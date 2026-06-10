@@ -7,6 +7,7 @@ export function SectionHeader({
   linkHref,
   linkLabel,
   center = false,
+  dark = false,
 }: {
   eyebrow?: string;
   title: string;
@@ -14,6 +15,7 @@ export function SectionHeader({
   linkHref?: string;
   linkLabel?: string;
   center?: boolean;
+  dark?: boolean;
 }) {
   return (
     <div
@@ -22,14 +24,22 @@ export function SectionHeader({
       }`}
     >
       <div className={center ? "mx-auto max-w-2xl" : "max-w-2xl"}>
-        {eyebrow && <span className="eyebrow">{eyebrow}</span>}
-        <h2 className="h-section mt-3">{title}</h2>
-        {subtitle && <p className="mt-3 text-base text-navy/60">{subtitle}</p>}
+        {eyebrow && (
+          <span className={dark ? "eyebrow-white" : "eyebrow"}>{eyebrow}</span>
+        )}
+        <h2 className={`h-section mt-3 ${dark ? "text-white" : ""}`}>{title}</h2>
+        {subtitle && (
+          <p className={`mt-3 text-base ${dark ? "text-white/60" : "text-navy/60"}`}>
+            {subtitle}
+          </p>
+        )}
       </div>
       {linkHref && linkLabel && (
         <Link
           href={linkHref}
-          className="shrink-0 text-sm font-semibold text-blue hover:text-navy"
+          className={`shrink-0 text-sm font-semibold transition-colors ${
+            dark ? "text-gold hover:text-gold-light" : "text-blue hover:text-navy"
+          }`}
         >
           {linkLabel} →
         </Link>

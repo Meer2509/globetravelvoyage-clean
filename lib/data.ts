@@ -817,3 +817,621 @@ export const aiPrompts: string[] = [
 
 export const DISCLAIMER_SHORT =
   "Globe Travel Voyage is an independent travel marketplace. We are not a government agency, embassy, immigration lawyer, airline, cruise company, real estate broker, or official visa authority. We do not guarantee visa approval, legal outcomes, or ticket prices.";
+
+// ─── Phase 3: Visa Intelligence Hub ──────────────────────────────────────────
+
+export interface VisaHubCard {
+  slug: string;
+  flag: string;
+  country: string;
+  type: string;
+  difficultyScore: number;
+  difficultyLabel: string;
+  difficultyColor: string;
+  timeline: string;
+  fee: string;
+  successRate: number;
+  aiRecommendation: string;
+  keyDocs: string[];
+  tags: string[];
+}
+
+export const visaHubCards: VisaHubCard[] = [
+  {
+    slug: "usa-b1b2",
+    flag: "🇺🇸",
+    country: "United States",
+    type: "B1/B2 Tourist & Business",
+    difficultyScore: 7,
+    difficultyLabel: "Hard",
+    difficultyColor: "bg-orange-500",
+    timeline: "3–12 weeks",
+    fee: "$185",
+    successRate: 68,
+    aiRecommendation: "Strong bank statements, employment letter, and proof of ties are critical. Apply 3+ months early. Connect with a verified visa agent for best preparation.",
+    keyDocs: ["DS-160 form", "Bank statements (6 months)", "Employment letter / NOC", "Strong ties to home country", "Passport photos (2×2 in)"],
+    tags: ["Popular", "AI-guided"],
+  },
+  {
+    slug: "usa-f1",
+    flag: "🇺🇸",
+    country: "United States",
+    type: "F-1 Student Visa",
+    difficultyScore: 6,
+    difficultyLabel: "Medium-Hard",
+    difficultyColor: "bg-orange-400",
+    timeline: "4–10 weeks",
+    fee: "$185 + $350 SEVIS",
+    successRate: 74,
+    aiRecommendation: "Apply immediately after receiving your I-20. Demonstrate strong academic intent and financial capacity. F-1 approval rates are improving for well-prepared applicants.",
+    keyDocs: ["I-20 from university", "SEVIS payment receipt", "DS-160", "Financial proof ($25k+/yr)", "Transcripts & test scores"],
+    tags: ["Student", "Common"],
+  },
+  {
+    slug: "canada",
+    flag: "🇨🇦",
+    country: "Canada",
+    type: "Temporary Resident Visa",
+    difficultyScore: 6,
+    difficultyLabel: "Medium-Hard",
+    difficultyColor: "bg-orange-400",
+    timeline: "4–8 weeks",
+    fee: "CAD $100",
+    successRate: 61,
+    aiRecommendation: "Canada IRCC processes online applications faster. Provide a detailed travel itinerary, strong financial proof, and previous travel history for best results.",
+    keyDocs: ["IMM 5257 form", "Bank statements", "Invitation letter (if applicable)", "Travel history", "Employment proof"],
+    tags: ["Popular"],
+  },
+  {
+    slug: "uk",
+    flag: "🇬🇧",
+    country: "United Kingdom",
+    type: "Standard Visitor Visa",
+    difficultyScore: 6,
+    difficultyLabel: "Medium-Hard",
+    difficultyColor: "bg-orange-400",
+    timeline: "3–6 weeks",
+    fee: "£115",
+    successRate: 72,
+    aiRecommendation: "The UK visa has improved approval rates with a clear itinerary, hotel bookings, and strong financial proof. Emphasize intent to return home.",
+    keyDocs: ["Online application form", "Bank statements (6 months)", "Invitation letter (optional)", "Hotel + flight bookings", "Employment proof"],
+    tags: ["Europe gateway"],
+  },
+  {
+    slug: "schengen",
+    flag: "🇪🇺",
+    country: "Schengen Zone (26 countries)",
+    type: "Type C Short-Stay Visa",
+    difficultyScore: 7,
+    difficultyLabel: "Hard",
+    difficultyColor: "bg-orange-500",
+    timeline: "2–4 weeks",
+    fee: "€90",
+    successRate: 65,
+    aiRecommendation: "Apply at the consulate of your main destination. Biometrics required. Travel insurance (€30k coverage) is mandatory. Early applications get better appointment slots.",
+    keyDocs: ["Application form", "Travel insurance (€30k+)", "Hotel bookings", "Round-trip tickets", "Bank statements (3 months)"],
+    tags: ["26 countries", "Popular"],
+  },
+  {
+    slug: "uae",
+    flag: "🇦🇪",
+    country: "United Arab Emirates",
+    type: "Tourist eVisa / Visa on Arrival",
+    difficultyScore: 2,
+    difficultyLabel: "Easy",
+    difficultyColor: "bg-emerald-500",
+    timeline: "24–72 hours",
+    fee: "AED 250–350",
+    successRate: 96,
+    aiRecommendation: "Most nationalities get UAE visa on arrival or eVisa very quickly. Apply via official GDRFA or ICA portal. Very high approval rate with a clean travel history.",
+    keyDocs: ["Valid passport (6+ months)", "Photo", "Return ticket", "Hotel booking", "Travel insurance"],
+    tags: ["Fast", "Easy"],
+  },
+  {
+    slug: "saudi",
+    flag: "🇸🇦",
+    country: "Saudi Arabia",
+    type: "Tourist eVisa",
+    difficultyScore: 3,
+    difficultyLabel: "Easy-Medium",
+    difficultyColor: "bg-yellow-500",
+    timeline: "Minutes to 24 hours",
+    fee: "SAR 300",
+    successRate: 91,
+    aiRecommendation: "Saudi Arabia's eVisa is now available for 50+ nationalities online. Apply via the official Visa Platform. No sponsor needed for tourist visits.",
+    keyDocs: ["Valid passport", "Credit card for payment", "Photo", "Travel insurance"],
+    tags: ["eVisa", "Fast"],
+  },
+  {
+    slug: "pakistan",
+    flag: "🇵🇰",
+    country: "Pakistan",
+    type: "e-Visa / Visa on Arrival",
+    difficultyScore: 3,
+    difficultyLabel: "Easy-Medium",
+    difficultyColor: "bg-yellow-500",
+    timeline: "3–5 business days",
+    fee: "Varies by nationality",
+    successRate: 89,
+    aiRecommendation: "Pakistan has opened e-Visa for 175+ countries. Business visa requires sponsor letter. Tourist visa is straightforward for most nationalities.",
+    keyDocs: ["Valid passport", "Photo", "Hotel booking or invitation", "Return ticket"],
+    tags: ["eVisa", "Open"],
+  },
+];
+
+// ─── Phase 3: Smart Ticket Marketplace ───────────────────────────────────────
+
+export interface TicketRoute {
+  id: string;
+  fromFlag: string;
+  from: string;
+  fromCode: string;
+  toFlag: string;
+  to: string;
+  toCode: string;
+  airlines: string[];
+  priceFrom: string;
+  priceTo: string;
+  cheapestMonth: string;
+  duration: string;
+  tip: string;
+  trending: boolean;
+  region: "gulf-pk" | "gulf-india" | "gulf-ph" | "pk-west" | "other";
+}
+
+export const ticketRoutes: TicketRoute[] = [
+  {
+    id: "dxb-lhe",
+    fromFlag: "🇦🇪",
+    from: "Dubai",
+    fromCode: "DXB",
+    toFlag: "🇵🇰",
+    to: "Lahore",
+    toCode: "LHE",
+    airlines: ["Emirates", "PIA", "FlyDubai"],
+    priceFrom: "$145",
+    priceTo: "$320",
+    cheapestMonth: "September",
+    duration: "2h 30m",
+    tip: "Book 3 weeks ahead for the best fares. Tuesday departures are usually cheapest.",
+    trending: true,
+    region: "gulf-pk",
+  },
+  {
+    id: "dxb-khi",
+    fromFlag: "🇦🇪",
+    from: "Dubai",
+    fromCode: "DXB",
+    toFlag: "🇵🇰",
+    to: "Karachi",
+    toCode: "KHI",
+    airlines: ["Emirates", "FlyDubai", "PIA"],
+    priceFrom: "$155",
+    priceTo: "$340",
+    cheapestMonth: "October",
+    duration: "2h 10m",
+    tip: "FlyDubai often has flash sales on this route. Set price alerts for best deals.",
+    trending: true,
+    region: "gulf-pk",
+  },
+  {
+    id: "ruh-lhe",
+    fromFlag: "🇸🇦",
+    from: "Riyadh",
+    fromCode: "RUH",
+    toFlag: "🇵🇰",
+    to: "Lahore",
+    toCode: "LHE",
+    airlines: ["Saudia", "PIA", "Air Arabia"],
+    priceFrom: "$170",
+    priceTo: "$380",
+    cheapestMonth: "August",
+    duration: "3h 20m",
+    tip: "Saudia and PIA compete heavily on this route — compare both for savings.",
+    trending: false,
+    region: "gulf-pk",
+  },
+  {
+    id: "doh-khi",
+    fromFlag: "🇶🇦",
+    from: "Doha",
+    fromCode: "DOH",
+    toFlag: "🇵🇰",
+    to: "Karachi",
+    toCode: "KHI",
+    airlines: ["Qatar Airways", "PIA"],
+    priceFrom: "$180",
+    priceTo: "$360",
+    cheapestMonth: "November",
+    duration: "2h 50m",
+    tip: "Qatar Airways Business Class upgrades available from $90 extra on this route.",
+    trending: false,
+    region: "gulf-pk",
+  },
+  {
+    id: "dxb-del",
+    fromFlag: "🇦🇪",
+    from: "Dubai",
+    fromCode: "DXB",
+    toFlag: "🇮🇳",
+    to: "Delhi",
+    toCode: "DEL",
+    airlines: ["Emirates", "IndiGo", "Air India", "FlyDubai"],
+    priceFrom: "$130",
+    priceTo: "$290",
+    cheapestMonth: "September",
+    duration: "3h 15m",
+    tip: "IndiGo often offers very competitive prices on this route. Book early.",
+    trending: true,
+    region: "gulf-india",
+  },
+  {
+    id: "dxb-mum",
+    fromFlag: "🇦🇪",
+    from: "Dubai",
+    fromCode: "DXB",
+    toFlag: "🇮🇳",
+    to: "Mumbai",
+    toCode: "BOM",
+    airlines: ["Emirates", "Air India", "SpiceJet"],
+    priceFrom: "$125",
+    priceTo: "$280",
+    cheapestMonth: "October",
+    duration: "2h 55m",
+    tip: "Air India direct flights from $125 one-way during off-peak. Great value route.",
+    trending: false,
+    region: "gulf-india",
+  },
+  {
+    id: "dxb-mnl",
+    fromFlag: "🇦🇪",
+    from: "Dubai",
+    fromCode: "DXB",
+    toFlag: "🇵🇭",
+    to: "Manila",
+    toCode: "MNL",
+    airlines: ["Emirates", "Philippine Airlines", "Cebu Pacific"],
+    priceFrom: "$220",
+    priceTo: "$490",
+    cheapestMonth: "February",
+    duration: "8h 30m",
+    tip: "Cebu Pacific sometimes runs $199 sales. Check for promo codes in advance.",
+    trending: true,
+    region: "gulf-ph",
+  },
+  {
+    id: "khi-jfk",
+    fromFlag: "🇵🇰",
+    from: "Karachi",
+    fromCode: "KHI",
+    toFlag: "🇺🇸",
+    to: "New York (JFK)",
+    toCode: "JFK",
+    airlines: ["Turkish Airlines", "Emirates", "Qatar Airways"],
+    priceFrom: "$720",
+    priceTo: "$1,400",
+    cheapestMonth: "January",
+    duration: "16–20h (1 stop)",
+    tip: "Turkish Airlines via Istanbul is usually the cheapest. Book 2–3 months ahead for under $800.",
+    trending: true,
+    region: "pk-west",
+  },
+  {
+    id: "lhe-lhr",
+    fromFlag: "🇵🇰",
+    from: "Lahore",
+    fromCode: "LHE",
+    toFlag: "🇬🇧",
+    to: "London (LHR)",
+    toCode: "LHR",
+    airlines: ["PIA", "Qatar Airways", "Turkish Airlines"],
+    priceFrom: "$580",
+    priceTo: "$1,200",
+    cheapestMonth: "January",
+    duration: "10–14h (1 stop)",
+    tip: "PIA offers direct Lahore–London flights. Qatar Airways via Doha often has better prices.",
+    trending: false,
+    region: "pk-west",
+  },
+  {
+    id: "dac-dxb",
+    fromFlag: "🇧🇩",
+    from: "Dhaka",
+    fromCode: "DAC",
+    toFlag: "🇸🇦",
+    to: "Riyadh",
+    toCode: "RUH",
+    airlines: ["Biman", "Saudia", "Air Arabia"],
+    priceFrom: "$190",
+    priceTo: "$420",
+    cheapestMonth: "March",
+    duration: "5h 30m",
+    tip: "Biman Bangladesh Airlines is often cheapest but check alliance partners for better service.",
+    trending: false,
+    region: "other",
+  },
+];
+
+// ─── Phase 3: Property Marketplace ───────────────────────────────────────────
+
+export interface PropertyListing {
+  id: string;
+  name: string;
+  type: "stay" | "rent" | "sale";
+  city: string;
+  country: string;
+  flag: string;
+  price: string;
+  per: string;
+  beds: number;
+  sqft: number;
+  rating: number;
+  reviews: number;
+  host: string;
+  verified: boolean;
+  amenities: string[];
+  emoji: string;
+  tag?: string;
+  gradient: string;
+}
+
+export const propertyListings: PropertyListing[] = [
+  {
+    id: "p1",
+    name: "Marina View 2BR Apartment",
+    type: "stay",
+    city: "Dubai Marina",
+    country: "UAE",
+    flag: "🇦🇪",
+    price: "$180",
+    per: "night",
+    beds: 2,
+    sqft: 1100,
+    rating: 4.9,
+    reviews: 84,
+    host: "Omar F.",
+    verified: true,
+    amenities: ["Pool", "Gym", "Parking", "WiFi", "Sea view"],
+    emoji: "🏙️",
+    tag: "Superhost",
+    gradient: "from-blue/20 to-blue/5",
+  },
+  {
+    id: "p2",
+    name: "Furnished Studio — JLT",
+    type: "rent",
+    city: "JLT, Dubai",
+    country: "UAE",
+    flag: "🇦🇪",
+    price: "$650",
+    per: "month",
+    beds: 0,
+    sqft: 480,
+    rating: 4.7,
+    reviews: 31,
+    host: "Fatima A.",
+    verified: true,
+    amenities: ["WiFi", "AC", "Gym", "Metro nearby"],
+    emoji: "🏢",
+    tag: "Great value",
+    gradient: "from-gold/20 to-gold/5",
+  },
+  {
+    id: "p3",
+    name: "3BR Villa — Jumeirah",
+    type: "sale",
+    city: "Jumeirah, Dubai",
+    country: "UAE",
+    flag: "🇦🇪",
+    price: "$1.2M",
+    per: "sale",
+    beds: 3,
+    sqft: 2800,
+    rating: 0,
+    reviews: 0,
+    host: "Omar F.",
+    verified: true,
+    amenities: ["Private pool", "Maid's room", "2 parking", "Near beach"],
+    emoji: "🏡",
+    tag: "Investment",
+    gradient: "from-emerald-500/15 to-emerald-500/5",
+  },
+  {
+    id: "p4",
+    name: "Sea-view 1BR — Seaview Towers",
+    type: "stay",
+    city: "Karachi, Pakistan",
+    country: "Pakistan",
+    flag: "🇵🇰",
+    price: "$55",
+    per: "night",
+    beds: 1,
+    sqft: 750,
+    rating: 4.6,
+    reviews: 22,
+    host: "Zara K.",
+    verified: true,
+    amenities: ["Sea view", "WiFi", "Generator", "Security"],
+    emoji: "🌊",
+    gradient: "from-blue/15 to-blue/5",
+  },
+  {
+    id: "p5",
+    name: "Modern 2BR — BGC",
+    type: "rent",
+    city: "BGC, Manila",
+    country: "Philippines",
+    flag: "🇵🇭",
+    price: "$900",
+    per: "month",
+    beds: 2,
+    sqft: 920,
+    rating: 4.8,
+    reviews: 45,
+    host: "Maria L.",
+    verified: true,
+    amenities: ["Pool", "Gym", "24h security", "Mall access"],
+    emoji: "🏙️",
+    tag: "Popular area",
+    gradient: "from-purple-500/15 to-purple-500/5",
+  },
+  {
+    id: "p6",
+    name: "Penthouse — Downtown Dubai",
+    type: "stay",
+    city: "Downtown Dubai",
+    country: "UAE",
+    flag: "🇦🇪",
+    price: "$450",
+    per: "night",
+    beds: 3,
+    sqft: 3200,
+    rating: 5.0,
+    reviews: 17,
+    host: "Khalid R.",
+    verified: true,
+    amenities: ["Burj Khalifa view", "Private terrace", "Butler", "Chef"],
+    emoji: "👑",
+    tag: "Luxury",
+    gradient: "from-gold/25 to-gold/8",
+  },
+];
+
+// ─── Phase 3: Verified Marketplace Providers ─────────────────────────────────
+
+export interface MarketplaceProvider {
+  id: string;
+  name: string;
+  role: "visa-agent" | "agency" | "guide" | "host";
+  roleLabel: string;
+  flag: string;
+  country: string;
+  city: string;
+  avatar: string;
+  rating: number;
+  reviews: number;
+  responseTime: string;
+  languages: string[];
+  specialization: string;
+  services: string[];
+  verified: boolean;
+  featured: boolean;
+  priceFrom: string;
+}
+
+export const marketplaceProviders: MarketplaceProvider[] = [
+  {
+    id: "mp1",
+    name: "Sana Malik",
+    role: "visa-agent",
+    roleLabel: "Visa Expert",
+    flag: "🇦🇪",
+    country: "UAE",
+    city: "Dubai",
+    avatar: "SM",
+    rating: 4.9,
+    reviews: 312,
+    responseTime: "< 1 hour",
+    languages: ["English", "Urdu", "Arabic"],
+    specialization: "USA, UK, Schengen",
+    services: ["Document review", "Full application prep", "Interview coaching"],
+    verified: true,
+    featured: true,
+    priceFrom: "$40",
+  },
+  {
+    id: "mp2",
+    name: "Voyage Pro Travels",
+    role: "agency",
+    roleLabel: "Travel Agency",
+    flag: "🇦🇪",
+    country: "UAE",
+    city: "Dubai",
+    avatar: "VP",
+    rating: 4.8,
+    reviews: 198,
+    responseTime: "< 2 hours",
+    languages: ["English", "Arabic", "Urdu"],
+    specialization: "Gulf, Umrah, Europe, USA",
+    services: ["Holiday packages", "Umrah groups", "Visa support"],
+    verified: true,
+    featured: true,
+    priceFrom: "$299",
+  },
+  {
+    id: "mp3",
+    name: "Khalid Al-Rashidi",
+    role: "guide",
+    roleLabel: "Tour Guide",
+    flag: "🇦🇪",
+    country: "UAE",
+    city: "Dubai",
+    avatar: "KR",
+    rating: 4.96,
+    reviews: 68,
+    responseTime: "< 3 hours",
+    languages: ["English", "Arabic"],
+    specialization: "Old Dubai, Food tours, Desert",
+    services: ["Walking tours", "Food safari", "Photography tours"],
+    verified: true,
+    featured: false,
+    priceFrom: "$35",
+  },
+  {
+    id: "mp4",
+    name: "Hassan Al-Qadi",
+    role: "visa-agent",
+    roleLabel: "Visa Expert",
+    flag: "🇸🇦",
+    country: "Saudi Arabia",
+    city: "Riyadh",
+    avatar: "HA",
+    rating: 4.8,
+    reviews: 148,
+    responseTime: "< 2 hours",
+    languages: ["English", "Arabic"],
+    specialization: "Canada, Australia, UK",
+    services: ["Application preparation", "Document checklist", "Follow-up support"],
+    verified: true,
+    featured: false,
+    priceFrom: "$50",
+  },
+  {
+    id: "mp5",
+    name: "Orient Express Travel",
+    role: "agency",
+    roleLabel: "Travel Agency",
+    flag: "🇵🇰",
+    country: "Pakistan",
+    city: "Karachi",
+    avatar: "OE",
+    rating: 4.7,
+    reviews: 124,
+    responseTime: "< 4 hours",
+    languages: ["English", "Urdu"],
+    specialization: "UK, Canada, USA packages",
+    services: ["Visa + Ticket packages", "Family tours", "Student travel"],
+    verified: true,
+    featured: false,
+    priceFrom: "$180",
+  },
+  {
+    id: "mp6",
+    name: "Omar Al-Farsi",
+    role: "host",
+    roleLabel: "Property Host",
+    flag: "🇦🇪",
+    country: "UAE",
+    city: "Dubai",
+    avatar: "OF",
+    rating: 4.8,
+    reviews: 84,
+    responseTime: "< 2 hours",
+    languages: ["English", "Arabic"],
+    specialization: "Luxury stays, Monthly rentals",
+    services: ["Short stays", "Monthly rentals", "Investment properties"],
+    verified: true,
+    featured: false,
+    priceFrom: "$55/night",
+  },
+];
