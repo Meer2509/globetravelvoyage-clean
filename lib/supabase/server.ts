@@ -1,79 +1,84 @@
 // =============================================================================
-// Globe Travel Voyage — Supabase Server Client (stub)
+// Globe Travel Voyage — Supabase Server Client
 // =============================================================================
+// Used in Server Components, Server Actions, and Route Handlers.
+// Must be called per-request (not module-level) to get fresh cookies.
 //
-// STATUS: Stub client — safe to import from Server Components and API routes.
-//
-// To enable real Supabase server client:
-//   1. Add keys to .env.local (see .env.example)
-//   2. Install: npm install @supabase/supabase-js @supabase/ssr
-//   3. Replace this file with:
-//
-//      import { createServerClient, type CookieOptions } from "@supabase/ssr";
-//      import { cookies } from "next/headers";
-//      import type { Database } from "./types";
-//
-//      export async function createServerSupabaseClient() {
-//        const cookieStore = await cookies();
-//        return createServerClient<Database>(
-//          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-//          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-//          {
-//            cookies: {
-//              get(name: string) { return cookieStore.get(name)?.value; },
-//              set(name: string, value: string, options: CookieOptions) {
-//                cookieStore.set({ name, value, ...options });
-//              },
-//              remove(name: string, options: CookieOptions) {
-//                cookieStore.set({ name, value: "", ...options });
-//              },
-//            },
-//          }
-//        );
-//      }
-//
-//      // Service role client (bypasses RLS) — server only, never expose to browser
-//      export function createAdminSupabaseClient() {
-//        return createClient<Database>(
-//          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-//          process.env.SUPABASE_SERVICE_ROLE_KEY!
-//        );
-//      }
-//
+// CRITICAL: Use ONLY getAll/setAll — never get/set/remove (deprecated).
+// CRITICAL: cookies() is async in Next.js 16 — always await it.
 // =============================================================================
 
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import type { Database } from "./types";
-import { isSupabaseConfigured } from "./client";
+import { SUPABASE_URL, SUPABASE_ANON_KEY, isSupabaseConfigured } from "./client";
 
-export type { Database };
 export { isSupabaseConfigured };
 
-export type ServerSupabaseStub = null;
-
-/**
- * Server-side Supabase client stub.
- * Returns null until real keys are added.
- * Use in Server Components: const db = await createServerSupabaseClient()
- */
-export async function createServerSupabaseClient(): Promise<ServerSupabaseStub> {
-  // Add real implementation here after installing @supabase/ssr
-  return null;
-}
-
-/**
- * Admin/service-role client stub.
- * Server-only — never expose to the browser.
- * Returns null until SUPABASE_SERVICE_ROLE_KEY is set.
- */
-export function createAdminSupabaseClient(): ServerSupabaseStub {
-  // Add real implementation here after installing @supabase/ssr
-  return null;
-}
-
-/**
- * Check if both public AND service role keys are configured.
- * Service role key is required for admin operations.
- */
 export const isAdminClientConfigured =
-  isSupabaseConfigured &&
-  Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
+  isSupabaseConfigured && Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+// ── Server client (per-request, uses auth cookie) ─────────────────────────────
+
+/**
+ * Returns a typed Supabase server client bound to the current request's cookies.
+ * Returns null when Supabase env keys are missing.
+ *
+ * Usage (Server Component):
+ *   const supabase = await createServerSupabaseClient();
+ *   if (!supabase) return null;  // or show setup message
+ *   const { data: { user } } = await supabase.auth.getUser();
+ */
+export async function createServerSupabaseClient() {
+  if (!isSupabaseConfigured) return null;
+
+  const cookieStore = await cookies();
+
+  return createServerClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet, _headers) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        } catch {
+          // Called from a Server Component — middleware handles the actual refresh.
+        }
+      },
+    },
+  });
+}
+
+// ── Admin client (service role — NEVER expose to browser) ─────────────────────
+
+/**
+ * Service-role client — bypasses RLS.
+ * ONLY use in server-side code (Route Handlers, Server Actions, cron jobs).
+ * Returns null when SUPABASE_SERVICE_ROLE_KEY is missing.
+ */
+export async function createAdminSupabaseClient() {
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!isSupabaseConfigured || !serviceKey) return null;
+
+  const cookieStore = await cookies();
+
+  return createServerClient<Database>(SUPABASE_URL, serviceKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        } catch {
+          // Server Component context — middleware handles refresh.
+        }
+      },
+    },
+  });
+}

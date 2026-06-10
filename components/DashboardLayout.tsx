@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Icon } from "./Icon";
+import { LogoutButton } from "./LogoutButton";
 import type { IconName } from "@/lib/data";
 
 export interface DashboardTab {
@@ -99,14 +100,17 @@ export function DashboardLayout({
               ))}
             </nav>
 
-            {/* Back to site */}
-            <Link
-              href="/"
-              className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium text-charcoal/50 hover:bg-white hover:text-navy transition-colors"
-            >
-              <Icon name="globe" className="h-4 w-4" />
-              Back to site
-            </Link>
+            {/* Back to site + logout */}
+            <div className="card overflow-hidden p-1.5 space-y-0.5">
+              <Link
+                href="/"
+                className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium text-charcoal/50 hover:bg-soft hover:text-navy transition-colors"
+              >
+                <Icon name="globe" className="h-4 w-4" />
+                Back to site
+              </Link>
+              <LogoutButton className="flex w-full items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium text-red-500/70 hover:bg-red-50 hover:text-red-600 transition-colors" />
+            </div>
           </aside>
 
           {/* ── Main content ── */}

@@ -357,6 +357,9 @@ export interface Notification {
   created_at: string;
 }
 
+// ── Convenience alias ─────────────────────────────────────────────────────────
+export type TableName = keyof Database["public"]["Tables"];
+
 // ── Database type map (used with Supabase generic client) ─────────────────────
 
 export interface Database {

@@ -1,54 +1,44 @@
 // =============================================================================
-// Globe Travel Voyage — Supabase Browser Client (stub)
+// Globe Travel Voyage — Supabase Browser Client
 // =============================================================================
-//
-// STATUS: Stub client — safe to import, returns null until keys are added.
-//
-// To enable real Supabase:
-//   1. Add keys to .env.local  (see .env.example)
-//   2. Install:  npm install @supabase/supabase-js @supabase/ssr
-//   3. Replace this file with:
-//
-//      import { createBrowserClient } from "@supabase/ssr";
-//      import type { Database } from "./types";
-//
-//      export const supabase = createBrowserClient<Database>(
-//        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-//        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-//      );
-//      export const isSupabaseConfigured = true;
-//
+// Used in Client Components ("use client").
+// createBrowserClient() uses a singleton — safe to call multiple times.
+// Returns null when env keys are missing (demo/dev mode without Supabase).
 // =============================================================================
 
+import { createBrowserClient } from "@supabase/ssr";
 import type { Database } from "./types";
 
-// ── Config detection ──────────────────────────────────────────────────────────
+// ── Config ────────────────────────────────────────────────────────────────────
 
 export const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 
+// Supabase renamed anon key → publishable key; support both env var names.
 export const SUPABASE_ANON_KEY =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+  "";
 
-/** True only when both public env vars are set. */
+/** True when both public env vars are present. */
 export const isSupabaseConfigured =
   Boolean(SUPABASE_URL) && Boolean(SUPABASE_ANON_KEY);
 
-// ── Stub client ───────────────────────────────────────────────────────────────
-// Type-annotated as null for now; will be SupabaseClient<Database> once enabled.
-
-export type SupabaseStub = null;
+// ── Browser client factory ────────────────────────────────────────────────────
 
 /**
- * Supabase browser client.
- * Returns null until real keys are added — all pages gracefully fall back to mock data.
- * Replace with `createBrowserClient<Database>(...)` after setup.
+ * Returns a typed Supabase browser client.
+ * Returns null if keys are not configured — caller must guard with isSupabaseConfigured.
+ *
+ * Example:
+ *   const client = createClient();
+ *   if (!client) { return <SetupRequired />; }
+ *   const { data } = await client.auth.signInWithPassword(...)
  */
-export const supabase: SupabaseStub = null;
+export function createClient() {
+  if (!isSupabaseConfigured) return null;
+  // createBrowserClient is a singleton — multiple calls return same instance
+  return createBrowserClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
 
-// ── Typed table helpers (ready for real client) ───────────────────────────────
-// These are convenience aliases. Use them in components:
-//   import { tables } from "@/lib/supabase/client";
-//   // When real client is wired: await tables.profiles.select()
-
-export type TableName = keyof Database["public"]["Tables"];
+export type SupabaseBrowserClient = ReturnType<typeof createBrowserClient<Database>>;
