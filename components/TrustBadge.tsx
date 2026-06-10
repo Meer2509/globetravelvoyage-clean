@@ -3,20 +3,28 @@ import type { IconName } from "@/lib/data";
 
 export function TrustBadge({
   icon,
+  emoji,
   title,
   text,
 }: {
   icon: IconName;
+  emoji?: string;
   title: string;
   text: string;
 }) {
   return (
-    <div className="card flex flex-col items-start gap-3 p-6">
-      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-navy/5 text-navy">
-        <Icon name={icon} className="h-5 w-5" />
+    <div className="card flex flex-col gap-4 p-6">
+      <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-navy/5 text-navy">
+        {emoji ? (
+          <span className="text-2xl">{emoji}</span>
+        ) : (
+          <Icon name={icon} className="h-6 w-6" />
+        )}
       </span>
-      <h3 className="text-base font-bold text-navy">{title}</h3>
-      <p className="text-sm leading-relaxed text-navy/60">{text}</p>
+      <div>
+        <h3 className="text-base font-bold text-navy">{title}</h3>
+        <p className="mt-1.5 text-sm leading-relaxed text-charcoal/65">{text}</p>
+      </div>
     </div>
   );
 }

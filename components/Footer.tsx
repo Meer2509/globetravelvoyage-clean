@@ -4,38 +4,48 @@ import { DISCLAIMER_SHORT } from "@/lib/data";
 
 const cols = [
   {
-    title: "Explore",
+    title: "Visa Services",
     links: [
-      { label: "Visa Marketplace", href: "/visa" },
+      { label: "AI Visa Assistant", href: "/visa" },
+      { label: "USA Visa Guide", href: "/visa/usa" },
+      { label: "USA from Pakistan", href: "/visa/usa-from-pakistan" },
+      { label: "All Countries", href: "/visa/countries" },
+      { label: "Visa Experts", href: "/agents" },
+    ],
+  },
+  {
+    title: "Travel & Stays",
+    links: [
       { label: "Flights", href: "/flights" },
       { label: "Hotels & Stays", href: "/hotels" },
       { label: "Car Rentals", href: "/car-rentals" },
       { label: "Cruises & Boats", href: "/cruises" },
-      { label: "Tours & Tickets", href: "/tours" },
+      { label: "Local Tours", href: "/tours" },
+      { label: "Attraction Tickets", href: "/tickets" },
     ],
   },
   {
-    title: "Plan & Earn",
+    title: "Plan & Discover",
     links: [
       { label: "AI Trip Planner", href: "/trip-planner" },
+      { label: "Destinations", href: "/destinations" },
+      { label: "Travel Guides", href: "/guides" },
       { label: "Properties", href: "/properties" },
       { label: "Referral Program", href: "/referrals" },
-      { label: "Verified Agencies", href: "/agencies" },
-      { label: "Verified Agents", href: "/agents" },
     ],
   },
   {
-    title: "Accounts",
+    title: "Marketplace",
     links: [
-      { label: "Traveler Dashboard", href: "/dashboard/customer" },
-      { label: "Agent Dashboard", href: "/dashboard/agent" },
-      { label: "Agency Dashboard", href: "/dashboard/agency" },
-      { label: "Admin Console", href: "/dashboard/admin" },
+      { label: "Verified Agencies", href: "/agencies" },
+      { label: "Visa Agents", href: "/agents" },
+      { label: "Dashboard", href: "/dashboard" },
       { label: "Log in", href: "/login" },
+      { label: "Register", href: "/register" },
     ],
   },
   {
-    title: "Company",
+    title: "Company & Legal",
     links: [
       { label: "About", href: "/about" },
       { label: "Contact", href: "/contact" },
@@ -49,30 +59,49 @@ const cols = [
 export function Footer() {
   return (
     <footer className="mt-auto border-t border-soft-200 bg-navy text-white">
-      <div className="container-px py-14">
-        <div className="grid gap-10 lg:grid-cols-[1.4fr_repeat(4,1fr)]">
+      {/* Main footer */}
+      <div className="container-px py-16">
+        <div className="grid gap-10 lg:grid-cols-[1.6fr_repeat(5,1fr)]">
+          {/* Brand */}
           <div className="max-w-sm">
-            <Link href="/" className="flex items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-gold">
+            <Link href="/" className="flex items-center gap-2.5">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-gold">
                 <Icon name="globe" className="h-5 w-5" />
               </span>
-              <span className="text-lg font-extrabold tracking-tight">
+              <span className="text-xl font-extrabold tracking-tight">
                 Globe<span className="text-blue-light">Travel</span>
                 <span className="text-gold">Voyage</span>
               </span>
             </Link>
-            <p className="mt-4 text-sm leading-relaxed text-white/65">
-              Your AI Travel Command Center for visas, flights, tours, rentals and
-              global journeys — powered by AI and verified human experts.
+            <p className="mt-5 text-sm leading-relaxed text-white/60">
+              Your AI Travel Command Center for visas, flights, tours, luxury
+              stays and global journeys — powered by AI and verified human experts.
             </p>
-            <p className="mt-4 text-xs leading-relaxed text-white/45">
+
+            {/* Trust badges */}
+            <div className="mt-6 grid grid-cols-2 gap-2">
+              {[
+                { icon: "shield" as const, label: "Verified providers" },
+                { icon: "check" as const, label: "Transparent reviews" },
+                { icon: "sparkles" as const, label: "AI-powered" },
+                { icon: "globe" as const, label: "190+ countries" },
+              ].map((b) => (
+                <div key={b.label} className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/5 px-3 py-2">
+                  <Icon name={b.icon} className="h-3.5 w-3.5 text-gold" />
+                  <span className="text-xs text-white/60">{b.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <p className="mt-6 text-xs leading-relaxed text-white/35">
               {DISCLAIMER_SHORT}
             </p>
           </div>
 
+          {/* Link columns */}
           {cols.map((col) => (
             <div key={col.title}>
-              <h4 className="text-sm font-semibold text-white">{col.title}</h4>
+              <h4 className="text-xs font-bold uppercase tracking-widest text-white/40">{col.title}</h4>
               <ul className="mt-4 space-y-2.5">
                 {col.links.map((l) => (
                   <li key={l.href}>
@@ -88,12 +117,15 @@ export function Footer() {
             </div>
           ))}
         </div>
+      </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/50 sm:flex-row">
+      {/* Bottom bar */}
+      <div className="border-t border-white/8">
+        <div className="container-px flex flex-col items-center justify-between gap-3 py-5 text-xs text-white/40 sm:flex-row">
           <p>© {new Date().getFullYear()} Globe Travel Voyage. All rights reserved.</p>
           <p className="flex items-center gap-2">
-            <Icon name="shield" className="h-4 w-4 text-gold" />
-            Independent marketplace · Not a government or visa authority
+            <Icon name="shield" className="h-3.5 w-3.5 text-gold/70" />
+            Independent marketplace · Not a government, embassy or visa authority
           </p>
         </div>
       </div>

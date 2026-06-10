@@ -1,5 +1,7 @@
-// Central mock data for Globe Travel Voyage.
+// ─────────────────────────────────────────────────────────────────────────────
+// Globe Travel Voyage — Central mock data layer
 // All static so the frontend builds and deploys without external services.
+// ─────────────────────────────────────────────────────────────────────────────
 
 export type IconName =
   | "visa"
@@ -21,7 +23,18 @@ export type IconName =
   | "check"
   | "star"
   | "users"
-  | "doc";
+  | "doc"
+  | "heart"
+  | "map"
+  | "compass"
+  | "camera"
+  | "medical"
+  | "student"
+  | "prayer"
+  | "yacht"
+  | "insurance";
+
+// ─── Services (20) ───────────────────────────────────────────────────────────
 
 export interface Service {
   slug: string;
@@ -29,83 +42,35 @@ export interface Service {
   description: string;
   href: string;
   icon: IconName;
+  emoji: string;
   accent: string;
+  badge?: string;
 }
 
 export const services: Service[] = [
-  {
-    slug: "visa",
-    title: "Visa Marketplace",
-    description: "AI visa guidance for every country plus verified visa agents.",
-    href: "/visa",
-    icon: "visa",
-    accent: "from-blue/15 to-blue/5",
-  },
-  {
-    slug: "flights",
-    title: "Flights",
-    description: "Compare cheap routes across the Middle East, Asia & the West.",
-    href: "/flights",
-    icon: "flight",
-    accent: "from-navy/15 to-navy/5",
-  },
-  {
-    slug: "hotels",
-    title: "Hotels & Stays",
-    description: "Hotels, apartments and long-stay rentals worldwide.",
-    href: "/hotels",
-    icon: "hotel",
-    accent: "from-gold/20 to-gold/5",
-  },
-  {
-    slug: "car-rentals",
-    title: "Car Rentals",
-    description: "Self-drive and chauffeur cars in 90+ countries.",
-    href: "/car-rentals",
-    icon: "car",
-    accent: "from-blue/15 to-blue/5",
-  },
-  {
-    slug: "cruises",
-    title: "Cruises, Boats & Ships",
-    description: "Ocean cruises, river boats and private charters.",
-    href: "/cruises",
-    icon: "cruise",
-    accent: "from-navy/15 to-navy/5",
-  },
-  {
-    slug: "tours",
-    title: "Local Tours",
-    description: "Guided experiences led by verified local tour guides.",
-    href: "/tours",
-    icon: "tour",
-    accent: "from-gold/20 to-gold/5",
-  },
-  {
-    slug: "tickets",
-    title: "Attraction Tickets",
-    description: "Skip-the-line tickets to top global attractions.",
-    href: "/tickets",
-    icon: "ticket",
-    accent: "from-blue/15 to-blue/5",
-  },
-  {
-    slug: "trip-planner",
-    title: "AI Trip Planner",
-    description: "Build a full itinerary from your budget and travel days.",
-    href: "/trip-planner",
-    icon: "planner",
-    accent: "from-navy/15 to-navy/5",
-  },
-  {
-    slug: "properties",
-    title: "Properties",
-    description: "Rent or buy/sell travel-related homes and apartments.",
-    href: "/properties",
-    icon: "property",
-    accent: "from-gold/20 to-gold/5",
-  },
+  { slug: "visa", title: "AI Visa Assistant", description: "AI-powered visa guidance for every country with document checklists.", href: "/visa", icon: "visa", emoji: "🛂", accent: "from-blue/20 to-blue/5", badge: "AI" },
+  { slug: "usa-visa", title: "USA Visa Guide", description: "Featured B1/B2, F-1 & family visa paths from Pakistan and South Asia.", href: "/visa/usa-from-pakistan", icon: "visa", emoji: "🇺🇸", accent: "from-navy/20 to-navy/5", badge: "Popular" },
+  { slug: "flights", title: "Flights", description: "Compare cheap routes: Middle East ↔ South & Southeast Asia, USA, Europe.", href: "/flights", icon: "flight", emoji: "✈️", accent: "from-blue/20 to-blue/5" },
+  { slug: "hotels", title: "Hotels & Luxury Stays", description: "5-star hotels, boutique stays, serviced apartments and long-stay rentals.", href: "/hotels", icon: "hotel", emoji: "🏨", accent: "from-gold/20 to-gold/5" },
+  { slug: "apartments", title: "Apartment Rentals", description: "Furnished monthly apartments in Dubai, Riyadh, London, New York and more.", href: "/properties", icon: "property", emoji: "🏠", accent: "from-navy/20 to-navy/5" },
+  { slug: "car-rentals", title: "Car Rentals", description: "Economy to luxury cars with or without a chauffeur in 90+ countries.", href: "/car-rentals", icon: "car", emoji: "🚗", accent: "from-blue/20 to-blue/5" },
+  { slug: "cruises", title: "Cruises & Ships", description: "Ocean cruises, river voyages, luxury liners and private ship charters.", href: "/cruises", icon: "cruise", emoji: "🛳️", accent: "from-gold/20 to-gold/5" },
+  { slug: "yachts", title: "Boats & Yacht Tours", description: "Private yacht charters, sunset cruises and island-hopping boat tours.", href: "/cruises", icon: "yacht", emoji: "⛵", accent: "from-navy/20 to-navy/5" },
+  { slug: "tours", title: "Local Tours", description: "Guided experiences led by verified local guides worldwide.", href: "/tours", icon: "tour", emoji: "🗺️", accent: "from-blue/20 to-blue/5" },
+  { slug: "tickets", title: "Attraction Tickets", description: "Skip-the-line tickets to the world's top landmarks and attractions.", href: "/tickets", icon: "ticket", emoji: "🎟️", accent: "from-gold/20 to-gold/5" },
+  { slug: "guides", title: "Travel Guides", description: "Deep-dive city and country guides with local insider knowledge.", href: "/guides", icon: "compass", emoji: "📖", accent: "from-navy/20 to-navy/5" },
+  { slug: "agencies", title: "Verified Travel Agencies", description: "Curated, identity-checked agencies offering packages, Umrah and more.", href: "/agencies", icon: "agency", emoji: "🏢", accent: "from-blue/20 to-blue/5" },
+  { slug: "agents", title: "Verified Visa Experts", description: "Application-ready agents who prepare, review and guide your visa files.", href: "/agents", icon: "agent", emoji: "👔", accent: "from-gold/20 to-gold/5" },
+  { slug: "local-guides", title: "Tour Guides", description: "Book certified local guides for private or group tours.", href: "/tours", icon: "guide", emoji: "🧑‍🦯", accent: "from-navy/20 to-navy/5" },
+  { slug: "properties", title: "Property Rentals", description: "Short and long-term rental properties for travel and relocation.", href: "/properties", icon: "property", emoji: "🏡", accent: "from-blue/20 to-blue/5" },
+  { slug: "property-sales", title: "Buy / Sell Property", description: "Travel-related property listings: homes, holiday villas and more.", href: "/properties", icon: "property", emoji: "🔑", accent: "from-gold/20 to-gold/5" },
+  { slug: "insurance", title: "Travel Insurance", description: "Multi-trip and single-trip travel insurance options for global coverage.", href: "/", icon: "insurance", emoji: "🛡️", accent: "from-navy/20 to-navy/5", badge: "Coming soon" },
+  { slug: "student", title: "Student Travel", description: "Student visa paths, campus housing, flight discounts and more.", href: "/visa", icon: "student", emoji: "🎓", accent: "from-blue/20 to-blue/5" },
+  { slug: "medical", title: "Medical Travel", description: "Medical tourism guidance, hospital connections and travel coordination.", href: "/", icon: "medical", emoji: "🏥", accent: "from-gold/20 to-gold/5", badge: "Coming soon" },
+  { slug: "umrah", title: "Umrah & Hajj Travel", description: "Complete Umrah and Hajj packages from verified agencies and operators.", href: "/agencies", icon: "prayer", emoji: "🕋", accent: "from-navy/20 to-navy/5", badge: "Trusted" },
 ];
+
+// ─── Visas ────────────────────────────────────────────────────────────────────
 
 export interface Visa {
   slug: string;
@@ -122,6 +87,8 @@ export interface Visa {
   featured?: boolean;
   documents: string[];
   steps: string[];
+  commonMistakes?: string[];
+  tips?: string[];
 }
 
 export const visas: Visa[] = [
@@ -131,31 +98,45 @@ export const visas: Visa[] = [
     flag: "🇺🇸",
     type: "B1/B2 Visitor Visa",
     category: "Visitor",
-    summary:
-      "Tourism, business meetings and family visits to the USA on a non-immigrant visitor visa.",
-    processing: "3–12 weeks (varies by embassy)",
+    summary: "Tourism, business meetings and family visits to the USA on a non-immigrant visitor visa.",
+    processing: "3–12 weeks (embassy-dependent)",
     validity: "Up to 10 years (multiple entry)",
     stay: "Up to 6 months per entry",
     feeFrom: "$185 (consular fee)",
     difficulty: "Complex",
     featured: true,
     documents: [
-      "Valid passport (6+ months validity)",
-      "DS-160 confirmation page",
-      "Visa fee payment receipt",
-      "Interview appointment letter",
-      "Recent photograph (per spec)",
-      "Proof of funds / bank statements",
-      "Employment or business proof",
-      "Travel itinerary & ties to home country",
+      "Valid passport (6+ months remaining)",
+      "DS-160 online application confirmation",
+      "Visa fee payment receipt (MRV fee)",
+      "Interview appointment confirmation letter",
+      "Recent passport-size photo (per US spec)",
+      "Bank statements (last 3–6 months)",
+      "Employment letter or business registration",
+      "Income tax returns (last 2 years)",
+      "Property deeds or strong ties to home country",
+      "Sponsor's invitation letter (if applicable)",
     ],
     steps: [
-      "Complete the DS-160 online form",
-      "Pay the consular visa fee",
-      "Schedule biometrics & interview",
-      "Prepare supporting documents",
-      "Attend the visa interview",
-      "Track passport return",
+      "Determine the correct visa category (B1 business, B2 tourism)",
+      "Complete DS-160 — the online non-immigrant visa application",
+      "Pay the MRV consular fee ($185)",
+      "Create a CEAC account and schedule your interview",
+      "Prepare and organise all supporting documents",
+      "Attend the visa interview at the US Embassy or Consulate",
+      "Track your passport return via courier",
+    ],
+    commonMistakes: [
+      "Submitting inconsistent financial information",
+      "Not showing strong ties to your home country",
+      "Providing vague answers during the interview",
+      "Missing or expired supporting documents",
+    ],
+    tips: [
+      "Rehearse short, factual answers for common questions",
+      "Bring originals AND copies of all documents",
+      "Show genuine intent to return home after your visit",
+      "Apply at least 3 months before your intended travel date",
     ],
   },
   {
@@ -164,28 +145,38 @@ export const visas: Visa[] = [
     flag: "🇺🇸",
     type: "F-1 Student Visa",
     category: "Student",
-    summary:
-      "Study at an accredited US college or university with an approved I-20.",
+    summary: "Study at an accredited US college or university on an approved I-20 from your institution.",
     processing: "4–10 weeks",
     validity: "Duration of study program",
-    stay: "Program length + grace period",
-    feeFrom: "$185 + SEVIS $350",
+    stay: "Program length + 60-day grace period",
+    feeFrom: "$185 + SEVIS fee $350",
     difficulty: "Complex",
     featured: true,
     documents: [
-      "Form I-20 from your school",
-      "SEVIS fee payment receipt",
-      "DS-160 confirmation",
-      "Proof of academic admission",
-      "Financial support evidence",
-      "Academic transcripts & test scores",
+      "Form I-20 from your accredited school",
+      "SEVIS I-901 fee payment receipt",
+      "DS-160 confirmation page",
+      "University acceptance letter",
+      "Financial support evidence (sponsorship or own funds)",
+      "Academic transcripts, diplomas and test scores",
+      "Scholarship letters (if applicable)",
     ],
     steps: [
-      "Get admission & Form I-20",
-      "Pay the SEVIS I-901 fee",
-      "Complete DS-160 & pay visa fee",
-      "Book the visa interview",
-      "Attend interview with documents",
+      "Get accepted and receive Form I-20 from your school",
+      "Pay the SEVIS I-901 fee online",
+      "Complete DS-160 and pay the visa fee",
+      "Schedule your F-1 interview",
+      "Attend the interview with all documents",
+    ],
+    commonMistakes: [
+      "Paying SEVIS fee after applying for the visa",
+      "Not bringing the original I-20",
+      "Unclear financial sponsorship documentation",
+    ],
+    tips: [
+      "Apply as soon as you receive your I-20",
+      "Be clear about your academic plans and career goals",
+      "Show ties to your home country even as a student",
     ],
   },
   {
@@ -194,26 +185,15 @@ export const visas: Visa[] = [
     flag: "🇬🇧",
     type: "Standard Visitor Visa",
     category: "Visitor",
-    summary: "Tourism, family visits and short business trips to the UK.",
+    summary: "Tourism, family visits and short business trips to the UK for up to 6 months.",
     processing: "3 weeks (standard)",
-    validity: "6 months (or 2/5/10 year options)",
+    validity: "6 months, or 2 / 5 / 10-year options",
     stay: "Up to 6 months",
     feeFrom: "£115",
     difficulty: "Moderate",
-    documents: [
-      "Valid passport",
-      "Online application form",
-      "Proof of funds",
-      "Accommodation & travel details",
-      "Employment / study proof",
-    ],
-    steps: [
-      "Apply online & pay the fee",
-      "Book a biometrics appointment",
-      "Upload supporting documents",
-      "Attend the visa centre",
-      "Receive decision",
-    ],
+    documents: ["Valid passport", "Online application confirmation", "Bank statements", "Accommodation proof", "Employment or business evidence"],
+    steps: ["Apply online on the UK Visas portal", "Book a biometrics appointment at a VFS centre", "Upload supporting documents", "Attend the appointment", "Track decision online"],
+    tips: ["Apply at least 3 weeks before travel", "Show clear return plans and financial stability"],
   },
   {
     slug: "canada-visitor",
@@ -221,25 +201,15 @@ export const visas: Visa[] = [
     flag: "🇨🇦",
     type: "Visitor Visa (TRV)",
     category: "Visitor",
-    summary: "Temporary Resident Visa for tourism and family visits to Canada.",
+    summary: "Temporary Resident Visa for tourism, family visits and short business trips to Canada.",
     processing: "4–12 weeks",
     validity: "Up to 10 years (multiple entry)",
     stay: "Up to 6 months",
     feeFrom: "CAD $100",
     difficulty: "Moderate",
-    documents: [
-      "Valid passport",
-      "Online application (IRCC)",
-      "Proof of funds",
-      "Purpose of travel / invitation",
-      "Biometrics",
-    ],
-    steps: [
-      "Create an IRCC account",
-      "Complete the application",
-      "Pay fees & give biometrics",
-      "Submit & track the application",
-    ],
+    documents: ["Valid passport", "IRCC online application", "Financial proof", "Travel purpose / invitation letter", "Biometrics enrollment"],
+    steps: ["Create an IRCC account", "Complete the application online", "Pay fees and enrol biometrics", "Submit documents and track"],
+    tips: ["Apply via IRCC directly — no middleman needed", "Show ties to home country clearly"],
   },
   {
     slug: "schengen",
@@ -247,26 +217,15 @@ export const visas: Visa[] = [
     flag: "🇪🇺",
     type: "Schengen Short-Stay Visa",
     category: "Visitor",
-    summary: "Travel across 29 European countries on a single short-stay visa.",
-    processing: "15–45 days",
+    summary: "Single visa giving access to 29 European countries for up to 90 days in any 180-day period.",
+    processing: "15–45 calendar days",
     validity: "Up to 5 years (multiple entry)",
     stay: "90 days within any 180 days",
     feeFrom: "€90",
     difficulty: "Moderate",
-    documents: [
-      "Valid passport",
-      "Completed application form",
-      "Travel medical insurance (€30,000+)",
-      "Flight & hotel reservations",
-      "Proof of funds",
-    ],
-    steps: [
-      "Identify the main destination country",
-      "Book an appointment at the consulate",
-      "Prepare documents & insurance",
-      "Attend the appointment",
-      "Collect your passport",
-    ],
+    documents: ["Valid passport", "Application form", "Travel medical insurance (€30,000 minimum)", "Confirmed return flights", "Hotel reservations", "Bank statements"],
+    steps: ["Identify your main destination country", "Book an appointment at the relevant consulate", "Prepare and submit all documents", "Attend biometrics if required", "Collect your passport"],
+    tips: ["Apply at the embassy of your main destination", "Insurance must cover the entire Schengen zone"],
   },
   {
     slug: "uae-tourist",
@@ -274,24 +233,15 @@ export const visas: Visa[] = [
     flag: "🇦🇪",
     type: "Tourist Visa",
     category: "Visitor",
-    summary: "30 or 60-day tourist visa for Dubai, Abu Dhabi and the UAE.",
+    summary: "30 or 60-day single or multiple entry tourist visa for Dubai, Abu Dhabi and the UAE.",
     processing: "2–5 business days",
     validity: "60 days from issue",
     stay: "30 or 60 days",
     feeFrom: "$90",
     difficulty: "Easy",
-    documents: [
-      "Passport copy (6+ months)",
-      "Passport-size photo",
-      "Confirmed return ticket",
-      "Hotel booking",
-    ],
-    steps: [
-      "Apply online or via an agent",
-      "Upload passport & photo",
-      "Pay the visa fee",
-      "Receive e-visa by email",
-    ],
+    documents: ["Passport copy (6+ months validity)", "Passport-size photo", "Confirmed return ticket", "Hotel booking"],
+    steps: ["Apply online or through a licensed agent / airline", "Upload passport scan and photo", "Pay the visa fee", "Receive e-visa by email"],
+    tips: ["Pakistani, Indian, Filipino and Bangladeshi nationals can apply online easily", "Use Emirates, Air Arabia or Flydubai sponsored visa for speed"],
   },
   {
     slug: "saudi-tourist",
@@ -299,24 +249,15 @@ export const visas: Visa[] = [
     flag: "🇸🇦",
     type: "Tourist eVisa",
     category: "Visitor",
-    summary: "1-year multiple-entry tourist eVisa including Umrah eligibility.",
+    summary: "1-year multiple-entry tourist eVisa for Saudi Arabia including Umrah eligibility.",
     processing: "Minutes to 72 hours",
     validity: "1 year (multiple entry)",
-    stay: "Up to 90 days",
+    stay: "Up to 90 days total",
     feeFrom: "$80 + insurance",
     difficulty: "Easy",
-    documents: [
-      "Valid passport",
-      "Photograph",
-      "Confirmed accommodation",
-      "Travel insurance",
-    ],
-    steps: [
-      "Apply on the official eVisa portal",
-      "Upload photo & passport",
-      "Pay visa & insurance fee",
-      "Download the eVisa",
-    ],
+    documents: ["Valid passport", "Digital photograph", "Confirmed accommodation", "Travel insurance (mandatory)"],
+    steps: ["Apply on the official Saudi eVisa portal (visitsaudi.com)", "Upload passport scan and photo", "Pay visa fee and required insurance", "Download your eVisa"],
+    tips: ["The eVisa is linked to your passport — keep it on your phone", "Insurance is now mandatory and can be purchased during application"],
   },
 ];
 
@@ -345,7 +286,13 @@ export const visaCountries: Country[] = [
   { name: "Singapore", flag: "🇸🇬", region: "Southeast Asia", visaTypes: 3, difficulty: "Easy" },
   { name: "Germany", flag: "🇩🇪", region: "Europe", visaTypes: 4, difficulty: "Moderate" },
   { name: "Japan", flag: "🇯🇵", region: "East Asia", visaTypes: 4, difficulty: "Moderate" },
+  { name: "Malaysia", flag: "🇲🇾", region: "Southeast Asia", visaTypes: 3, difficulty: "Easy" },
+  { name: "Switzerland", flag: "🇨🇭", region: "Europe", visaTypes: 3, difficulty: "Moderate" },
+  { name: "France", flag: "🇫🇷", region: "Europe", visaTypes: 4, difficulty: "Moderate" },
+  { name: "Italy", flag: "🇮🇹", region: "Europe", visaTypes: 4, difficulty: "Moderate" },
 ];
+
+// ─── Routes ───────────────────────────────────────────────────────────────────
 
 export interface Route {
   id: string;
@@ -358,24 +305,31 @@ export interface Route {
   duration: string;
   stops: string;
   tag?: string;
+  trend?: "up" | "down" | "stable";
+  aiTip?: string;
 }
 
 export const cheapRoutes: Route[] = [
-  { id: "r1", from: "Dubai", to: "Lahore", fromCode: "DXB", toCode: "LHE", priceFrom: "$165", airlines: ["Fly Jinnah", "Air Arabia"], duration: "3h 10m", stops: "Direct", tag: "Hot deal" },
-  { id: "r2", from: "Riyadh", to: "Karachi", fromCode: "RUH", toCode: "KHI", priceFrom: "$180", airlines: ["PIA", "Saudia"], duration: "3h 45m", stops: "Direct" },
-  { id: "r3", from: "Dubai", to: "Manila", fromCode: "DXB", toCode: "MNL", priceFrom: "$320", airlines: ["Emirates", "Cebu Pacific"], duration: "8h 30m", stops: "Direct", tag: "Popular" },
-  { id: "r4", from: "Doha", to: "Dhaka", fromCode: "DOH", toCode: "DAC", priceFrom: "$240", airlines: ["Qatar Airways", "US-Bangla"], duration: "5h 10m", stops: "Direct" },
-  { id: "r5", from: "Abu Dhabi", to: "Delhi", fromCode: "AUH", toCode: "DEL", priceFrom: "$150", airlines: ["Etihad", "IndiGo"], duration: "3h 30m", stops: "Direct", tag: "Cheapest" },
-  { id: "r6", from: "Dubai", to: "Mumbai", fromCode: "DXB", toCode: "BOM", priceFrom: "$140", airlines: ["Emirates", "IndiGo"], duration: "3h 15m", stops: "Direct" },
-  { id: "r7", from: "Jeddah", to: "Islamabad", fromCode: "JED", toCode: "ISB", priceFrom: "$210", airlines: ["Saudia", "PIA"], duration: "4h 20m", stops: "Direct" },
-  { id: "r8", from: "Kuwait", to: "Manila", fromCode: "KWI", toCode: "MNL", priceFrom: "$340", airlines: ["Kuwait Airways", "Gulf Air"], duration: "9h 40m", stops: "1 stop" },
+  { id: "r1", from: "Dubai", to: "Lahore", fromCode: "DXB", toCode: "LHE", priceFrom: "$165", airlines: ["Fly Jinnah", "Air Arabia"], duration: "3h 10m", stops: "Direct", tag: "🔥 Hot deal", trend: "down", aiTip: "Prices drop mid-week. Tuesday departures average 18% cheaper." },
+  { id: "r2", from: "Riyadh", to: "Karachi", fromCode: "RUH", toCode: "KHI", priceFrom: "$180", airlines: ["PIA", "Saudia"], duration: "3h 45m", stops: "Direct", trend: "stable" },
+  { id: "r3", from: "Dubai", to: "Manila", fromCode: "DXB", toCode: "MNL", priceFrom: "$320", airlines: ["Emirates", "Cebu Pacific"], duration: "8h 30m", stops: "Direct", tag: "⭐ Popular", trend: "stable", aiTip: "Book 6–8 weeks ahead for best fares on this route." },
+  { id: "r4", from: "Doha", to: "Dhaka", fromCode: "DOH", toCode: "DAC", priceFrom: "$240", airlines: ["Qatar Airways", "US-Bangla"], duration: "5h 10m", stops: "Direct", trend: "down" },
+  { id: "r5", from: "Abu Dhabi", to: "Delhi", fromCode: "AUH", toCode: "DEL", priceFrom: "$150", airlines: ["Etihad", "IndiGo"], duration: "3h 30m", stops: "Direct", tag: "💰 Cheapest", trend: "down", aiTip: "Etihad's early-morning departures consistently offer the lowest fares." },
+  { id: "r6", from: "Dubai", to: "Mumbai", fromCode: "DXB", toCode: "BOM", priceFrom: "$140", airlines: ["Emirates", "IndiGo"], duration: "3h 15m", stops: "Direct", trend: "stable" },
+  { id: "r7", from: "Jeddah", to: "Islamabad", fromCode: "JED", toCode: "ISB", priceFrom: "$210", airlines: ["Saudia", "PIA"], duration: "4h 20m", stops: "Direct", trend: "up" },
+  { id: "r8", from: "Kuwait", to: "Manila", fromCode: "KWI", toCode: "MNL", priceFrom: "$340", airlines: ["Kuwait Airways", "Gulf Air"], duration: "9h 40m", stops: "1 stop", trend: "stable" },
 ];
 
 export const usaRoutes: Route[] = [
-  { id: "u1", from: "Lahore", to: "New York", fromCode: "LHE", toCode: "JFK", priceFrom: "$760", airlines: ["Qatar Airways", "Turkish"], duration: "18h 30m", stops: "1 stop", tag: "PK → USA" },
-  { id: "u2", from: "Karachi", to: "Washington", fromCode: "KHI", toCode: "IAD", priceFrom: "$820", airlines: ["Qatar Airways", "Etihad"], duration: "19h 10m", stops: "1 stop", tag: "PK → USA" },
-  { id: "u3", from: "Islamabad", to: "Chicago", fromCode: "ISB", toCode: "ORD", priceFrom: "$880", airlines: ["Turkish", "Emirates"], duration: "20h 05m", stops: "1 stop", tag: "PK → USA" },
+  { id: "u1", from: "Lahore", to: "New York", fromCode: "LHE", toCode: "JFK", priceFrom: "$760", airlines: ["Qatar Airways", "Turkish Airlines"], duration: "18h 30m", stops: "1 stop", tag: "🇵🇰 → 🇺🇸", trend: "stable", aiTip: "Qatar Airways via DOH is consistently the most reliable option from Pakistan." },
+  { id: "u2", from: "Karachi", to: "Washington", fromCode: "KHI", toCode: "IAD", priceFrom: "$820", airlines: ["Qatar Airways", "Etihad"], duration: "19h 10m", stops: "1 stop", tag: "🇵🇰 → 🇺🇸", trend: "stable" },
+  { id: "u3", from: "Islamabad", to: "Chicago", fromCode: "ISB", toCode: "ORD", priceFrom: "$880", airlines: ["Turkish Airlines", "Emirates"], duration: "20h 05m", stops: "1 stop", tag: "🇵🇰 → 🇺🇸", trend: "down", aiTip: "Turkish Airlines via IST often dips below $850 in Jan–Feb." },
+  { id: "u4", from: "Delhi", to: "New York", fromCode: "DEL", toCode: "JFK", priceFrom: "$720", airlines: ["Air India", "Qatar Airways"], duration: "16h 30m", stops: "1 stop", tag: "🇮🇳 → 🇺🇸", trend: "stable" },
+  { id: "u5", from: "Manila", to: "Los Angeles", fromCode: "MNL", toCode: "LAX", priceFrom: "$680", airlines: ["Philippine Airlines", "Korean Air"], duration: "15h 00m", stops: "Direct/1 stop", tag: "🇵🇭 → 🇺🇸", trend: "down" },
+  { id: "u6", from: "Dubai", to: "New York", fromCode: "DXB", toCode: "JFK", priceFrom: "$590", airlines: ["Emirates", "Delta"], duration: "14h 45m", stops: "Direct", tag: "🇦🇪 → 🇺🇸", trend: "stable", aiTip: "Emirates' direct DXB–JFK is unbeatable in comfort for this route." },
 ];
+
+// ─── Flights ──────────────────────────────────────────────────────────────────
 
 export interface Flight {
   id: string;
@@ -399,27 +353,32 @@ export const flights: Flight[] = [
   { id: "f6", airline: "Cebu Pacific", from: "DXB", to: "MNL", depart: "21:10", arrive: "10:40", duration: "8h 30m", stops: "Direct", price: "$320", cabin: "Economy" },
 ];
 
+// ─── Stays ────────────────────────────────────────────────────────────────────
+
 export interface Stay {
   id: string;
   name: string;
   city: string;
   country: string;
-  type: "Hotel" | "Apartment" | "Villa" | "Long Stay";
+  type: "Hotel" | "Apartment" | "Villa" | "Long Stay" | "Boutique";
   rating: number;
   reviews: number;
   pricePerNight: string;
   amenities: string[];
   emoji: string;
+  stars?: number;
 }
 
 export const stays: Stay[] = [
-  { id: "s1", name: "Burj Vista Residences", city: "Dubai", country: "UAE", type: "Apartment", rating: 4.9, reviews: 412, pricePerNight: "$180", amenities: ["Pool", "Gym", "Kitchen"], emoji: "🏙️" },
-  { id: "s2", name: "Marina Bay Hotel", city: "Karachi", country: "Pakistan", type: "Hotel", rating: 4.6, reviews: 238, pricePerNight: "$70", amenities: ["Breakfast", "WiFi", "Parking"], emoji: "🏨" },
-  { id: "s3", name: "Makkah Clock Suites", city: "Makkah", country: "Saudi Arabia", type: "Hotel", rating: 4.8, reviews: 905, pricePerNight: "$140", amenities: ["Haram view", "Shuttle"], emoji: "🕌" },
+  { id: "s1", name: "Burj Vista Residences", city: "Dubai", country: "UAE", type: "Apartment", rating: 4.9, reviews: 412, pricePerNight: "$180", amenities: ["Pool", "Gym", "Kitchen", "Burj view"], emoji: "🏙️", stars: 5 },
+  { id: "s2", name: "Makkah Clock Tower Suites", city: "Makkah", country: "Saudi Arabia", type: "Hotel", rating: 4.8, reviews: 905, pricePerNight: "$140", amenities: ["Haram view", "Shuttle", "Restaurant"], emoji: "🕌", stars: 5 },
+  { id: "s3", name: "Four Seasons Doha", city: "Doha", country: "Qatar", type: "Hotel", rating: 4.9, reviews: 624, pricePerNight: "$320", amenities: ["Beach", "Spa", "Pool", "Fine dining"], emoji: "🌊", stars: 5 },
   { id: "s4", name: "Makati Sky Apartments", city: "Manila", country: "Philippines", type: "Apartment", rating: 4.7, reviews: 156, pricePerNight: "$60", amenities: ["Pool", "Kitchen", "Gym"], emoji: "🌆" },
-  { id: "s5", name: "Heritage Haveli", city: "Jaipur", country: "India", type: "Villa", rating: 4.9, reviews: 321, pricePerNight: "$120", amenities: ["Pool", "Breakfast"], emoji: "🏰" },
-  { id: "s6", name: "Riverside Long Stay", city: "Dhaka", country: "Bangladesh", type: "Long Stay", rating: 4.5, reviews: 88, pricePerNight: "$45", amenities: ["Monthly rate", "Kitchen"], emoji: "🏘️" },
+  { id: "s5", name: "Heritage Haveli Palace", city: "Jaipur", country: "India", type: "Boutique", rating: 4.9, reviews: 321, pricePerNight: "$120", amenities: ["Pool", "Breakfast", "Heritage tours"], emoji: "🏰", stars: 4 },
+  { id: "s6", name: "Marina Bay Hotel Karachi", city: "Karachi", country: "Pakistan", type: "Hotel", rating: 4.6, reviews: 238, pricePerNight: "$70", amenities: ["Breakfast", "WiFi", "Parking", "Sea view"], emoji: "🏨", stars: 4 },
 ];
+
+// ─── Cars ─────────────────────────────────────────────────────────────────────
 
 export interface CarRental {
   id: string;
@@ -442,6 +401,8 @@ export const cars: CarRental[] = [
   { id: "c6", model: "Toyota Hiace", category: "Van", city: "Manila", pricePerDay: "$70", seats: 12, transmission: "Manual", withDriver: true, emoji: "🚐" },
 ];
 
+// ─── Cruises ──────────────────────────────────────────────────────────────────
+
 export interface Cruise {
   id: string;
   name: string;
@@ -455,12 +416,14 @@ export interface Cruise {
 
 export const cruises: Cruise[] = [
   { id: "cr1", name: "Arabian Gulf Explorer", type: "Cruise", region: "Dubai · Abu Dhabi · Qatar", nights: 4, priceFrom: "$420", highlights: ["All-inclusive", "Pool deck", "Shows"], emoji: "🛳️" },
-  { id: "cr2", name: "Mediterranean Jewel", type: "Cruise", region: "Italy · Greece · Spain", nights: 7, priceFrom: "$890", highlights: ["Balcony cabins", "Excursions"], emoji: "🚢" },
-  { id: "cr3", name: "Dubai Marina Yacht", type: "Yacht", region: "Dubai Marina", nights: 0, priceFrom: "$300", highlights: ["Private charter", "Sunset"], emoji: "⛵" },
-  { id: "cr4", name: "Nile Heritage Boat", type: "Boat", region: "Luxor · Aswan, Egypt", nights: 3, priceFrom: "$260", highlights: ["River cruise", "Guided"], emoji: "🛶" },
-  { id: "cr5", name: "Karachi Coast Ferry", type: "Ship", region: "Karachi · Gwadar", nights: 1, priceFrom: "$60", highlights: ["Scenic coast", "Cabins"], emoji: "⛴️" },
-  { id: "cr6", name: "Palawan Island Hopper", type: "Boat", region: "El Nido, Philippines", nights: 0, priceFrom: "$45", highlights: ["Lagoons", "Snorkel"], emoji: "🚤" },
+  { id: "cr2", name: "Mediterranean Jewel", type: "Cruise", region: "Italy · Greece · Spain", nights: 7, priceFrom: "$890", highlights: ["Balcony cabins", "Shore excursions"], emoji: "🚢" },
+  { id: "cr3", name: "Dubai Marina Yacht", type: "Yacht", region: "Dubai Marina", nights: 0, priceFrom: "$300", highlights: ["Private charter", "Sunset cruise"], emoji: "⛵" },
+  { id: "cr4", name: "Nile Heritage Voyage", type: "Boat", region: "Luxor · Aswan, Egypt", nights: 3, priceFrom: "$260", highlights: ["River cruise", "Guided temples"], emoji: "🛶" },
+  { id: "cr5", name: "Karachi Coast Ferry", type: "Ship", region: "Karachi · Gwadar", nights: 1, priceFrom: "$60", highlights: ["Scenic coastline", "Cabin"], emoji: "⛴️" },
+  { id: "cr6", name: "Palawan Island Hopper", type: "Boat", region: "El Nido, Philippines", nights: 0, priceFrom: "$45", highlights: ["Hidden lagoons", "Snorkelling"], emoji: "🚤" },
 ];
+
+// ─── Tours ────────────────────────────────────────────────────────────────────
 
 export interface Tour {
   id: string;
@@ -480,9 +443,11 @@ export const tours: Tour[] = [
   { id: "t2", title: "Lahore Food & Heritage Trail", city: "Lahore", country: "Pakistan", guide: "Fatima S.", duration: "5 hours", price: "$30", rating: 4.8, reviews: 142, emoji: "🍛" },
   { id: "t3", title: "Taj Mahal Sunrise Experience", city: "Agra", country: "India", guide: "Rahul M.", duration: "Full day", price: "$65", rating: 4.9, reviews: 388, emoji: "🕌" },
   { id: "t4", title: "Manila Bay Sunset & Intramuros", city: "Manila", country: "Philippines", guide: "Joey C.", duration: "3 hours", price: "$28", rating: 4.7, reviews: 96, emoji: "🌅" },
-  { id: "t5", title: "Riyadh Edge of the World", city: "Riyadh", country: "Saudi Arabia", guide: "Khalid A.", duration: "6 hours", price: "$80", rating: 4.8, reviews: 134, emoji: "🏜️" },
+  { id: "t5", title: "Riyadh Edge of the World Trek", city: "Riyadh", country: "Saudi Arabia", guide: "Khalid A.", duration: "6 hours", price: "$80", rating: 4.8, reviews: 134, emoji: "🏜️" },
   { id: "t6", title: "Old Dhaka Rickshaw Tour", city: "Dhaka", country: "Bangladesh", guide: "Imran H.", duration: "4 hours", price: "$25", rating: 4.6, reviews: 71, emoji: "🛺" },
 ];
+
+// ─── Tickets ──────────────────────────────────────────────────────────────────
 
 export interface Ticket {
   id: string;
@@ -502,6 +467,8 @@ export const tickets: Ticket[] = [
   { id: "tk5", attraction: "Diriyah Historical Tour", city: "Riyadh", price: "$25", category: "Heritage", skipLine: false, emoji: "🏛️" },
   { id: "tk6", attraction: "Minar-e-Pakistan & Museum", city: "Lahore", price: "$5", category: "Landmark", skipLine: false, emoji: "🗼" },
 ];
+
+// ─── Properties ───────────────────────────────────────────────────────────────
 
 export interface Property {
   id: string;
@@ -525,6 +492,8 @@ export const properties: Property[] = [
   { id: "p6", title: "Goa Holiday Home", city: "Goa", country: "India", listingType: "For Rent", price: "$1,200/mo", beds: 3, baths: 3, area: "1,800 sqft", emoji: "🌴" },
 ];
 
+// ─── Agents ───────────────────────────────────────────────────────────────────
+
 export interface Agent {
   id: string;
   name: string;
@@ -536,14 +505,18 @@ export interface Agent {
   verified: boolean;
   cases: number;
   initials: string;
+  location: string;
+  responseTime: string;
 }
 
 export const agents: Agent[] = [
-  { id: "a1", name: "Sana Malik", title: "Senior Visa Consultant", specialties: ["USA B1/B2", "UK Visitor", "Schengen"], countries: ["Pakistan", "UAE"], rating: 4.9, reviews: 312, verified: true, cases: 1450, initials: "SM" },
-  { id: "a2", name: "Omar Haddad", title: "Visa & Immigration Advisor", specialties: ["Canada", "Australia", "Schengen"], countries: ["UAE", "Saudi Arabia"], rating: 4.8, reviews: 204, verified: true, cases: 980, initials: "OH" },
-  { id: "a3", name: "Priya Nair", title: "Student Visa Specialist", specialties: ["USA F-1", "UK Student", "Canada Study"], countries: ["India", "UAE"], rating: 4.9, reviews: 189, verified: true, cases: 760, initials: "PN" },
-  { id: "a4", name: "Reyes Santos", title: "Documentation Expert", specialties: ["UAE", "Saudi", "Schengen"], countries: ["Philippines"], rating: 4.7, reviews: 122, verified: true, cases: 540, initials: "RS" },
+  { id: "a1", name: "Sana Malik", title: "Senior Visa Consultant", specialties: ["USA B1/B2", "UK Visitor", "Schengen"], countries: ["Pakistan", "UAE"], rating: 4.9, reviews: 312, verified: true, cases: 1450, initials: "SM", location: "Lahore, Pakistan", responseTime: "< 2 hours" },
+  { id: "a2", name: "Omar Haddad", title: "Visa & Immigration Advisor", specialties: ["Canada", "Australia", "Schengen"], countries: ["UAE", "Saudi Arabia"], rating: 4.8, reviews: 204, verified: true, cases: 980, initials: "OH", location: "Dubai, UAE", responseTime: "< 3 hours" },
+  { id: "a3", name: "Priya Nair", title: "Student Visa Specialist", specialties: ["USA F-1", "UK Student", "Canada Study"], countries: ["India", "UAE"], rating: 4.9, reviews: 189, verified: true, cases: 760, initials: "PN", location: "Delhi, India", responseTime: "< 1 hour" },
+  { id: "a4", name: "Reyes Santos", title: "Documentation Expert", specialties: ["UAE", "Saudi", "Schengen"], countries: ["Philippines"], rating: 4.7, reviews: 122, verified: true, cases: 540, initials: "RS", location: "Manila, Philippines", responseTime: "< 4 hours" },
 ];
+
+// ─── Agencies ─────────────────────────────────────────────────────────────────
 
 export interface Agency {
   id: string;
@@ -556,14 +529,17 @@ export interface Agency {
   verified: boolean;
   packages: number;
   initials: string;
+  founded?: string;
 }
 
 export const agencies: Agency[] = [
-  { id: "ag1", name: "Voyage Pro Travels", city: "Dubai", country: "UAE", services: ["Flights", "Visa", "Packages"], rating: 4.8, reviews: 540, verified: true, packages: 32, initials: "VP" },
-  { id: "ag2", name: "Skyline Tours", city: "Lahore", country: "Pakistan", services: ["Umrah", "Tours", "Tickets"], rating: 4.7, reviews: 410, verified: true, packages: 24, initials: "ST" },
+  { id: "ag1", name: "Voyage Pro Travels", city: "Dubai", country: "UAE", services: ["Flights", "Visa", "Packages"], rating: 4.8, reviews: 540, verified: true, packages: 32, initials: "VP", founded: "2015" },
+  { id: "ag2", name: "Skyline Tours", city: "Lahore", country: "Pakistan", services: ["Umrah", "Tours", "Tickets"], rating: 4.7, reviews: 410, verified: true, packages: 24, initials: "ST", founded: "2011" },
   { id: "ag3", name: "Pearl Holidays", city: "Manila", country: "Philippines", services: ["Packages", "Cruises", "Hotels"], rating: 4.6, reviews: 288, verified: true, packages: 18, initials: "PH" },
-  { id: "ag4", name: "Crescent Travel House", city: "Riyadh", country: "Saudi Arabia", services: ["Umrah", "Flights", "Visa"], rating: 4.9, reviews: 622, verified: true, packages: 40, initials: "CT" },
+  { id: "ag4", name: "Crescent Travel House", city: "Riyadh", country: "Saudi Arabia", services: ["Umrah", "Flights", "Visa"], rating: 4.9, reviews: 622, verified: true, packages: 40, initials: "CT", founded: "2009" },
 ];
+
+// ─── Vacation Packages ────────────────────────────────────────────────────────
 
 export interface VacationPackage {
   id: string;
@@ -583,24 +559,183 @@ export const packages: VacationPackage[] = [
   { id: "vp4", title: "Philippines Island Hop", agency: "Pearl Holidays", destinations: "Cebu · Palawan", nights: 6, price: "$980", includes: ["Domestic flights", "Resorts", "Boat tours"], emoji: "🏝️" },
 ];
 
+// ─── Luxury Destinations ──────────────────────────────────────────────────────
+
 export interface Destination {
   city: string;
   country: string;
   tagline: string;
   fromPrice: string;
   emoji: string;
+  highlights: string[];
+  visaRequired?: string;
+  bestTime?: string;
+  category: "City" | "Beach" | "Culture" | "Adventure" | "Religious";
 }
 
 export const destinations: Destination[] = [
-  { city: "Dubai", country: "UAE", tagline: "Skyline, souks & desert", fromPrice: "$140", emoji: "🌇" },
-  { city: "Istanbul", country: "Turkey", tagline: "Where East meets West", fromPrice: "$220", emoji: "🕌" },
-  { city: "Makkah", country: "Saudi Arabia", tagline: "Umrah & pilgrimage", fromPrice: "$210", emoji: "🕋" },
-  { city: "London", country: "UK", tagline: "History & culture", fromPrice: "$480", emoji: "🎡" },
-  { city: "New York", country: "USA", tagline: "The city that never sleeps", fromPrice: "$690", emoji: "🗽" },
-  { city: "Manila", country: "Philippines", tagline: "Islands & warmth", fromPrice: "$320", emoji: "🏝️" },
-  { city: "Delhi", country: "India", tagline: "Color & heritage", fromPrice: "$150", emoji: "🕌" },
-  { city: "Bali", country: "Indonesia", tagline: "Beaches & temples", fromPrice: "$390", emoji: "🌴" },
+  { city: "Dubai", country: "UAE", tagline: "Skyline, souks & desert luxury", fromPrice: "$140", emoji: "🌇", highlights: ["Burj Khalifa", "Desert Safari", "Gold Souk"], visaRequired: "eVisa (easy)", bestTime: "Oct–Apr", category: "City" },
+  { city: "Maldives", country: "Maldives", tagline: "Overwater villas & turquoise lagoons", fromPrice: "$520", emoji: "🏝️", highlights: ["Overwater bungalows", "Snorkelling", "Whale sharks"], visaRequired: "Free on arrival", bestTime: "Nov–Apr", category: "Beach" },
+  { city: "Istanbul", country: "Turkey", tagline: "Where civilisations meet", fromPrice: "$220", emoji: "🕌", highlights: ["Hagia Sophia", "Grand Bazaar", "Bosphorus"], visaRequired: "eVisa", bestTime: "Apr–Oct", category: "Culture" },
+  { city: "Makkah", country: "Saudi Arabia", tagline: "Umrah & spiritual pilgrimage", fromPrice: "$210", emoji: "🕋", highlights: ["Masjid al-Haram", "Tawaf", "Zamzam"], visaRequired: "Saudi eVisa", bestTime: "Year-round", category: "Religious" },
+  { city: "London", country: "UK", tagline: "History, culture & world-class city", fromPrice: "$480", emoji: "🎡", highlights: ["Buckingham Palace", "Tower Bridge", "West End"], visaRequired: "UK Visitor Visa", bestTime: "May–Sep", category: "City" },
+  { city: "New York", country: "USA", tagline: "The city that never sleeps", fromPrice: "$690", emoji: "🗽", highlights: ["Times Square", "Central Park", "Statue of Liberty"], visaRequired: "B1/B2 Visa or ESTA", bestTime: "Sep–Nov", category: "City" },
+  { city: "Manila & Palawan", country: "Philippines", tagline: "Islands, warmth & hospitality", fromPrice: "$320", emoji: "🌴", highlights: ["El Nido lagoons", "Chocolate Hills", "White beaches"], visaRequired: "Free on arrival (30 days)", bestTime: "Nov–May", category: "Beach" },
+  { city: "Swiss Alps", country: "Switzerland", tagline: "Snow peaks, lakes & luxury", fromPrice: "$650", emoji: "🏔️", highlights: ["Interlaken", "Matterhorn", "Zurich"], visaRequired: "Schengen Visa", bestTime: "Dec–Mar / Jun–Sep", category: "Adventure" },
+  { city: "Bali", country: "Indonesia", tagline: "Temples, rice terraces & beaches", fromPrice: "$390", emoji: "🌺", highlights: ["Ubud temples", "Kuta beach", "Rice terraces"], visaRequired: "Visa on arrival", bestTime: "Apr–Oct", category: "Beach" },
+  { city: "Paris", country: "France", tagline: "Romance, art & haute cuisine", fromPrice: "$420", emoji: "🗼", highlights: ["Eiffel Tower", "Louvre", "Versailles"], visaRequired: "Schengen Visa", bestTime: "Apr–Jun", category: "Culture" },
+  { city: "Tokyo", country: "Japan", tagline: "Futuristic technology meets tradition", fromPrice: "$580", emoji: "🎌", highlights: ["Mount Fuji", "Shibuya", "Temples"], visaRequired: "Japan Visa", bestTime: "Mar–May / Oct", category: "Culture" },
+  { city: "Hunza Valley", country: "Pakistan", tagline: "Untouched Himalayan paradise", fromPrice: "$180", emoji: "🏔️", highlights: ["Attabad Lake", "Rakaposhi", "Baltit Fort"], visaRequired: "None for Pakistanis", bestTime: "Apr–Oct", category: "Adventure" },
 ];
+
+// ─── Reviews ──────────────────────────────────────────────────────────────────
+
+export interface Review {
+  name: string;
+  location: string;
+  text: string;
+  rating: number;
+  service: string;
+  avatar: string;
+}
+
+export const reviews: Review[] = [
+  { name: "Bilal A.", location: "Lahore, Pakistan", text: "The AI visa assistant explained exactly what documents I needed for my US B1/B2. Connected me with Sana, a verified agent who made the whole process smooth.", rating: 5, service: "USA Visa", avatar: "BA" },
+  { name: "Maria S.", location: "Dubai, UAE", text: "Found the cheapest flight from Dubai to Manila in seconds. The AI trip planner built my entire itinerary by budget — I was amazed.", rating: 5, service: "Flights", avatar: "MS" },
+  { name: "Imran K.", location: "Riyadh, KSA", text: "Booked an Umrah package from a verified agency. The transparent reviews and verification badge gave me complete confidence.", rating: 5, service: "Umrah Package", avatar: "IK" },
+  { name: "Anjali R.", location: "Delhi, India", text: "The tours marketplace is brilliant. Our local guide in Agra was fantastic and fully verified. Will absolutely use again.", rating: 5, service: "Tours", avatar: "AR" },
+  { name: "Hassan M.", location: "Karachi, Pakistan", text: "Applied for the UK visa with complete guidance from the platform. The document checklist saved me from making costly mistakes.", rating: 5, service: "UK Visa", avatar: "HM" },
+  { name: "Sarah K.", location: "Manila, Philippines", text: "Rented a beachfront villa through the properties section. Communication was seamless, the host was verified. Superb experience.", rating: 5, service: "Property", avatar: "SK" },
+];
+
+// ─── Referral Tiers ───────────────────────────────────────────────────────────
+
+export interface ReferralTier {
+  name: string;
+  referrals: string;
+  commission: string;
+  perks: string[];
+  highlight?: boolean;
+  badge: string;
+}
+
+export const referralTiers: ReferralTier[] = [
+  { name: "Explorer", referrals: "1–10 referrals", commission: "5% commission", badge: "🌍", perks: ["Personal referral link", "Dashboard tracking", "Monthly payouts"] },
+  { name: "Voyager", referrals: "11–50 referrals", commission: "8% commission", badge: "✈️", perks: ["All Explorer benefits", "Priority support", "Bonus credits on milestones"], highlight: true },
+  { name: "Ambassador", referrals: "50+ referrals", commission: "12% commission", badge: "👑", perks: ["All Voyager benefits", "Co-marketing opportunities", "Dedicated account manager"] },
+];
+
+// ─── Trust Items ──────────────────────────────────────────────────────────────
+
+export interface TrustItem {
+  icon: IconName;
+  emoji: string;
+  title: string;
+  text: string;
+}
+
+export const trustItems: TrustItem[] = [
+  { icon: "shield", emoji: "🔒", title: "Secure Documents", text: "Your documents and data are handled with enterprise-grade security." },
+  { icon: "check", emoji: "✅", title: "Verified Experts", text: "Every agent and agency undergoes identity and business verification." },
+  { icon: "sparkles", emoji: "🤖", title: "AI Fraud Detection", text: "Our AI flags suspicious listings and agents before they reach you." },
+  { icon: "star", emoji: "⭐", title: "Transparent Reviews", text: "Real ratings from real travelers — no pay-to-rank ever." },
+  { icon: "globe", emoji: "🌐", title: "Global Coverage", text: "190+ countries, 50+ visa guides and a 24/7 AI assistant." },
+  { icon: "users", emoji: "💬", title: "Human + AI Support", text: "AI guidance plus access to real humans when you need them most." },
+];
+
+// ─── Stats ────────────────────────────────────────────────────────────────────
+
+export interface Stat {
+  value: string;
+  label: string;
+  icon: string;
+}
+
+export const stats: Stat[] = [
+  { value: "190+", label: "Countries covered", icon: "🌍" },
+  { value: "12k+", label: "Verified providers", icon: "✅" },
+  { value: "50+", label: "Visa guides", icon: "🛂" },
+  { value: "4.9★", label: "Average rating", icon: "⭐" },
+];
+
+// ─── Roles / Account Types ────────────────────────────────────────────────────
+
+export interface Role {
+  slug: string;
+  title: string;
+  description: string;
+  icon: IconName;
+  emoji: string;
+  features: string[];
+  href: string;
+  cta: string;
+  color: string;
+}
+
+export const roles: Role[] = [
+  {
+    slug: "customer",
+    title: "Traveler Account",
+    description: "Plan trips, track visa applications, save bookings and earn referrals.",
+    icon: "users", emoji: "🧳",
+    features: ["Saved trips & AI itineraries", "Visa applications tracker", "Bookings & documents checklist", "Referral earnings dashboard"],
+    href: "/dashboard/customer",
+    cta: "Open traveler dashboard",
+    color: "from-blue/15 to-blue/5",
+  },
+  {
+    slug: "agent",
+    title: "Visa Agent Account",
+    description: "Offer professional visa preparation services and manage client applications.",
+    icon: "agent", emoji: "👔",
+    features: ["Create a verified public profile", "Client application management", "Authorization form generator", "Receive leads & build reviews"],
+    href: "/dashboard/agent",
+    cta: "Become a visa expert",
+    color: "from-gold/15 to-gold/5",
+  },
+  {
+    slug: "agency",
+    title: "Travel Agency Account",
+    description: "List packages, tickets and tours; manage leads and bookings.",
+    icon: "agency", emoji: "🏢",
+    features: ["List packages & flight deals", "Manage leads & bookings", "Verification badge display", "Performance & revenue insights"],
+    href: "/dashboard/agency",
+    cta: "Register your agency",
+    color: "from-blue/15 to-blue/5",
+  },
+  {
+    slug: "guide",
+    title: "Tour Guide Account",
+    description: "List local tours, set pricing and availability, and grow your reviews.",
+    icon: "guide", emoji: "🧭",
+    features: ["List private & group tours", "Dynamic pricing & calendar", "Automated booking management", "Guest reviews & ratings"],
+    href: "/dashboard/agency",
+    cta: "Become a guide",
+    color: "from-gold/15 to-gold/5",
+  },
+  {
+    slug: "host",
+    title: "Property Host Account",
+    description: "List houses, apartments and travel stays; capture qualified leads.",
+    icon: "property", emoji: "🏠",
+    features: ["List rentals, stays & sales", "Buy/sell inquiry pages", "Lead capture & contact forms", "Listing performance analytics"],
+    href: "/dashboard/agency",
+    cta: "List your property",
+    color: "from-blue/15 to-blue/5",
+  },
+  {
+    slug: "admin",
+    title: "Admin Console",
+    description: "Oversee all users, verifications, listings, payments and content.",
+    icon: "shield", emoji: "⚙️",
+    features: ["Users, roles & verification approvals", "Listings, bookings & payments", "Referral program management", "Content & SEO page management"],
+    href: "/dashboard/admin",
+    cta: "Open admin console",
+    color: "from-navy/15 to-navy/5",
+  },
+];
+
+// ─── FAQs ─────────────────────────────────────────────────────────────────────
 
 export interface Faq {
   q: string;
@@ -614,146 +749,71 @@ export const faqs: Faq[] = [
   },
   {
     q: "Do you guarantee visa approval?",
-    a: "No. No platform, agent or agency can guarantee a visa approval. Decisions are made solely by the relevant authorities. Our AI assistant and agents help you prepare, but outcomes are never guaranteed.",
+    a: "No. No platform, agent or agency can guarantee a visa approval. Decisions are made solely by the relevant government authorities. Our AI assistant and agents help you prepare the strongest possible application, but outcomes are never guaranteed.",
   },
   {
     q: "Are the flight and ticket prices guaranteed?",
-    a: "No. Prices shown are sample/estimated figures for demonstration and can change at any time based on availability, season and provider. Always confirm final prices before booking.",
+    a: "No. All prices shown are sample or estimated figures for demonstration purposes and can change at any time based on availability, season and provider. Always confirm final prices directly with the airline or service provider before booking.",
   },
   {
-    q: "How does the AI assistant work?",
-    a: "Our AI assistant asks about your trip — destination, budget, days, and purpose — then suggests visa types, documents, routes, stays and a step-by-step plan. It is informational guidance, not legal or professional advice.",
+    q: "How does the AI travel assistant work?",
+    a: "Our AI assistant asks about your trip — destination, budget, days and purpose — then suggests visa types, required documents, flight routes, stay options and a step-by-step action plan. It is informational guidance only, not legal or professional advice.",
   },
   {
     q: "How are agents and agencies verified?",
-    a: "Verified partners complete identity and business checks and earn a verification badge. We also use a transparent review system. Always do your own due diligence before paying anyone.",
+    a: "Verified partners complete identity and business document checks and earn a verification badge. We also use a transparent review system with genuine traveler ratings. Always conduct your own due diligence before paying any third party.",
   },
   {
     q: "How do referral commissions work?",
-    a: "Share your referral link, and when someone you refer completes a qualifying action, you earn commission credits. Full terms apply and payouts are subject to verification.",
+    a: "Share your personal referral link, and when someone you refer completes a qualifying action on our platform, you earn commission credits. Full terms apply and payouts are subject to verification and minimum thresholds.",
+  },
+  {
+    q: "Is this platform free to use?",
+    a: "Browsing, AI guidance, visa information and most search features are completely free. Service providers may charge fees for their professional services. Platform service fees for bookings will be disclosed clearly before any purchase.",
+  },
+  {
+    q: "Which countries and routes are covered?",
+    a: "We cover 190+ countries for visa guidance and have a specific focus on Middle East–South Asia routes (UAE, Saudi, Qatar to Pakistan, India, Philippines, Bangladesh) and Pakistan/South Asia to USA, UK, Canada and Europe.",
   },
 ];
 
-export interface Review {
-  name: string;
-  location: string;
-  text: string;
-  rating: number;
-  service: string;
-}
+// ─── Travel Guides ────────────────────────────────────────────────────────────
 
-export const reviews: Review[] = [
-  { name: "Bilal A.", location: "Lahore, Pakistan", text: "The AI visa assistant explained exactly what documents I needed for my US B1/B2. Connected me with a verified agent who made it smooth.", rating: 5, service: "Visa" },
-  { name: "Maria S.", location: "Dubai, UAE", text: "Found the cheapest flight from Dubai to Manila in seconds and the trip planner built my whole itinerary by budget.", rating: 5, service: "Flights" },
-  { name: "Imran K.", location: "Riyadh, KSA", text: "Booked an Umrah package from a verified agency. Transparent reviews gave me real confidence.", rating: 5, service: "Packages" },
-  { name: "Anjali R.", location: "Delhi, India", text: "Loved the tours marketplace. Our local guide in Agra was fantastic and verified.", rating: 5, service: "Tours" },
-];
-
-export interface ReferralTier {
-  name: string;
-  referrals: string;
-  commission: string;
-  perks: string[];
-  highlight?: boolean;
-}
-
-export const referralTiers: ReferralTier[] = [
-  { name: "Explorer", referrals: "1–10 referrals", commission: "5% commission", perks: ["Personal referral link", "Dashboard tracking", "Monthly payouts"] },
-  { name: "Voyager", referrals: "11–50 referrals", commission: "8% commission", perks: ["Everything in Explorer", "Priority support", "Bonus credits"], highlight: true },
-  { name: "Ambassador", referrals: "50+ referrals", commission: "12% commission", perks: ["Everything in Voyager", "Co-marketing", "Dedicated manager"] },
-];
-
-export interface TrustItem {
-  icon: IconName;
+export interface TravelGuide {
+  id: string;
   title: string;
-  text: string;
+  city: string;
+  country: string;
+  excerpt: string;
+  emoji: string;
+  readTime: string;
+  category: string;
+  featured?: boolean;
 }
 
-export const trustItems: TrustItem[] = [
-  { icon: "shield", title: "Verified Partners", text: "Identity & business checks for agents, agencies, guides and hosts." },
-  { icon: "star", title: "Transparent Reviews", text: "Real ratings from real travelers — no pay-to-rank." },
-  { icon: "doc", title: "Clear Disclaimers", text: "We never guarantee visas, prices or approvals. You stay informed." },
-  { icon: "users", title: "Human + AI", text: "AI guidance plus access to verified human experts when you need them." },
+export const travelGuides: TravelGuide[] = [
+  { id: "g1", title: "The Complete Dubai Traveler's Guide 2026", city: "Dubai", country: "UAE", excerpt: "Everything you need: visa, transport, hotels, souks, desert and fine dining — from first-timer to frequent visitor.", emoji: "🌇", readTime: "12 min", category: "City Guide", featured: true },
+  { id: "g2", title: "USA B1/B2 Visa: The Insider Preparation Guide", city: "", country: "USA", excerpt: "How verified agents prepare winning US visitor visa applications — DS-160, financials, interview prep and common mistakes.", emoji: "🇺🇸", readTime: "15 min", category: "Visa Guide", featured: true },
+  { id: "g3", title: "Pakistan to USA: Cheapest Flights & Best Times", city: "", country: "Pakistan → USA", excerpt: "Route-by-route breakdown of the best airlines, booking windows and price trends for LHE, KHI and ISB to the US.", emoji: "✈️", readTime: "8 min", category: "Flights" },
+  { id: "g4", title: "Umrah Guide: From Application to Return", city: "Makkah", country: "Saudi Arabia", excerpt: "Step-by-step Umrah planning: visa, ihram, tawaf, sa'i and accommodation near Masjid al-Haram.", emoji: "🕋", readTime: "10 min", category: "Religious Travel", featured: true },
+  { id: "g5", title: "Switzerland on a Budget: Schengen Visa & Travel Tips", city: "Zurich", country: "Switzerland", excerpt: "How to visit Switzerland affordably: Schengen visa process, budget stays, rail passes and alpine adventures.", emoji: "🏔️", readTime: "9 min", category: "Budget Travel" },
+  { id: "g6", title: "Bali: The Perfect Island Escape", city: "Bali", country: "Indonesia", excerpt: "Visa-free for most nationalities, Bali offers temples, beaches and culture at every budget level.", emoji: "🌺", readTime: "7 min", category: "Beach" },
 ];
 
-export interface Stat {
-  value: string;
-  label: string;
-}
+// ─── AI Quick Prompts ─────────────────────────────────────────────────────────
 
-export const stats: Stat[] = [
-  { value: "190+", label: "Countries covered" },
-  { value: "12k+", label: "Verified providers" },
-  { value: "50+", label: "Visa guides" },
-  { value: "4.9★", label: "Average rating" },
+export const aiPrompts: string[] = [
+  "I have $3,000 for 10 days in Europe",
+  "USA tourist visa from Pakistan — what do I need?",
+  "Cheapest flights Dubai to Pakistan this month",
+  "Family vacation in Switzerland for 7 days",
+  "Best cruise routes under $2,000",
+  "I need a furnished apartment in Dubai for 1 month",
+  "Umrah package for 2 from Lahore",
+  "Student visa USA F-1 requirements",
 ];
 
-export interface Role {
-  slug: string;
-  title: string;
-  description: string;
-  icon: IconName;
-  features: string[];
-  href: string;
-  cta: string;
-}
-
-export const roles: Role[] = [
-  {
-    slug: "customer",
-    title: "Traveler Account",
-    description: "Plan trips, track visa applications, save bookings and earn referrals.",
-    icon: "users",
-    features: ["Saved trips & itineraries", "Visa applications tracker", "Bookings & documents checklist", "Referrals & support messages"],
-    href: "/dashboard/customer",
-    cta: "Open traveler dashboard",
-  },
-  {
-    slug: "agent",
-    title: "Visa Agent Account",
-    description: "Offer visa preparation services and manage client applications.",
-    icon: "agent",
-    features: ["Create a public profile", "Manage client applications", "Authorization form template", "Receive leads & reviews"],
-    href: "/dashboard/agent",
-    cta: "Open agent dashboard",
-  },
-  {
-    slug: "agency",
-    title: "Travel Agency Account",
-    description: "List packages, tickets and tours, and manage leads & bookings.",
-    icon: "agency",
-    features: ["List packages & tickets", "Manage leads & bookings", "Verification badge", "Performance insights"],
-    href: "/dashboard/agency",
-    cta: "Open agency dashboard",
-  },
-  {
-    slug: "guide",
-    title: "Tour Guide Account",
-    description: "List local tours, set pricing and availability, and grow reviews.",
-    icon: "guide",
-    features: ["List local tours", "Pricing & availability", "Booking calendar", "Reviews & ratings"],
-    href: "/dashboard/agency",
-    cta: "Become a guide",
-  },
-  {
-    slug: "host",
-    title: "Property Host Account",
-    description: "List houses & apartments for rent or sale and capture leads.",
-    icon: "property",
-    features: ["List rentals & stays", "Buy/sell inquiry pages", "Contact lead forms", "Listing performance"],
-    href: "/dashboard/agency",
-    cta: "List your property",
-  },
-  {
-    slug: "admin",
-    title: "Admin Console",
-    description: "Oversee users, verifications, listings, payments and content.",
-    icon: "shield",
-    features: ["Users, roles & approvals", "Listings & bookings", "Payments & referrals", "Content & SEO pages"],
-    href: "/dashboard/admin",
-    cta: "Open admin console",
-  },
-];
+// ─── Disclaimer ───────────────────────────────────────────────────────────────
 
 export const DISCLAIMER_SHORT =
   "Globe Travel Voyage is an independent travel marketplace. We are not a government agency, embassy, immigration lawyer, airline, cruise company, real estate broker, or official visa authority. We do not guarantee visa approval, legal outcomes, or ticket prices.";

@@ -1,109 +1,171 @@
 @import "tailwindcss";
 
 @theme {
-  --color-navy: #0a1f44;
-  --color-navy-800: #0e2a5c;
-  --color-navy-700: #143a7a;
-  --color-navy-600: #1d4ed8;
-  --color-blue: #2563eb;
-  --color-blue-light: #3b82f6;
-  --color-gold: #c8a84b;
-  --color-gold-light: #e2c878;
-  --color-soft: #f4f6fa;
-  --color-soft-200: #e6eaf2;
+  /* ── Luxury color system ── */
+  --color-navy:      #081C3A;
+  --color-navy-800:  #0D2447;
+  --color-navy-700:  #122C57;
+  --color-navy-600:  #1A3A6B;
+  --color-blue:      #0F4C81;
+  --color-blue-light:#1A6FB5;
+  --color-blue-50:   #EEF4FB;
+  --color-gold:      #C9A227;
+  --color-gold-light:#E2BC4D;
+  --color-gold-50:   #FDF8EC;
+  --color-soft:      #F9FAFB;
+  --color-soft-100:  #F3F4F6;
+  --color-soft-200:  #E5E7EB;
+  --color-soft-300:  #D1D5DB;
+  --color-charcoal:  #374151;
 
   --font-sans: var(--font-sans-custom), ui-sans-serif, system-ui, sans-serif;
 
-  --shadow-premium: 0 10px 40px -12px rgba(10, 31, 68, 0.18);
-  --shadow-card: 0 4px 24px -8px rgba(10, 31, 68, 0.12);
+  --shadow-glow:    0 0 60px -15px rgba(15, 76, 129, 0.4);
+  --shadow-premium: 0 20px 60px -15px rgba(8, 28, 58, 0.2);
+  --shadow-card:    0 4px 24px -8px rgba(8, 28, 58, 0.10);
+  --shadow-gold:    0 8px 32px -8px rgba(201, 162, 39, 0.35);
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #0a1f44;
+  --background: #F9FAFB;
+  --foreground: #081C3A;
 }
 
-* {
-  border-color: var(--color-soft-200);
-}
+* { border-color: var(--color-soft-200); }
 
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/*
-  In Tailwind v4, @apply inside @layer components cannot reference other
-  component-layer classes (only Tailwind utilities). All button variants
-  expand the base .btn utilities inline to avoid cross-component @apply.
-*/
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--color-soft); }
+::-webkit-scrollbar-thumb { background: var(--color-soft-300); border-radius: 99px; }
 
+/*
+  Tailwind v4: @apply inside @layer components can only reference
+  Tailwind utility classes — NOT other component-layer classes.
+  All .btn-* variants fully expand .btn utilities inline.
+*/
 @layer components {
   .container-px {
     @apply mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8;
   }
 
-  /* Base .btn — only Tailwind utilities, safe to @apply standalone */
+  /* Base .btn — only Tailwind utilities */
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue/40 disabled:opacity-50;
   }
-
-  /* Variants expand all base .btn utilities + add their specific styles */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue/40 disabled:opacity-50 bg-navy text-white hover:bg-navy-800 shadow-[0_8px_24px_-10px_rgba(10,31,68,0.6)];
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue/40 disabled:opacity-50 bg-navy text-white hover:bg-navy-800 shadow-[0_8px_28px_-8px_rgba(8,28,58,0.55)];
   }
   .btn-gold {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 disabled:opacity-50 bg-gold text-navy hover:bg-gold-light;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 disabled:opacity-50 bg-gold text-navy hover:bg-gold-light shadow-[var(--shadow-gold)];
   }
   .btn-blue {
     @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue/40 disabled:opacity-50 bg-blue text-white hover:bg-blue-light;
   }
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue/40 disabled:opacity-50 border border-navy/15 bg-white text-navy hover:border-navy/40 hover:bg-soft;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue/40 disabled:opacity-50 border border-navy/20 bg-white text-navy hover:border-navy/40 hover:bg-soft;
   }
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none disabled:opacity-50 text-navy hover:bg-soft;
   }
+  .btn-white {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none disabled:opacity-50 bg-white text-navy hover:bg-soft-100 shadow-[0_4px_16px_-4px_rgba(8,28,58,0.15)];
+  }
 
   .card {
-    @apply rounded-2xl border border-soft-200 bg-white shadow-[var(--shadow-card)] transition-all duration-200;
+    @apply rounded-2xl border border-soft-200 bg-white shadow-[var(--shadow-card)] transition-all duration-300;
   }
   .card-hover {
-    @apply hover:-translate-y-1 hover:shadow-[var(--shadow-premium)];
+    @apply hover:-translate-y-1.5 hover:shadow-[var(--shadow-premium)];
+  }
+  .card-glass {
+    @apply rounded-2xl border border-white/10 bg-white/8 backdrop-blur-sm;
   }
 
   .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-soft-200 bg-soft px-3 py-1 text-xs font-medium text-navy/70;
+    @apply inline-flex items-center gap-1.5 rounded-full border border-soft-200 bg-soft px-3 py-1 text-xs font-medium text-charcoal;
   }
 
   .input {
-    @apply w-full rounded-xl border border-soft-200 bg-white px-4 py-3 text-sm text-navy placeholder:text-navy/35 focus:border-blue focus:outline-none focus:ring-2 focus:ring-blue/15;
+    @apply w-full rounded-xl border border-soft-200 bg-white px-4 py-3 text-sm text-navy placeholder:text-navy/35 focus:border-blue focus:outline-none focus:ring-2 focus:ring-blue/15 transition-all duration-200;
   }
   .label {
     @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-navy/55;
   }
 
   .section {
-    @apply py-16 sm:py-20;
+    @apply py-16 sm:py-20 lg:py-24;
+  }
+  .section-sm {
+    @apply py-12 sm:py-16;
   }
   .eyebrow {
     @apply inline-flex items-center gap-2 rounded-full bg-blue/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-blue;
   }
+  .eyebrow-gold {
+    @apply inline-flex items-center gap-2 rounded-full bg-gold/15 px-3 py-1 text-xs font-bold uppercase tracking-widest text-gold;
+  }
   .h-section {
     @apply text-3xl font-bold tracking-tight text-navy sm:text-4xl;
   }
+  .h-hero {
+    @apply text-4xl font-extrabold tracking-tight leading-[1.08] sm:text-5xl lg:text-6xl xl:text-7xl;
+  }
+
+  /* Gradient text utility */
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-gold to-gold-light bg-clip-text text-transparent;
+  }
+  .text-gradient-blue {
+    @apply bg-gradient-to-r from-blue-light to-blue bg-clip-text text-transparent;
+  }
 }
 
+/* ── Keyframes ── */
 @keyframes float-slow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-16px) rotate(2deg); }
 }
-.animate-float {
-  animation: float-slow 6s ease-in-out infinite;
+@keyframes float-medium {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(201, 162, 39, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(201, 162, 39, 0.6); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.animate-float { animation: float-slow 7s ease-in-out infinite; }
+.animate-float-med { animation: float-medium 5s ease-in-out infinite; }
+.animate-fade-up { animation: fade-up 0.6s ease-out both; }
+.animate-pulse-glow { animation: pulse-glow 2.5s ease-in-out infinite; }
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite;
+}
+
+/* ── Premium gradient backgrounds ── */
+.bg-hero-gradient {
+  background: linear-gradient(135deg, #081C3A 0%, #0D2447 40%, #0F4C81 100%);
+}
+.bg-section-gradient {
+  background: linear-gradient(180deg, #F9FAFB 0%, #EEF4FB 100%);
 }
