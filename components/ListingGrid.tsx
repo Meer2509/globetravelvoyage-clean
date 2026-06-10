@@ -1,0 +1,101 @@
+import { Stars } from "./Stars";
+
+export interface ListingItem {
+  id: string;
+  emoji?: string;
+  title: string;
+  subtitle?: string;
+  price?: string;
+  priceNote?: string;
+  badge?: string;
+  rating?: number;
+  reviews?: number;
+  tags?: string[];
+  meta?: { label: string; value: string }[];
+  ctaLabel?: string;
+}
+
+function ListingCard({ item }: { item: ListingItem }) {
+  return (
+    <div className="card card-hover flex flex-col overflow-hidden">
+      <div className="relative flex h-32 items-center justify-center bg-gradient-to-br from-soft to-soft-200 text-5xl">
+        <span>{item.emoji ?? "🌍"}</span>
+        {item.badge && (
+          <span className="absolute left-3 top-3 rounded-full bg-gold px-2.5 py-1 text-xs font-bold text-navy">
+            {item.badge}
+          </span>
+        )}
+      </div>
+      <div className="flex flex-1 flex-col p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-base font-bold text-navy">{item.title}</h3>
+            {item.subtitle && (
+              <p className="mt-0.5 text-sm text-navy/55">{item.subtitle}</p>
+            )}
+          </div>
+          {item.rating !== undefined && (
+            <Stars rating={item.rating} reviews={item.reviews} />
+          )}
+        </div>
+
+        {item.tags && item.tags.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {item.tags.map((t) => (
+              <span key={t} className="chip">
+                {t}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {item.meta && item.meta.length > 0 && (
+          <dl className="mt-4 grid grid-cols-2 gap-2 text-sm">
+            {item.meta.map((m) => (
+              <div key={m.label}>
+                <dt className="text-xs text-navy/45">{m.label}</dt>
+                <dd className="font-semibold text-navy">{m.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+
+        <div className="mt-5 flex items-end justify-between border-t border-soft-200 pt-4">
+          <div>
+            {item.price && (
+              <p className="text-lg font-extrabold text-navy">{item.price}</p>
+            )}
+            {item.priceNote && (
+              <p className="text-xs text-navy/45">{item.priceNote}</p>
+            )}
+          </div>
+          <button className="btn-blue px-4 py-2 text-sm">
+            {item.ctaLabel ?? "View"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ListingGrid({
+  items,
+  columns = 3,
+}: {
+  items: ListingItem[];
+  columns?: 2 | 3 | 4;
+}) {
+  const cols =
+    columns === 2
+      ? "sm:grid-cols-2"
+      : columns === 4
+      ? "sm:grid-cols-2 lg:grid-cols-4"
+      : "sm:grid-cols-2 lg:grid-cols-3";
+  return (
+    <div className={`grid grid-cols-1 gap-5 ${cols}`}>
+      {items.map((item) => (
+        <ListingCard key={item.id} item={item} />
+      ))}
+    </div>
+  );
+}
