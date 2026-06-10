@@ -91,6 +91,33 @@ const referrals = [
   { code: "GLOBE-TAR-0041", user: "Tariq M.", referred: 12, tier: "Platinum", earned: "$360", payout: "Settled" },
 ];
 
+type CommissionStatus = "pending" | "approved" | "paid" | "fraud_review";
+
+interface AdminCommission {
+  id: string;
+  referrer: string;
+  referrerEmail: string;
+  referral: string;
+  action: string;
+  amount: number;
+  status: CommissionStatus;
+  date: string;
+  fraudFlag?: string;
+}
+
+const adminCommissions: AdminCommission[] = [
+  { id: "CM001", referrer: "Ali Hassan",  referrerEmail: "ali@example.com",    referral: "Sara Malik",   action: "AI Visa Guidance",  amount: 4.35,  status: "pending",      date: "Jun 10" },
+  { id: "CM002", referrer: "Zainab R.",   referrerEmail: "zainab@example.com", referral: "Omar Hassan",  action: "First purchase",    amount: 7.50,  status: "pending",      date: "Jun 10" },
+  { id: "CM003", referrer: "Tariq M.",    referrerEmail: "tariq@example.com",  referral: "Fatima Ali",   action: "Expert signup",     amount: 29.80, status: "approved",     date: "Jun 9"  },
+  { id: "CM004", referrer: "Sara J.",     referrerEmail: "sara@example.com",   referral: "Bilal Ahmed",  action: "Bundle purchase",   amount: 17.88, status: "paid",         date: "Jun 8"  },
+  { id: "CM005", referrer: "Omar F.",     referrerEmail: "omar@example.com",   referral: "Nadia Iqbal",  action: "User signup",       amount: 2.00,  status: "fraud_review", date: "Jun 7", fraudFlag: "Duplicate email detected" },
+  { id: "CM006", referrer: "Khalid R.",   referrerEmail: "khalid@example.com", referral: "Khalid Raza",  action: "Trip plan",         amount: 1.90,  status: "pending",      date: "Jun 6"  },
+  { id: "CM007", referrer: "Amira Y.",    referrerEmail: "amira@example.com",  referral: "Amira Yusuf",  action: "First purchase",    amount: 12.00, status: "paid",         date: "Jun 5"  },
+  { id: "CM008", referrer: "Ali Hassan",  referrerEmail: "ali@example.com",    referral: "Rashid Ali",   action: "Agency lead",       amount: 9.90,  status: "fraud_review", date: "Jun 4", fraudFlag: "Unusual referral pattern" },
+  { id: "CM009", referrer: "Zainab R.",   referrerEmail: "zainab@example.com", referral: "Layla M.",     action: "Property lead",     amount: 2.90,  status: "approved",     date: "Jun 3"  },
+  { id: "CM010", referrer: "Tariq M.",    referrerEmail: "tariq@example.com",  referral: "David L.",     action: "Featured listing",  amount: 29.80, status: "paid",         date: "Jun 2"  },
+];
+
 const flaggedReviews = [
   { id: "REV-441", reviewer: "Anonymous", target: "Ahmed Travels", rating: 1, text: "Scam! Never delivered the package.", flag: "Spam/Fraud", date: "Jun 9" },
   { id: "REV-440", reviewer: "User4821", target: "Orient Express Travel", rating: 2, text: "Overcharged me.", flag: "Pricing dispute", date: "Jun 8" },
@@ -123,6 +150,215 @@ function MiniBar({ label, value, max, color = "bg-blue" }: { label: string; valu
         <div className={`h-2 rounded-full ${color}`} style={{ width: `${(value / max) * 100}%` }} />
       </div>
       <span className="w-12 text-right text-xs font-bold text-navy">{value.toLocaleString()}</span>
+    </div>
+  );
+}
+
+// ─── Admin Commissions Tab ─────────────────────────────────────────────────────
+
+const COMM_STATUS_STYLES: Record<CommissionStatus, { badge: string; dot: string; label: string }> = {
+  pending:      { badge: "bg-gold/10 text-gold",          dot: "bg-gold",        label: "Pending"       },
+  approved:     { badge: "bg-blue/10 text-blue",          dot: "bg-blue",        label: "Approved"      },
+  paid:         { badge: "bg-emerald-50 text-emerald-700", dot: "bg-emerald-500", label: "Paid"          },
+  fraud_review: { badge: "bg-red-50 text-red-600",        dot: "bg-red-500",     label: "Fraud Review"  },
+};
+
+function AdminCommissionsTab() {
+  const [commissions, setCommissions] = useState<AdminCommission[]>(adminCommissions);
+  const [filter, setFilter] = useState<"all" | CommissionStatus>("all");
+
+  function updateStatus(id: string, newStatus: CommissionStatus) {
+    setCommissions((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
+    );
+  }
+
+  const filtered = filter === "all" ? commissions : commissions.filter((c) => c.status === filter);
+
+  const totals = {
+    pending:      commissions.filter((c) => c.status === "pending").reduce((s, c) => s + c.amount, 0),
+    approved:     commissions.filter((c) => c.status === "approved").reduce((s, c) => s + c.amount, 0),
+    paid:         commissions.filter((c) => c.status === "paid").reduce((s, c) => s + c.amount, 0),
+    fraud_review: commissions.filter((c) => c.status === "fraud_review").length,
+  };
+
+  const FILTERS: { key: "all" | CommissionStatus; label: string }[] = [
+    { key: "all",          label: `All (${commissions.length})`                                    },
+    { key: "pending",      label: `Pending (${commissions.filter((c) => c.status === "pending").length})` },
+    { key: "approved",     label: `Approved (${commissions.filter((c) => c.status === "approved").length})` },
+    { key: "paid",         label: `Paid (${commissions.filter((c) => c.status === "paid").length})` },
+    { key: "fraud_review", label: `Fraud Review (${totals.fraud_review})`                          },
+  ];
+
+  return (
+    <div className="space-y-5">
+      {/* Stats */}
+      <div className="grid gap-4 sm:grid-cols-4">
+        <StatCard label="Pending payout"  value={`$${totals.pending.toFixed(2)}`}  icon="doc"    color="gold"  />
+        <StatCard label="Approved"        value={`$${totals.approved.toFixed(2)}`} icon="check"  color="blue"  />
+        <StatCard label="Total paid out"  value={`$${totals.paid.toFixed(2)}`}     icon="star"   color="green" />
+        <StatCard label="Fraud review"    value={String(totals.fraud_review)}      icon="shield" color="navy"  />
+      </div>
+
+      {/* Fraud alerts */}
+      {commissions.some((c) => c.status === "fraud_review") && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+          <div className="flex items-start gap-3">
+            <span className="text-xl">⚠️</span>
+            <div>
+              <p className="font-bold text-red-700">Fraud review required</p>
+              <p className="mt-0.5 text-sm text-red-600">
+                {totals.fraud_review} commission{totals.fraud_review !== 1 ? "s" : ""} flagged for review. Investigate before approving.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Commission table */}
+      <Panel title="Commission Approval Queue" subtitle="Review and approve referral commissions" noPad>
+        {/* Filter tabs */}
+        <div className="flex border-b border-soft-200 px-5 overflow-x-auto">
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setFilter(f.key)}
+              className={`border-b-2 px-3 py-3 text-xs font-semibold whitespace-nowrap transition-colors ${
+                filter === f.key
+                  ? "border-blue text-blue"
+                  : "border-transparent text-charcoal/40 hover:text-navy"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="border-b border-soft-200 bg-soft/50">
+                <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Referrer</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Referral</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Action</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Date</th>
+                <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Amount</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Status</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-soft-200">
+              {filtered.map((c) => {
+                const st = COMM_STATUS_STYLES[c.status];
+                return (
+                  <tr key={c.id} className={`transition-colors hover:bg-soft/30 ${c.status === "fraud_review" ? "bg-red-50/40" : ""}`}>
+                    <td className="px-5 py-4">
+                      <p className="font-semibold text-navy">{c.referrer}</p>
+                      <p className="text-xs text-charcoal/40">{c.referrerEmail}</p>
+                    </td>
+                    <td className="px-4 py-4 text-charcoal/65 text-sm">{c.referral}</td>
+                    <td className="px-4 py-4 text-charcoal/65 text-sm">{c.action}</td>
+                    <td className="px-4 py-4 text-charcoal/45 text-xs">{c.date}</td>
+                    <td className="px-4 py-4 text-right font-bold text-navy">${c.amount.toFixed(2)}</td>
+                    <td className="px-4 py-4">
+                      <div className="flex flex-col gap-1">
+                        <span className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${st.badge}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />
+                          {st.label}
+                        </span>
+                        {c.fraudFlag && (
+                          <span className="text-[10px] text-red-500 font-medium">⚠ {c.fraudFlag}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {c.status === "pending" && (
+                          <>
+                            <button
+                              onClick={() => updateStatus(c.id, "approved")}
+                              className="rounded-lg bg-blue/10 px-2.5 py-1 text-xs font-semibold text-blue hover:bg-blue hover:text-white transition-colors"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => updateStatus(c.id, "fraud_review")}
+                              className="rounded-lg bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors"
+                            >
+                              Flag fraud
+                            </button>
+                          </>
+                        )}
+                        {c.status === "approved" && (
+                          <button
+                            onClick={() => updateStatus(c.id, "paid")}
+                            className="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
+                          >
+                            Mark paid
+                          </button>
+                        )}
+                        {c.status === "fraud_review" && (
+                          <>
+                            <button
+                              onClick={() => updateStatus(c.id, "approved")}
+                              className="rounded-lg bg-blue/10 px-2.5 py-1 text-xs font-semibold text-blue hover:bg-blue hover:text-white transition-colors"
+                            >
+                              Clear & approve
+                            </button>
+                            <button
+                              onClick={() => updateStatus(c.id, "pending")}
+                              className="rounded-lg bg-soft px-2.5 py-1 text-xs font-semibold text-charcoal/60 hover:bg-soft-200 transition-colors"
+                            >
+                              Reset
+                            </button>
+                          </>
+                        )}
+                        {c.status === "paid" && (
+                          <span className="text-xs text-emerald-600 font-semibold">✓ Settled</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {filtered.length === 0 && (
+          <div className="py-10 text-center">
+            <div className="text-4xl mb-3">📭</div>
+            <p className="font-semibold text-navy">No commissions in this view</p>
+          </div>
+        )}
+
+        <div className="border-t border-soft-200 px-5 py-3 flex items-center justify-between text-xs text-charcoal/40">
+          <span>Showing {filtered.length} of {commissions.length} commissions</span>
+          <span>Updates are mock — no real payments processed</span>
+        </div>
+      </Panel>
+
+      {/* Top referrers */}
+      <Panel title="Top Referrers" noPad>
+        <div className="divide-y divide-soft-200">
+          {referrals.map((r) => (
+            <div key={r.code} className="flex items-center justify-between p-5">
+              <div>
+                <p className="font-bold text-navy">{r.user}</p>
+                <p className="text-sm text-charcoal/55">Code: {r.code} · {r.referred} referrals · {r.tier} tier</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <p className="font-bold text-navy">{r.earned} earned</p>
+                  <p className="text-xs text-charcoal/50">{r.payout}</p>
+                </div>
+                <button className="btn-outline px-3 py-1.5 text-xs">Process</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Panel>
     </div>
   );
 }
@@ -538,35 +774,7 @@ export default function AdminDashboard() {
       </div>
     ),
 
-    referrals: (
-      <div className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <StatCard label="Total referrers" value="340" icon="users" color="blue" />
-          <StatCard label="Total paid out" value="$4,200" icon="star" color="gold" />
-          <StatCard label="Pending payouts" value="$850" icon="doc" color="green" />
-        </div>
-
-        <Panel title="Top Referrers" noPad>
-          <div className="divide-y divide-soft-200">
-            {referrals.map((r) => (
-              <div key={r.code} className="flex items-center justify-between p-5">
-                <div>
-                  <p className="font-bold text-navy">{r.user}</p>
-                  <p className="text-sm text-charcoal/55">Code: {r.code} · {r.referred} referrals · {r.tier} tier</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <p className="font-bold text-navy">{r.earned} earned</p>
-                    <p className="text-xs text-charcoal/50">{r.payout}</p>
-                  </div>
-                  <button className="btn-outline px-3 py-1.5 text-xs">Process</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Panel>
-      </div>
-    ),
+    referrals: <AdminCommissionsTab />,
 
     reviews: (
       <div className="space-y-4">
