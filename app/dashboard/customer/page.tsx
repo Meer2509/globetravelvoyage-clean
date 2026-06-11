@@ -212,64 +212,42 @@ export default function CustomerDashboard() {
     });
   }, []);
 
-  const visaCount = live?.visaRequests.length ?? 2;
-  const bookingCount = live?.bookingRequests.length ?? 3;
+  const visaCount = live?.visaRequests.length ?? 0;
+  const bookingCount = live?.bookingRequests.length ?? 0;
+  const supportCount = live?.supportTickets.length ?? 0;
 
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
         {user.setupMessage && <DatabaseSetupBanner message={user.setupMessage} />}
         <DashboardProfileSection user={user} />
-        {live && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-            ✓ Connected to Supabase — showing your live requests below mock samples.
-          </div>
-        )}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Active trips" value="1" icon="planner" hint="New York · Jul 2026" color="blue" />
-          <StatCard label="Visa applications" value={String(visaCount)} icon="visa" hint={live ? "From your account" : "1 in progress"} color="gold" />
-          <StatCard label="Total bookings" value={String(bookingCount)} icon="doc" delta={live ? undefined : "+1 this month"} color="navy" />
-          <StatCard label="Referral earnings" value="$45" icon="users" hint="Silver tier" color="green" />
+          <StatCard label="Visa requests" value={String(visaCount)} icon="visa" hint="Your submissions" color="gold" />
+          <StatCard label="Booking requests" value={String(bookingCount)} icon="doc" hint="Your bookings" color="navy" />
+          <StatCard label="Support tickets" value={String(supportCount)} icon="shield" hint="Your messages" color="blue" />
+          <StatCard label="Profile" value={`${user.completion}%`} icon="users" hint="Complete your profile" color="green" />
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Panel title="Next steps" subtitle="Actions to complete before your trip">
-            <div className="space-y-3">
-              {[
-                { text: "Attend biometrics — Jun 24, US Consulate Dubai", urgent: true, link: "#" },
-                { text: "Upload travel itinerary to visa file", urgent: true, link: "#" },
-                { text: "Complete online check-in (opens Jul 18)", urgent: false, link: "#" },
-                { text: "Download USA entry requirements guide", urgent: false, link: "/visa/usa-from-pakistan" },
-              ].map((item, i) => (
-                <Link key={i} href={item.link} className="flex items-start gap-3 rounded-xl border border-soft-200 p-3 hover:border-blue transition-colors group">
-                  <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${item.urgent ? "bg-gold/20 text-gold" : "bg-soft-200 text-charcoal/50"}`}>
-                    {item.urgent ? "!" : "→"}
-                  </span>
-                  <span className="text-sm text-charcoal/75 group-hover:text-navy">{item.text}</span>
-                </Link>
-              ))}
-            </div>
-          </Panel>
-
-          <Panel title="Upcoming trip" subtitle="New York · Jul 20 – Aug 1">
+        <Panel title="Your recent requests" subtitle="Live from Supabase">
+          {visaCount === 0 && bookingCount === 0 ? (
+            <p className="text-sm text-charcoal/50 py-4">No requests yet. Start a visa application or booking request to see them here.</p>
+          ) : (
             <div className="space-y-2">
-              {[
-                { label: "Flight", value: "EK 201 · DXB → JFK", icon: "✈️" },
-                { label: "Hotel", value: "Marriott Marquis, 3 nights", icon: "🏨" },
-                { label: "Visa status", value: "Biometrics scheduled Jun 24", icon: "📋" },
-                { label: "Days until departure", value: "40 days", icon: "📅" },
-              ].map((r, i) => (
-                <div key={i} className="flex items-center gap-3 rounded-xl bg-soft p-3">
-                  <span className="text-lg">{r.icon}</span>
-                  <div>
-                    <p className="text-xs text-charcoal/50">{r.label}</p>
-                    <p className="text-sm font-semibold text-navy">{r.value}</p>
-                  </div>
+              {live?.visaRequests.slice(0, 3).map((v) => (
+                <div key={v.id} className="rounded-xl bg-soft p-3 text-sm">
+                  <span className="font-semibold text-navy">{v.destination}</span>
+                  <span className="text-charcoal/50"> · {v.status}</span>
+                </div>
+              ))}
+              {live?.bookingRequests.slice(0, 3).map((b) => (
+                <div key={b.id} className="rounded-xl bg-soft p-3 text-sm">
+                  <span className="font-semibold text-navy">{b.service_name ?? b.service_type}</span>
+                  <span className="text-charcoal/50"> · {b.status}</span>
                 </div>
               ))}
             </div>
-          </Panel>
-        </div>
+          )}
+        </Panel>
 
         <AiPanel />
       </div>
@@ -319,31 +297,9 @@ export default function CustomerDashboard() {
             </div>
           </Panel>
         ))}
-        {visaApplications.map((v) => (
-          <Panel key={v.visa} title={v.visa} subtitle={`${v.country} · Submitted ${v.submitted}`}>
-            <div className="mb-4">
-              <ProgressBar label={v.stage} pct={v.pct} color={v.color === "gold" ? "gold" : "blue"} />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3 text-sm">
-              <div className="rounded-xl bg-soft p-3">
-                <p className="text-xs text-charcoal/50">Status</p>
-                <p className="font-semibold text-navy">{v.status}</p>
-              </div>
-              <div className="rounded-xl bg-soft p-3">
-                <p className="text-xs text-charcoal/50">Stage</p>
-                <p className="font-semibold text-navy">{v.stage}</p>
-              </div>
-              <div className="rounded-xl bg-soft p-3">
-                <p className="text-xs text-charcoal/50">Completion</p>
-                <p className="font-semibold text-navy">{v.pct}%</p>
-              </div>
-            </div>
-            <div className="mt-4 flex gap-2">
-              <button className="btn-primary px-4 py-2 text-sm">View details</button>
-              <Link href="/visa/usa-from-pakistan" className="btn-outline px-4 py-2 text-sm">Visa guide</Link>
-            </div>
-          </Panel>
-        ))}
+        {(live?.visaRequests.length ?? 0) === 0 && (
+          <p className="text-sm text-charcoal/50">No visa applications yet. <Link href="/visa/start" className="text-blue font-semibold hover:underline">Start one now</Link>.</p>
+        )}
         <Link href="/visa" className="inline-block text-sm font-semibold text-blue hover:underline">
           + Start new visa application
         </Link>

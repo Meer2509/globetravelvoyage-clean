@@ -233,7 +233,7 @@ function mapDbVisaRequest(row: {
 }
 
 function VisaRequestsTab() {
-  const [requests, setRequests] = useState<VisaRequestItem[]>(INITIAL_VISA_REQUESTS);
+  const [requests, setRequests] = useState<VisaRequestItem[]>([]);
   const [filter, setFilter]     = useState<"all" | VRStatus>("all");
   const [search, setSearch]     = useState("");
   const [toast, setToast]       = useState<string | null>(null);
@@ -1161,30 +1161,7 @@ export default function AdminDashboard() {
                   </div>
                 ))
             ) : (
-              usersData
-                .filter((u) => !userSearch || u.name.toLowerCase().includes(userSearch.toLowerCase()))
-                .map((u) => (
-                <div key={u.name} className="flex items-center justify-between py-3">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-navy text-xs font-bold text-white">
-                      {u.name[0]}
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold text-navy">{u.name}</p>
-                      <p className="text-xs text-charcoal/50">{u.country} · Joined {u.joined}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="chip text-xs">{u.role}</span>
-                    <span className={`chip text-xs ${u.status === "Active" ? "bg-emerald-50 text-emerald-700" : u.status === "Pending" ? "bg-gold/15 text-navy" : "bg-red-50 text-red-600"}`}>
-                      {u.status}
-                    </span>
-                    <button className="text-xs text-blue font-semibold hover:underline">View</button>
-                    {u.status === "Suspended" && <button onClick={() => toggleUserStatus(u.name)} className="text-xs text-emerald-600 font-semibold hover:underline">Restore</button>}
-                    {u.status === "Active" && <button onClick={() => toggleUserStatus(u.name)} className="text-xs text-red-500 font-semibold hover:underline">Suspend</button>}
-                  </div>
-                </div>
-              ))
+              <p className="py-8 text-center text-sm text-charcoal/50">No registered users in Supabase yet.</p>
             )}
           </div>
         </Panel>

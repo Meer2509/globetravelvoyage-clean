@@ -4,6 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { LogoutButton } from "@/components/LogoutButton";
 
 const nav = [
   {
@@ -57,6 +59,7 @@ export function Navbar() {
   const [megaOpen, setMegaOpen] = useState<string | null>(null);
   const [shadow, setShadow]     = useState(false);
   const pathname                = usePathname();
+  const auth                    = useAuthSession();
 
   // Only add shadow on scroll — background stays white always
   useEffect(() => {
@@ -186,18 +189,34 @@ export function Navbar() {
               <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
             </svg>
           </Link>
-          <Link
-            href="/login"
-            className="rounded-xl px-4 py-2.5 text-sm font-semibold text-charcoal/65 transition-all duration-150 hover:bg-navy/5 hover:text-navy"
-          >
-            Log in
-          </Link>
-          <Link
-            href="/register"
-            className="btn-gold rounded-xl px-6 py-3 text-sm font-bold shadow-[0_2px_16px_rgba(201,162,39,0.28)] transition-all duration-200 hover:shadow-[0_4px_24px_rgba(201,162,39,0.42)]"
-          >
-            Get started
-          </Link>
+          {auth.loading ? (
+            <span className="text-sm text-charcoal/40">…</span>
+          ) : auth.isLoggedIn ? (
+            <>
+              <Link
+                href={auth.dashboardUrl}
+                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-charcoal/65 transition-all duration-150 hover:bg-navy/5 hover:text-navy"
+              >
+                Dashboard
+              </Link>
+              <LogoutButton label="Logout" className="rounded-xl px-4 py-2.5 text-sm font-semibold text-red-500/80 transition-all hover:bg-red-50 hover:text-red-600" />
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-charcoal/65 transition-all duration-150 hover:bg-navy/5 hover:text-navy"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/register"
+                className="btn-gold rounded-xl px-6 py-3 text-sm font-bold shadow-[0_2px_16px_rgba(201,162,39,0.28)] transition-all duration-200 hover:shadow-[0_4px_24px_rgba(201,162,39,0.42)]"
+              >
+                Get started
+              </Link>
+            </>
+          )}
         </div>
 
         {/* ── Mobile burger ── */}
@@ -276,20 +295,38 @@ export function Navbar() {
 
           {/* Drawer footer CTAs */}
           <div className="border-t border-soft-200 px-5 py-5 space-y-3">
-            <Link
-              href="/register"
-              onClick={() => setOpen(false)}
-              className="btn-gold block w-full py-3.5 text-center text-base font-bold rounded-xl"
-            >
-              Get started free
-            </Link>
-            <Link
-              href="/login"
-              onClick={() => setOpen(false)}
-              className="btn-outline block w-full py-3.5 text-center text-base font-semibold rounded-xl"
-            >
-              Log in
-            </Link>
+            {auth.isLoggedIn ? (
+              <>
+                <Link
+                  href={auth.dashboardUrl}
+                  onClick={() => setOpen(false)}
+                  className="btn-gold block w-full py-3.5 text-center text-base font-bold rounded-xl"
+                >
+                  Dashboard
+                </Link>
+                <LogoutButton
+                  className="btn-outline block w-full py-3.5 text-center text-base font-semibold rounded-xl text-red-600"
+                  onClick={() => setOpen(false)}
+                />
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/register"
+                  onClick={() => setOpen(false)}
+                  className="btn-gold block w-full py-3.5 text-center text-base font-bold rounded-xl"
+                >
+                  Get started free
+                </Link>
+                <Link
+                  href="/login"
+                  onClick={() => setOpen(false)}
+                  className="btn-outline block w-full py-3.5 text-center text-base font-semibold rounded-xl"
+                >
+                  Log in
+                </Link>
+              </>
+            )}
             <div className="flex justify-center gap-6 pt-1">
               <Link href="/support" onClick={() => setOpen(false)} className="text-xs text-charcoal/40 hover:text-navy">Support</Link>
               <Link href="/search"  onClick={() => setOpen(false)} className="text-xs text-charcoal/40 hover:text-navy">Search</Link>

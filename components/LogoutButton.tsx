@@ -7,16 +7,19 @@ interface LogoutButtonProps {
   className?: string;
   label?: string;
   redirectTo?: string;
+  onClick?: () => void;
 }
 
 export function LogoutButton({
   className,
   label = "Sign out",
   redirectTo = "/login",
+  onClick,
 }: LogoutButtonProps) {
   const [loading, setLoading] = useState(false);
 
   async function handleLogout() {
+    onClick?.();
     setLoading(true);
     await signOut(redirectTo);
   }

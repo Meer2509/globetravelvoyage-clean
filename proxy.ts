@@ -13,6 +13,7 @@
 // =============================================================================
 
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import type { UserRole } from "@/lib/supabase/types";
 
@@ -42,6 +43,24 @@ const ROLE_DASHBOARD: Record<string, string> = {
 
 function getDashboardForRole(role: UserRole | string | undefined): string {
   return ROLE_DASHBOARD[role ?? "customer"] ?? "/dashboard";
+}
+
+async function getPrimaryRoleFromDb(userId: string): Promise<UserRole | undefined> {
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey || !SUPABASE_URL) return undefined;
+
+  const admin = createClient(SUPABASE_URL, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { data } = await admin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("is_primary", true)
+    .maybeSingle();
+
+  return (data as { role: UserRole } | null)?.role;
 }
 
 export async function proxy(request: NextRequest) {
@@ -92,12 +111,23 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Logged-in user on login/register → redirect to their dashboard
-  if (user && isAuthPage) {
-    const role = user.user_metadata?.role as string | undefined;
+  // Logged-in user on login/register or generic /dashboard → role dashboard
+  if (user && (isAuthPage || pathname === "/dashboard")) {
+    const dbRole = await getPrimaryRoleFromDb(user.id);
+    const role = dbRole ?? (user.user_metadata?.role as UserRole | undefined);
     return NextResponse.redirect(
       new URL(getDashboardForRole(role), request.url)
     );
+  }
+
+  // Role-specific dashboard must match signup role
+  if (user && pathname.startsWith("/dashboard/")) {
+    const dbRole = await getPrimaryRoleFromDb(user.id);
+    const role = dbRole ?? (user.user_metadata?.role as UserRole | undefined) ?? "customer";
+    const expected = getDashboardForRole(role);
+    if (pathname !== expected && pathname !== "/dashboard/profile" && role !== "admin") {
+      return NextResponse.redirect(new URL(expected, request.url));
+    }
   }
 
   // ── Return response with refreshed cookies ───────────────────────────────────

@@ -3,13 +3,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/auth";
-import { fetchAgentIntakeQueue, fetchRoleDashboardSummary } from "@/lib/supabase/queries";
+import { fetchAgentIntakeQueue, fetchAgencyLeads } from "@/lib/supabase/queries";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DashboardProfileSection } from "@/components/DashboardProfileSection";
 import { DatabaseSetupBanner } from "@/components/DatabaseSetupBanner";
+import { DashboardEmpty } from "@/components/DashboardEmpty";
 import { joinCommaList } from "@/lib/supabase/profile-utils";
 import { Disclaimer } from "@/components/Disclaimer";
-import { Stars } from "@/components/Stars";
 import { Icon } from "@/components/Icon";
 import {
   DashboardLayout,
@@ -20,45 +20,30 @@ import {
   type DashboardTab,
 } from "@/components/DashboardLayout";
 
-const tabs: DashboardTab[] = [
+function statusToPct(status: string): number {
+  const map: Record<string, number> = {
+    pending: 25,
+    reviewing: 55,
+    submitted: 85,
+    approved: 100,
+    rejected: 100,
+  };
+  return map[status] ?? 30;
+}
+
+function formatRelativeDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+const baseTabs: DashboardTab[] = [
   { key: "overview", label: "Overview", icon: "globe" },
   { key: "profile", label: "My Profile", icon: "agent" },
   { key: "services", label: "Services & Pricing", icon: "visa" },
-  { key: "clients", label: "Client Applications", icon: "doc", badge: 5 },
+  { key: "clients", label: "Client Applications", icon: "doc" },
   { key: "authorization", label: "Authorization Form", icon: "doc" },
-  { key: "leads", label: "Leads Inbox", icon: "users", badge: 3 },
+  { key: "leads", label: "Leads Inbox", icon: "users" },
   { key: "reviews", label: "Reviews", icon: "star" },
   { key: "earnings", label: "Earnings", icon: "users" },
-];
-
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-const clients = [
-  { name: "Ahmed K.", visa: "USA B1/B2", stage: "Documents", pct: 60, nationality: "🇵🇰 Pakistani", submitted: "Jun 10" },
-  { name: "Maria L.", visa: "Schengen", stage: "Application Review", pct: 80, nationality: "🇵🇭 Filipino", submitted: "Jun 5" },
-  { name: "Imran S.", visa: "UK Visitor", stage: "Submitted", pct: 100, nationality: "🇵🇰 Pakistani", submitted: "May 28" },
-  { name: "Sara J.", visa: "Canada TRV", stage: "Documents", pct: 35, nationality: "🇮🇳 Indian", submitted: "Jun 12" },
-  { name: "Omar F.", visa: "UAE Residence", stage: "Initial Review", pct: 20, nationality: "🇧🇩 Bangladeshi", submitted: "Jun 14" },
-];
-
-const leads = [
-  { id: "L-501", title: "USA F-1 Student Visa", from: "Lahore, Pakistan", budget: "$120", time: "2h ago", urgent: true },
-  { id: "L-500", title: "Canada Visitor Visa", from: "Dubai, UAE", budget: "$80", time: "5h ago", urgent: true },
-  { id: "L-498", title: "Schengen Multiple Entry", from: "Karachi, Pakistan", budget: "$100", time: "1d ago", urgent: false },
-];
-
-const reviews = [
-  { name: "Bilal A.", flag: "🇵🇰", text: "Extremely professional. Sana helped me prepare a very strong B1/B2 application. I got my visa on the first attempt!", rating: 5, date: "Jun 2026", visa: "USA B1/B2" },
-  { name: "Nadia R.", flag: "🇵🇭", text: "Very thorough checklist and honest advice. She never promised what she couldn't deliver.", rating: 5, date: "May 2026", visa: "Schengen" },
-  { name: "Hassan M.", flag: "🇵🇰", text: "Good communication, helped me with every document step by step.", rating: 4, date: "Apr 2026", visa: "UK Visitor" },
-  { name: "Zara K.", flag: "🇮🇳", text: "Very knowledgeable about Canada TRV requirements. Highly recommend.", rating: 5, date: "Mar 2026", visa: "Canada TRV" },
-];
-
-const earningsData = [
-  { month: "Jun 2026", clients: 3, revenue: "$480", status: "Current" },
-  { month: "May 2026", clients: 5, revenue: "$720", status: "Paid" },
-  { month: "Apr 2026", clients: 4, revenue: "$580", status: "Paid" },
-  { month: "Mar 2026", clients: 6, revenue: "$840", status: "Paid" },
 ];
 
 const services = [
@@ -70,10 +55,11 @@ const services = [
 
 // ─── Authorization Form Generator ─────────────────────────────────────────────
 
-function AuthorizationGenerator() {
+function AuthorizationGenerator({ expertName }: { expertName: string }) {
   const [clientName, setClientName] = useState("[Client Full Name]");
   const [passportNo, setPassportNo] = useState("[Passport No.]");
   const [visaType, setVisaType] = useState("[Visa Type]");
+  const agentName = expertName || "Visa Expert";
 
   return (
     <div className="space-y-4">
@@ -102,7 +88,7 @@ function AuthorizationGenerator() {
             <p>
               I, <span className="font-bold text-navy">{clientName}</span>, holder of passport{" "}
               <span className="font-bold text-navy">{passportNo}</span>, hereby authorize{" "}
-              <span className="font-bold text-navy">Sana Malik</span> (Visa Expert on Globe Travel Voyage) to assist me
+              <span className="font-bold text-navy">{agentName}</span> (Visa Expert on Globe Travel Voyage) to assist me
               with the preparation of my <span className="font-bold text-navy">{visaType}</span> visa application.
             </p>
             <p>
@@ -124,7 +110,7 @@ function AuthorizationGenerator() {
             </div>
             <div>
               <div className="h-12 border-b-2 border-navy/30" />
-              <p className="mt-2 text-xs text-charcoal/50">Agent (Sana Malik) signature &amp; date</p>
+              <p className="mt-2 text-xs text-charcoal/50">Agent ({agentName}) signature &amp; date</p>
             </div>
           </div>
 
@@ -151,34 +137,83 @@ function AuthorizationGenerator() {
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
+type IntakeClient = {
+  id: string;
+  name: string;
+  visa: string;
+  stage: string;
+  pct: number;
+  nationality: string;
+  submitted: string;
+};
+
+type IntakeLead = {
+  id: string;
+  title: string;
+  from: string;
+  message: string;
+  time: string;
+  status: string;
+};
+
 export default function AgentDashboard() {
   const user = useDashboardUser();
-  const [queueCount, setQueueCount] = useState<number | null>(null);
-  const [liveLeads, setLiveLeads] = useState<number | null>(null);
+  const [clients, setClients] = useState<IntakeClient[]>([]);
+  const [leads, setLeads] = useState<IntakeLead[]>([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
-    fetchAgentIntakeQueue().then((rows) => setQueueCount(rows.length));
-    fetchRoleDashboardSummary().then((s) => {
-      if (s) setLiveLeads(s.leadRequests);
+    Promise.all([fetchAgentIntakeQueue(), fetchAgencyLeads()]).then(([visaRows, leadRows]) => {
+      setClients(
+        visaRows.map((r) => ({
+          id: r.id,
+          name: r.full_name,
+          visa: r.destination,
+          stage: r.status,
+          pct: statusToPct(r.status),
+          nationality: r.nationality ?? "—",
+          submitted: formatRelativeDate(r.created_at),
+        }))
+      );
+      setLeads(
+        leadRows.map((l) => ({
+          id: l.id,
+          title: l.message?.slice(0, 80) || l.lead_type || "Lead request",
+          from: l.full_name,
+          message: l.message ?? "",
+          time: formatRelativeDate(l.created_at),
+          status: l.status,
+        }))
+      );
+      setDataLoaded(true);
     });
   }, []);
+
+  const tabs = baseTabs.map((t) => {
+    if (t.key === "clients" && clients.length > 0) return { ...t, badge: clients.length };
+    if (t.key === "leads" && leads.length > 0) return { ...t, badge: leads.length };
+    return t;
+  });
+
+  const expertRating = user.result?.ok ? user.result.visaExpert?.rating : null;
+  const reviewCount = user.result?.ok ? user.result.visaExpert?.review_count : null;
 
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
         {user.setupMessage && <DatabaseSetupBanner message={user.setupMessage} />}
         <DashboardProfileSection user={user} />
-        {queueCount !== null && (
+        {dataLoaded && (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-            ✓ Supabase live — {queueCount} visa requests in intake queue.
+            ✓ Supabase live — {clients.length} visa requests · {leads.length} leads in intake.
           </div>
         )}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Active clients" value={queueCount !== null ? String(queueCount) : "5"} icon="users" hint={queueCount !== null ? "Live intake queue" : "Across 5 visa types"} color="blue" />
-          <StatCard label="New leads" value={liveLeads !== null ? String(liveLeads) : "3"} icon="agent" hint={liveLeads !== null ? "Your lead requests" : "This week"} delta={liveLeads !== null ? undefined : "+3"} color="gold" />
-          <StatCard label="Approval prep score" value="92%" icon="check" hint="Docs completeness avg" color="green" />
-          <StatCard label="Rating" value="4.9 ★" icon="star" hint="312 total reviews" color="navy" />
+          <StatCard label="Active clients" value={String(clients.length)} icon="users" hint="Live intake queue" color="blue" />
+          <StatCard label="New leads" value={String(leads.length)} icon="agent" hint="Contact expert requests" color="gold" />
+          <StatCard label="Profile complete" value={`${user.completion}%`} icon="check" hint="Your expert profile" color="green" />
+          <StatCard label="Rating" value={expertRating ? `${expertRating} ★` : "—"} icon="star" hint={reviewCount ? `${reviewCount} reviews` : "No reviews yet"} color="navy" />
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
@@ -202,16 +237,24 @@ export default function AgentDashboard() {
               <ProgressBar label="Client satisfaction score" pct={96} color="blue" />
               <ProgressBar label="Documents complete rate" pct={92} color="green" />
               <ProgressBar label="Lead response rate" pct={88} color="gold" />
-              <ProgressBar label="Profile completeness" pct={75} color="blue" />
+              <ProgressBar label="Profile completeness" pct={user.completion} color="blue" />
             </div>
           </Panel>
         </div>
 
-        <Panel title="Recent Activity">
-          <TableRow cells={["New lead received — USA F-1, Lahore", "2h ago"]} badge="New" badgeColor="blue" />
-          <TableRow cells={["Ahmed K. uploaded bank statement", "4h ago"]} badge="Update" badgeColor="gold" />
-          <TableRow cells={["Maria L. application submitted", "1d ago"]} badge="Done" badgeColor="green" />
-          <TableRow cells={["New review from Bilal A. — 5★", "2d ago"]} badge="Review" />
+        <Panel title="Recent intake" subtitle="Latest visa requests from Supabase">
+          {clients.length === 0 ? (
+            <p className="text-sm text-charcoal/50 py-4">No visa requests in the queue yet.</p>
+          ) : (
+            clients.slice(0, 4).map((c) => (
+              <TableRow
+                key={c.id}
+                cells={[`${c.name} — ${c.visa}`, c.submitted]}
+                badge={c.stage}
+                badgeColor={c.pct >= 85 ? "green" : "blue"}
+              />
+            ))
+          )}
         </Panel>
       </div>
     ),
@@ -264,9 +307,16 @@ export default function AgentDashboard() {
 
     clients: (
       <div className="space-y-4">
+        {clients.length === 0 && (
+          <DashboardEmpty
+            title="No client applications yet"
+            message="Visa requests from travelers will appear here when submitted through the platform."
+            action={<Link href="/visa/start" className="btn-primary px-5 py-2.5 text-sm inline-block">View visa intake form</Link>}
+          />
+        )}
         {clients.map((c) => (
           <Panel
-            key={c.name}
+            key={c.id}
             title={`${c.name} · ${c.visa}`}
             subtitle={`${c.nationality} · Submitted ${c.submitted}`}
             action={
@@ -286,80 +336,60 @@ export default function AgentDashboard() {
       </div>
     ),
 
-    authorization: <AuthorizationGenerator />,
+    authorization: <AuthorizationGenerator expertName={user.displayName} />,
 
     leads: (
       <div className="space-y-4">
-        <Panel title="New Leads" subtitle="Respond within 1 hour to rank higher in search" noPad>
-          <div className="divide-y divide-soft-200">
-            {leads.map((l) => (
-              <div key={l.id} className="flex items-center justify-between p-5">
-                <div className="flex items-start gap-3">
-                  {l.urgent && (
+        {leads.length === 0 ? (
+          <DashboardEmpty
+            title="No leads yet"
+            message="When travelers contact an expert, their requests will appear here from Supabase."
+            action={<Link href="/lead/contact" className="btn-outline px-5 py-2.5 text-sm inline-block">View contact form</Link>}
+          />
+        ) : (
+          <Panel title="New Leads" subtitle="Live from lead_requests table" noPad>
+            <div className="divide-y divide-soft-200">
+              {leads.map((l) => (
+                <div key={l.id} className="flex items-center justify-between p-5">
+                  <div className="flex items-start gap-3">
                     <span className="mt-1 flex h-2 w-2 shrink-0 rounded-full bg-gold" />
-                  )}
-                  <div>
-                    <p className="font-bold text-navy">{l.title}</p>
-                    <p className="text-sm text-charcoal/55">{l.from} · Budget: {l.budget} · {l.time}</p>
+                    <div>
+                      <p className="font-bold text-navy">{l.title}</p>
+                      <p className="text-sm text-charcoal/55">{l.from} · {l.time} · {l.status}</p>
+                      {l.message && <p className="mt-1 text-xs text-charcoal/45 line-clamp-2">{l.message}</p>}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button className="btn-primary px-4 py-2 text-sm">Respond</button>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <button className="btn-primary px-4 py-2 text-sm">Respond</button>
-                  <button className="btn-outline px-3 py-2 text-sm">Decline</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Panel>
+              ))}
+            </div>
+          </Panel>
+        )}
       </div>
     ),
 
     reviews: (
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-3">
-          <StatCard label="Overall rating" value="4.9 ★" icon="star" hint="312 reviews" color="gold" />
-          <StatCard label="5-star reviews" value="287" icon="star" hint="91%" color="green" />
-          <StatCard label="Response rate" value="98%" icon="check" hint="Avg response 45min" color="blue" />
+          <StatCard label="Overall rating" value={expertRating ? `${expertRating} ★` : "—"} icon="star" hint={reviewCount ? `${reviewCount} reviews` : "No reviews"} color="gold" />
+          <StatCard label="Verification" value={user.verified ? "Verified" : "Pending"} icon="check" color="green" />
+          <StatCard label="Profile" value={`${user.completion}%`} icon="agent" hint="Completion" color="blue" />
         </div>
-        {reviews.map((r) => (
-          <div key={r.name} className="card p-5">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-navy text-white font-bold text-sm">
-                  {r.flag}
-                </span>
-                <div>
-                  <p className="font-bold text-navy">{r.name}</p>
-                  <p className="text-xs text-charcoal/50">{r.visa} · {r.date}</p>
-                </div>
-              </div>
-              <Stars rating={r.rating} />
-            </div>
-            <p className="mt-3 text-sm text-charcoal/70">{r.text}</p>
-          </div>
-        ))}
+        <DashboardEmpty
+          title="No client reviews yet"
+          message="Reviews from your clients will appear here once the reviews system has entries for your expert profile."
+        />
       </div>
     ),
 
     earnings: (
       <div className="space-y-5">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <StatCard label="Total earned" value="$2,620" icon="users" hint="Lifetime" color="gold" />
-          <StatCard label="This month" value="$480" icon="star" delta="+12%" color="green" />
-          <StatCard label="Pending payout" value="$120" icon="doc" hint="Processes Friday" color="blue" />
-        </div>
-
-        <Panel title="Monthly Earnings" subtitle="Revenue from all client services">
-          {earningsData.map((row) => (
-            <TableRow
-              key={row.month}
-              cells={[row.month, `${row.clients} clients`]}
-              badge={row.status}
-              badgeColor={row.status === "Current" ? "blue" : "green"}
-              action={<span className="font-bold text-navy text-sm">{row.revenue}</span>}
-            />
-          ))}
-        </Panel>
+        <DashboardEmpty
+          title="Earnings tracking coming soon"
+          message="Payment and payout data will appear here when connected to your Supabase payments table."
+        />
 
         <Panel title="Payout Settings">
           <div className="grid gap-4 sm:grid-cols-2">

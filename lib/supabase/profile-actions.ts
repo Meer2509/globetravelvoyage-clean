@@ -62,6 +62,17 @@ export async function saveProfileOnSignup(input: SignupProfileInput): Promise<Pr
 
   if (profileError) return { ok: false, error: profileError.message };
 
+  await admin.from("user_roles").delete().eq("user_id", input.userId).eq("is_primary", true);
+  const { error: roleError } = await admin.from("user_roles").upsert(
+    { user_id: input.userId, role: input.role, is_primary: true },
+    { onConflict: "user_id,role" }
+  );
+  if (roleError) return { ok: false, error: roleError.message };
+
+  await admin.auth.admin.updateUserById(input.userId, {
+    user_metadata: { role: input.role, full_name: input.fullName },
+  });
+
   if (input.role === "visa_agent") {
     const { data: existing } = await admin
       .from("visa_experts")
