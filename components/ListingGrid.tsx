@@ -31,11 +31,9 @@ function ListingCard({
     <div className="card card-hover flex flex-col overflow-hidden">
       <div className="relative flex h-32 items-center justify-center bg-gradient-to-br from-soft to-soft-200 text-5xl">
         <span>{item.emoji ?? "🌍"}</span>
-        {item.badge && (
-          <span className="absolute left-3 top-3 rounded-full bg-gold px-2.5 py-1 text-xs font-bold text-navy">
-            {item.badge}
-          </span>
-        )}
+        <span className="absolute left-3 top-3 rounded-full bg-gold px-2.5 py-1 text-xs font-bold text-navy">
+          {item.badge ?? "Sample estimate"}
+        </span>
         {onSave && (
           <div className="absolute right-2 top-2">
             <SaveButton

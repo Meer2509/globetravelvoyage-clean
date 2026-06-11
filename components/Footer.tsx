@@ -85,6 +85,7 @@ const navCols = [
       { label: "Refund Policy", href: "/legal/refund" },
       { label: "Cancellation Policy", href: "/legal/cancellation" },
       { label: "Cookie Policy", href: "/legal/cookies" },
+      { label: "Payment Terms", href: "/legal/payment-terms" },
     ],
   },
 ];

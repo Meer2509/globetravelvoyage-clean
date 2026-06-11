@@ -125,7 +125,7 @@ export function ProviderServicesPanel({
 
   return (
     <div className="space-y-5">
-      <Panel title={`${roleLabel} services`} subtitle="Add real services travelers can book or enquire about">
+      <Panel title={`${roleLabel} services`} subtitle="Add real services — customers can pay via Stripe Checkout when they book your listed price">
         {loading ? (
           <p className="text-sm text-charcoal/50 py-4">Loading services…</p>
         ) : services.length === 0 && editingId !== "new" ? (

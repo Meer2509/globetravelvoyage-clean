@@ -7,11 +7,13 @@ import type { CheckoutProductKey } from "@/lib/stripe/products";
 
 export function StripeCheckoutButton({
   productKey,
+  providerServiceId,
   label,
   className = "btn-primary px-5 py-2.5 text-sm",
   fullWidth = false,
 }: {
-  productKey: CheckoutProductKey;
+  productKey?: CheckoutProductKey;
+  providerServiceId?: string;
   label: string;
   className?: string;
   fullWidth?: boolean;
@@ -20,13 +22,17 @@ export function StripeCheckoutButton({
   const [error, setError] = useState("");
 
   async function handleCheckout() {
+    if (!providerServiceId && !productKey) {
+      setError("No product selected.");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productKey }),
+        body: JSON.stringify(providerServiceId ? { providerServiceId } : { productKey }),
       });
       const data = (await res.json()) as { url?: string; error?: string };
       if (!res.ok || !data.url) {

@@ -56,7 +56,11 @@ export function MarketplaceCard({
           </div>
           <p className="truncate text-sm text-navy/60">{subtitle}</p>
           <div className="mt-1">
-            <Stars rating={rating} reviews={reviews} />
+            {reviews > 0 ? (
+              <Stars rating={rating} reviews={reviews} />
+            ) : (
+              <span className="text-xs text-charcoal/50">No reviews yet</span>
+            )}
           </div>
         </div>
         {onSave && (

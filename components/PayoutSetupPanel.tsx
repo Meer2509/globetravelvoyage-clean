@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Panel } from "@/components/DashboardLayout";
 import { fetchPayoutAccount, type PayoutAccountRow } from "@/lib/supabase/mvp-queries";
 
@@ -53,13 +54,9 @@ export function PayoutSetupPanel() {
               </div>
             </div>
           ) : null}
-          <button
-            type="button"
-            disabled={!isStripeConfigured}
-            className="btn-primary px-5 py-2.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Set up payouts
-          </button>
+          <Link href="/dashboard/payouts" className="btn-primary inline-flex px-5 py-2.5 text-sm">
+            View payout policy
+          </Link>
           {!isStripeConfigured && (
             <p className="text-xs text-charcoal/50">
               Stripe Connect onboarding will be enabled in the next phase. Add Stripe keys in{" "}

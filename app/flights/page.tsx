@@ -9,6 +9,7 @@ import { CTASection } from "@/components/CTASection";
 import { ContactModal } from "@/components/ContactModal";
 import { Icon } from "@/components/Icon";
 import { flights, cheapRoutes, usaRoutes } from "@/lib/data";
+import { SampleCatalogBanner } from "@/components/SampleCatalogBanner";
 
 type Flight = (typeof flights)[0];
 type Route  = (typeof cheapRoutes)[0];
@@ -59,7 +60,8 @@ export default function FlightsPage() {
         </div>
       </div>
 
-      <div className="container-px">
+      <div className="container-px space-y-4">
+        <SampleCatalogBanner label="Example routes" />
         <FilterBar
           fields={[
             { key: "from",     placeholder: "From (city or airport)" },

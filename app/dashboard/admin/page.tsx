@@ -14,6 +14,7 @@ import {
   type AdminPaymentRow,
 } from "@/lib/supabase/queries";
 import { fetchAdminProviders, fetchAdminProviderServices } from "@/lib/supabase/mvp-queries";
+import { updateIntakeStatus } from "@/lib/supabase/mvp-actions";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
 import { ROLE_LABELS } from "@/lib/auth";
@@ -1046,6 +1047,16 @@ export default function AdminDashboard() {
     showToast(`Ticket updated to "${status}" (refresh to sync with Supabase)`);
   }
 
+  async function updateBookingStatus(id: string, status: string) {
+    const result = await updateIntakeStatus("booking_requests", id, status);
+    if (!result.ok) {
+      showToast(result.error);
+      return;
+    }
+    setLiveBookings((prev) => prev.map((b) => b.id === id ? { ...b, status } : b));
+    showToast(`Booking updated to "${status}"`);
+  }
+
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
@@ -1391,7 +1402,15 @@ export default function AdminDashboard() {
                       <p className="text-xs text-charcoal/50">{b.full_name} · {b.email} · {formatJoinedDate(b.created_at)}</p>
                     </div>
                   </div>
-                  <span className={`chip text-xs ${b.status === "confirmed" ? "bg-emerald-50 text-emerald-700" : "bg-gold/15 text-navy"}`}>{b.status}</span>
+                  <select
+                    value={b.status}
+                    onChange={(e) => updateBookingStatus(b.id, e.target.value)}
+                    className="rounded-lg border border-soft-200 px-2 py-1 text-xs font-semibold text-navy"
+                  >
+                    {["pending", "confirmed", "cancelled", "completed"].map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
                 </div>
               ))}
             </div>

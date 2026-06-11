@@ -52,6 +52,23 @@ export default async function AdminAuditPage() {
           </div>
         </div>
 
+        {report.recordCounts && (
+          <div className="grid gap-4 sm:grid-cols-5">
+            {[
+              { label: "Verified providers", value: report.recordCounts.verifiedProviders },
+              { label: "Bookings", value: report.recordCounts.bookings },
+              { label: "Reviews", value: report.recordCounts.reviews },
+              { label: "Paid payments", value: report.recordCounts.payments },
+              { label: "Leads", value: report.recordCounts.leads },
+            ].map((s) => (
+              <div key={s.label} className="card p-4 text-center">
+                <p className="text-xs text-charcoal/50">{s.label}</p>
+                <p className="mt-1 text-2xl font-extrabold text-navy">{s.value}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
         {report.recommendedFixes.length > 0 && (
           <div className="card border border-gold/25 bg-gold/5 p-6">
             <h2 className="font-bold text-navy">Recommended next fixes</h2>

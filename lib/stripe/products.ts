@@ -4,14 +4,19 @@
 
 export type CheckoutProductKey =
   | "visa_expert_consultation"
-  | "visa_service_fee"
+  | "visa_document_review"
+  | "visa_application_prep"
   | "premium_ai_trip_plan"
   | "agency_featured_listing"
+  | "expert_featured_listing"
   | "property_featured_listing"
+  | "guide_featured_listing"
   | "tour_booking_request"
   | "cruise_booking_request"
+  | "concierge_travel_planning"
   | "provider_subscription"
-  | "verified_badge_fee";
+  | "verified_badge_fee"
+  | "provider_service";
 
 export interface CheckoutProduct {
   key: CheckoutProductKey;
@@ -27,17 +32,26 @@ export const CHECKOUT_PRODUCTS: CheckoutProduct[] = [
   {
     key: "visa_expert_consultation",
     name: "Visa Expert Consultation",
-    description: "1-on-1 video session with a verified visa preparation expert.",
+    description: "1-on-1 session with a verified visa preparation expert.",
     amountCents: 4900,
     currency: "usd",
     emoji: "👔",
     category: "Visa",
   },
   {
-    key: "visa_service_fee",
-    name: "Visa Service Fee",
-    description: "AI-powered visa preparation guidance and document checklist for one application.",
-    amountCents: 2900,
+    key: "visa_document_review",
+    name: "Visa Document Review",
+    description: "Expert review of your visa application documents and checklist.",
+    amountCents: 3900,
+    currency: "usd",
+    emoji: "📄",
+    category: "Visa",
+  },
+  {
+    key: "visa_application_prep",
+    name: "Visa Application Preparation",
+    description: "Guided visa application preparation support with a verified expert.",
+    amountCents: 5900,
     currency: "usd",
     emoji: "🛂",
     category: "Visa",
@@ -49,7 +63,16 @@ export const CHECKOUT_PRODUCTS: CheckoutProduct[] = [
     amountCents: 1900,
     currency: "usd",
     emoji: "✈️",
-    category: "AI",
+    category: "AI & Planning",
+  },
+  {
+    key: "concierge_travel_planning",
+    name: "Concierge Travel Planning",
+    description: "Human concierge travel planning session for complex multi-city trips.",
+    amountCents: 9900,
+    currency: "usd",
+    emoji: "🧳",
+    category: "AI & Planning",
   },
   {
     key: "agency_featured_listing",
@@ -61,31 +84,49 @@ export const CHECKOUT_PRODUCTS: CheckoutProduct[] = [
     category: "Marketplace",
   },
   {
+    key: "expert_featured_listing",
+    name: "Visa Expert Featured Listing",
+    description: "Featured placement for your visa expert profile (1 month).",
+    amountCents: 14900,
+    currency: "usd",
+    emoji: "👔",
+    category: "Marketplace",
+  },
+  {
+    key: "guide_featured_listing",
+    name: "Tour Guide Featured Listing",
+    description: "Featured placement for your tour guide profile (1 month).",
+    amountCents: 12900,
+    currency: "usd",
+    emoji: "🧭",
+    category: "Marketplace",
+  },
+  {
     key: "property_featured_listing",
     name: "Property Featured Listing",
     description: "Boost your property listing visibility and receive qualified renter leads.",
     amountCents: 14900,
     currency: "usd",
     emoji: "🏠",
-    category: "Property",
+    category: "Marketplace",
   },
   {
     key: "tour_booking_request",
     name: "Tour Booking Request",
-    description: "Receive direct tour booking requests from travelers on the platform.",
+    description: "Platform fee for a tour booking request with a verified guide.",
     amountCents: 1900,
     currency: "usd",
-    emoji: "🧭",
-    category: "Travel",
+    emoji: "🗺️",
+    category: "Bookings",
   },
   {
     key: "cruise_booking_request",
     name: "Cruise Booking Request",
-    description: "Promote your cruise package and receive qualified booking enquiries.",
+    description: "Platform fee for a cruise booking enquiry with a verified agency.",
     amountCents: 4900,
     currency: "usd",
     emoji: "🚢",
-    category: "Travel",
+    category: "Bookings",
   },
   {
     key: "provider_subscription",
@@ -110,6 +151,7 @@ export const CHECKOUT_PRODUCTS: CheckoutProduct[] = [
 const productMap = new Map(CHECKOUT_PRODUCTS.map((p) => [p.key, p]));
 
 export function getCheckoutProduct(key: string): CheckoutProduct | undefined {
+  if (key === "provider_service") return undefined;
   return productMap.get(key as CheckoutProductKey);
 }
 
