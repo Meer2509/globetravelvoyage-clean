@@ -33,9 +33,11 @@ const nav = [
     href: "/trip-planner",
     sub: [
       { label: "AI Trip Planner", href: "/trip-planner", desc: "Budget → full itinerary" },
+      { label: "AI Visa Assistant", href: "/ai-visa-assistant", desc: "AI-guided visa prep" },
+      { label: "AI Flight Finder", href: "/ai-flight-finder", desc: "Best routes by AI" },
       { label: "Destinations", href: "/destinations", desc: "Luxury inspiration" },
-      { label: "Travel Guides", href: "/guides", desc: "Expert destination guides" },
       { label: "Properties", href: "/properties", desc: "Rent, buy or list property" },
+      { label: "Post a Listing", href: "/properties/post", desc: "List your property" },
     ],
   },
   {
@@ -45,6 +47,8 @@ const nav = [
       { label: "Visa Experts", href: "/agents", desc: "Verified visa agents" },
       { label: "Travel Agencies", href: "/agencies", desc: "Curated agency packages" },
       { label: "Referral Program", href: "/referrals", desc: "Earn commissions" },
+      { label: "Contact an Expert", href: "/lead/contact", desc: "Send a direct enquiry" },
+      { label: "Start Visa Application", href: "/visa/start", desc: "3-step application form" },
     ],
   },
 ];
