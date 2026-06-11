@@ -82,22 +82,12 @@ export function Navbar() {
       <div className="container-px flex h-[72px] items-center justify-between gap-6">
         {/* Logo */}
         <Link href="/" className="flex items-center shrink-0 group" aria-label="Globe Travel Voyage — Home">
-          {/* Desktop: full wordmark logo */}
           <Image
-            src={scrolled ? "/logo.svg" : "/logo-white.svg"}
+            src="/globe-logo.png"
             alt="Globe Travel Voyage"
-            width={200}
-            height={48}
-            className="hidden sm:block h-12 w-auto object-contain transition-all duration-300 group-hover:opacity-90"
-            priority
-          />
-          {/* Mobile: icon mark only */}
-          <Image
-            src="/logo-mark.svg"
-            alt="Globe Travel Voyage"
-            width={40}
-            height={40}
-            className="block sm:hidden h-10 w-10 object-contain"
+            width={180}
+            height={52}
+            className="h-11 w-auto object-contain transition-opacity duration-200 group-hover:opacity-90 sm:h-12"
             priority
           />
         </Link>

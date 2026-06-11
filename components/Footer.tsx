@@ -132,10 +132,10 @@ export function Footer() {
           <div className="max-w-sm">
             <Link href="/" className="inline-block group" aria-label="Globe Travel Voyage">
               <Image
-                src="/logo-white.svg"
+                src="/globe-logo.png"
                 alt="Globe Travel Voyage"
-                width={220}
-                height={52}
+                width={200}
+                height={56}
                 className="h-14 w-auto object-contain opacity-95 group-hover:opacity-100 transition-opacity"
               />
             </Link>

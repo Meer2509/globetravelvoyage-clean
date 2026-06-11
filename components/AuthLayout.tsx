@@ -53,10 +53,10 @@ export function AuthLayout({
         <div className="relative z-10">
           <Link href="/" className="inline-block group" aria-label="Globe Travel Voyage">
             <Image
-              src="/logo-white.svg"
+              src="/globe-logo.png"
               alt="Globe Travel Voyage"
-              width={210}
-              height={50}
+              width={200}
+              height={52}
               className="h-12 w-auto object-contain opacity-95 group-hover:opacity-100 transition-opacity"
               priority
             />
@@ -139,7 +139,7 @@ export function AuthLayout({
         <div className="flex items-center justify-between border-b border-soft-200 px-5 py-3.5 lg:hidden">
           <Link href="/" aria-label="Globe Travel Voyage">
             <Image
-              src="/logo.svg"
+              src="/globe-logo.png"
               alt="Globe Travel Voyage"
               width={160}
               height={40}
