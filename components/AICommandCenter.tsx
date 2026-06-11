@@ -220,13 +220,13 @@ export function AICommandCenter() {
 
         <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
           {/* ── Input panel ── */}
-          <div className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-            <h3 className="font-bold text-white text-sm uppercase tracking-wide opacity-60">Your travel preferences</h3>
+          <div className="space-y-4 rounded-2xl border bg-white p-6 shadow-[var(--shadow-premium)]" style={{ borderColor: "var(--gtv-border)" }}>
+            <h3 className="font-bold text-navy text-sm uppercase tracking-wide">Your travel preferences</h3>
 
             <div>
-              <label className="label-dark">Destination</label>
+              <label className="label">Destination</label>
               <input
-                className="input-dark"
+                className="input"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
                 placeholder="Dubai, Istanbul, New York, Bangkok..."
@@ -234,14 +234,14 @@ export function AICommandCenter() {
             </div>
             <div className="grid gap-3 grid-cols-2">
               <div>
-                <label className="label-dark">Days</label>
-                <select className="input-dark" value={days} onChange={(e) => setDays(e.target.value)}>
+                <label className="label">Days</label>
+                <select className="input select" value={days} onChange={(e) => setDays(e.target.value)}>
                   {[3,4,5,6,7,8,10,14].map((d) => <option key={d} value={d}>{d} days</option>)}
                 </select>
               </div>
               <div>
-                <label className="label-dark">Travelers</label>
-                <select className="input-dark" value={travelers} onChange={(e) => setTravelers(e.target.value)}>
+                <label className="label">Travelers</label>
+                <select className="input select" value={travelers} onChange={(e) => setTravelers(e.target.value)}>
                   <option value="1">Solo</option>
                   <option value="2">Couple (2)</option>
                   <option value="3">3 people</option>
@@ -251,8 +251,8 @@ export function AICommandCenter() {
               </div>
             </div>
             <div>
-              <label className="label-dark">Total budget (USD)</label>
-              <select className="input-dark" value={budget} onChange={(e) => setBudget(e.target.value)}>
+              <label className="label">Total budget (USD)</label>
+              <select className="input select" value={budget} onChange={(e) => setBudget(e.target.value)}>
                 <option value="800">$800 (Budget)</option>
                 <option value="1500">$1,500</option>
                 <option value="2000">$2,000</option>
@@ -263,8 +263,8 @@ export function AICommandCenter() {
               </select>
             </div>
             <div>
-              <label className="label-dark">Travel style</label>
-              <select className="input-dark" value={style} onChange={(e) => setStyle(e.target.value)}>
+              <label className="label">Travel style</label>
+              <select className="input select" value={style} onChange={(e) => setStyle(e.target.value)}>
                 <option>Balanced</option>
                 <option>Budget traveler</option>
                 <option>Luxury & comfort</option>
@@ -276,8 +276,8 @@ export function AICommandCenter() {
               </select>
             </div>
             <div>
-              <label className="label-dark">Special needs</label>
-              <select className="input-dark">
+              <label className="label">Special needs</label>
+              <select className="input select" defaultValue="None">
                 <option>None</option>
                 <option>Halal food required</option>
                 <option>Wheelchair accessible</option>

@@ -1405,7 +1405,7 @@ export default function AdminDashboard() {
                   <select
                     value={b.status}
                     onChange={(e) => updateBookingStatus(b.id, e.target.value)}
-                    className="rounded-lg border border-soft-200 px-2 py-1 text-xs font-semibold text-navy"
+                    className="input select !py-1.5 !text-xs !min-w-[7rem]"
                   >
                     {["pending", "confirmed", "cancelled", "completed"].map((s) => (
                       <option key={s} value={s}>{s}</option>

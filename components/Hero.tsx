@@ -212,14 +212,14 @@ function FlightsForm() {
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="label">From</label>
-          <select className="input" value={from} onChange={(e) => setFrom(e.target.value)}>
+          <select className="input select" value={from} onChange={(e) => setFrom(e.target.value)}>
             <option value="">Select departure city</option>
             {FLIGHT_CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div>
           <label className="label">To</label>
-          <select className="input" value={to} onChange={(e) => setTo(e.target.value)}>
+          <select className="input select" value={to} onChange={(e) => setTo(e.target.value)}>
             <option value="">Select destination city</option>
             {FLIGHT_CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
@@ -228,7 +228,7 @@ function FlightsForm() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <label className="label">Trip type</label>
-          <select className="input" value={tripType} onChange={(e) => setType(e.target.value)}>
+          <select className="input select" value={tripType} onChange={(e) => setType(e.target.value)}>
             <option>One-way</option>
             <option>Round-trip</option>
             <option>Multi-city</option>
@@ -236,7 +236,7 @@ function FlightsForm() {
         </div>
         <div>
           <label className="label">Cabin class</label>
-          <select className="input" value={cabin} onChange={(e) => setCabin(e.target.value)}>
+          <select className="input select" value={cabin} onChange={(e) => setCabin(e.target.value)}>
             <option>Economy</option>
             <option>Premium Economy</option>
             <option>Business</option>
@@ -249,7 +249,7 @@ function FlightsForm() {
         </div>
         <div>
           <label className="label">Passengers</label>
-          <select className="input" value={pax} onChange={(e) => setPax(e.target.value)}>
+          <select className="input select" value={pax} onChange={(e) => setPax(e.target.value)}>
             {[1,2,3,4,5,6,7,8,9].map((n) => (
               <option key={n}>{n} {n === 1 ? "Adult" : "Adults"}</option>
             ))}
@@ -321,14 +321,14 @@ function HotelsForm() {
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="label">Destination</label>
-          <select className="input" value={dest} onChange={(e) => setDest(e.target.value)}>
+          <select className="input select" value={dest} onChange={(e) => setDest(e.target.value)}>
             <option value="">Select city</option>
             {HOTEL_DESTINATIONS.map((d) => <option key={d} value={d}>{d}</option>)}
           </select>
         </div>
         <div>
           <label className="label">Property type</label>
-          <select className="input" value={stayType} onChange={(e) => setStayType(e.target.value)}>
+          <select className="input select" value={stayType} onChange={(e) => setStayType(e.target.value)}>
             <option value="">Any type</option>
             {HOTEL_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
@@ -343,13 +343,13 @@ function HotelsForm() {
         </div>
         <div>
           <label className="label">Guests</label>
-          <select className="input" value={guests} onChange={(e) => setGuests(e.target.value)}>
+          <select className="input select" value={guests} onChange={(e) => setGuests(e.target.value)}>
             {[1,2,3,4,5,6,7,8,9,10].map((n) => <option key={n}>{n} {n === 1 ? "Guest" : "Guests"}</option>)}
           </select>
         </div>
         <div>
           <label className="label">Budget tier</label>
-          <select className="input" value={budget} onChange={(e) => setBudget(e.target.value)}>
+          <select className="input select" value={budget} onChange={(e) => setBudget(e.target.value)}>
             <option value="">Any budget</option>
             <option>Budget (under $60/night)</option>
             <option>Mid-range ($60–$150/night)</option>
@@ -414,14 +414,14 @@ function VisaForm() {
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="label">Your nationality / passport</label>
-          <select className="input" value={nat} onChange={(e) => setNat(e.target.value)}>
+          <select className="input select" value={nat} onChange={(e) => setNat(e.target.value)}>
             <option value="">Select passport</option>
             {NATIONALITIES.map((n) => <option key={n} value={n}>{n}</option>)}
           </select>
         </div>
         <div>
           <label className="label">Destination country</label>
-          <select className="input" value={dest} onChange={(e) => setDest(e.target.value)}>
+          <select className="input select" value={dest} onChange={(e) => setDest(e.target.value)}>
             <option value="">Select destination</option>
             {VISA_DESTINATIONS.map((d) => <option key={d} value={d}>{d}</option>)}
           </select>
@@ -429,7 +429,7 @@ function VisaForm() {
       </div>
       <div>
         <label className="label">Purpose of visit</label>
-        <select className="input" value={purpose} onChange={(e) => setPurpose(e.target.value)}>
+        <select className="input select" value={purpose} onChange={(e) => setPurpose(e.target.value)}>
           <option value="">Select purpose</option>
           {VISA_PURPOSES.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
@@ -496,14 +496,14 @@ function CruisesForm() {
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="label">Region</label>
-          <select className="input" value={region} onChange={(e) => setRegion(e.target.value)}>
+          <select className="input select" value={region} onChange={(e) => setRegion(e.target.value)}>
             <option value="">Select region</option>
             {CRUISE_REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
         </div>
         <div>
           <label className="label">Cruise type</label>
-          <select className="input" value={type} onChange={(e) => setType(e.target.value)}>
+          <select className="input select" value={type} onChange={(e) => setType(e.target.value)}>
             <option value="">Any type</option>
             <option>Ocean cruise</option>
             <option>Private yacht</option>
@@ -514,7 +514,7 @@ function CruisesForm() {
         </div>
         <div>
           <label className="label">Duration</label>
-          <select className="input" value={dur} onChange={(e) => setDur(e.target.value)}>
+          <select className="input select" value={dur} onChange={(e) => setDur(e.target.value)}>
             <option value="">Any duration</option>
             <option>Day trip (1 day)</option>
             <option>2–4 nights</option>
@@ -525,7 +525,7 @@ function CruisesForm() {
         </div>
         <div>
           <label className="label">Guests</label>
-          <select className="input" value={guests} onChange={(e) => setGuests(e.target.value)}>
+          <select className="input select" value={guests} onChange={(e) => setGuests(e.target.value)}>
             {[1,2,3,4,5,6,7,8,9,10].map((n) => <option key={n}>{n} {n === 1 ? "guest" : "guests"}</option>)}
             <option>Private group (10+)</option>
           </select>
@@ -592,14 +592,14 @@ function ToursForm() {
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="label">Destination / City</label>
-          <select className="input" value={dest} onChange={(e) => setDest(e.target.value)}>
+          <select className="input select" value={dest} onChange={(e) => setDest(e.target.value)}>
             <option value="">Select destination</option>
             {TOUR_DESTINATIONS.map((d) => <option key={d} value={d}>{d}</option>)}
           </select>
         </div>
         <div>
           <label className="label">Tour type</label>
-          <select className="input" value={tourType} onChange={(e) => setType(e.target.value)}>
+          <select className="input select" value={tourType} onChange={(e) => setType(e.target.value)}>
             <option value="">Any type</option>
             {TOUR_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
@@ -610,7 +610,7 @@ function ToursForm() {
         </div>
         <div>
           <label className="label">Group size</label>
-          <select className="input" value={group} onChange={(e) => setGroup(e.target.value)}>
+          <select className="input select" value={group} onChange={(e) => setGroup(e.target.value)}>
             <option>1 person</option>
             <option>1–2 people</option>
             <option>3–5 people</option>
@@ -676,7 +676,7 @@ function RentalsForm() {
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="label">What do you need?</label>
-          <select className="input" value={rentalType} onChange={(e) => setRentalType(e.target.value)}>
+          <select className="input select" value={rentalType} onChange={(e) => setRentalType(e.target.value)}>
             <option value="">Select type</option>
             <option>Car rental (self-drive)</option>
             <option>Car with chauffeur</option>
@@ -688,7 +688,7 @@ function RentalsForm() {
         </div>
         <div>
           <label className="label">Location / City</label>
-          <select className="input" value={location} onChange={(e) => setLocation(e.target.value)}>
+          <select className="input select" value={location} onChange={(e) => setLocation(e.target.value)}>
             <option value="">Select city</option>
             {RENTAL_LOCATIONS.map((l) => <option key={l} value={l}>{l}</option>)}
           </select>
@@ -699,7 +699,7 @@ function RentalsForm() {
         </div>
         <div>
           <label className="label">Duration</label>
-          <select className="input" value={duration} onChange={(e) => setDuration(e.target.value)}>
+          <select className="input select" value={duration} onChange={(e) => setDuration(e.target.value)}>
             <option value="">Select duration</option>
             <option>Daily (1–6 days)</option>
             <option>Weekly (1–3 weeks)</option>
@@ -815,7 +815,7 @@ function AiPlannerForm() {
             </div>
             <div>
               <label className="label">Total budget</label>
-              <select className="input" value={budget} onChange={(e) => setBudget(e.target.value)} required>
+              <select className="input select" value={budget} onChange={(e) => setBudget(e.target.value)} required>
                 <option value="">Select budget</option>
                 <option>$500</option>
                 <option>$1,000</option>
@@ -827,14 +827,14 @@ function AiPlannerForm() {
             </div>
             <div>
               <label className="label">Travel days</label>
-              <select className="input" value={days} onChange={(e) => setDays(e.target.value)} required>
+              <select className="input select" value={days} onChange={(e) => setDays(e.target.value)} required>
                 <option value="">Select days</option>
                 {[3,5,7,10,14,21,30].map((d) => <option key={d}>{d} days</option>)}
               </select>
             </div>
             <div>
               <label className="label">Travel style</label>
-              <select className="input" value={style} onChange={(e) => setStyle(e.target.value)}>
+              <select className="input select" value={style} onChange={(e) => setStyle(e.target.value)}>
                 <option value="">Any style</option>
                 <option>Budget traveller</option>
                 <option>Family trip</option>
@@ -950,7 +950,7 @@ export function Hero() {
         </h1>
 
         {/* Subheadline */}
-        <p className="mx-auto mt-5 max-w-3xl text-center text-base leading-relaxed text-white/65 sm:text-lg">
+        <p className="mx-auto mt-5 max-w-3xl text-center text-base leading-relaxed text-white/80 sm:text-lg">
           Plan smarter, travel cheaper, apply confidently. Search flights, check visa requirements,
           compare hotels, book tours, find properties and get AI-powered trip planning — all in one place.
         </p>
@@ -966,7 +966,7 @@ export function Hero() {
                 className={`flex shrink-0 items-center gap-1.5 rounded-t-xl px-4 py-2.5 text-xs font-bold transition-all duration-200 border-b-2 ${
                   activeTab === tab.id
                     ? "border-blue bg-blue/5 text-navy"
-                    : "border-transparent text-charcoal/50 hover:text-navy hover:bg-soft"
+                    : "border-transparent text-muted hover:text-navy hover:bg-[var(--gtv-hover-gold)]"
                 }`}
               >
                 <span>{tab.emoji}</span>

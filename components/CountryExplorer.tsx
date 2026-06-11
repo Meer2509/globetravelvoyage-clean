@@ -25,7 +25,7 @@ export function CountryExplorer({ countries }: { countries: Country[] }) {
           onChange={(e) => setQ(e.target.value)}
         />
         <select
-          className="input sm:w-56"
+          className="input select sm:w-56"
           value={region}
           onChange={(e) => setRegion(e.target.value)}
         >

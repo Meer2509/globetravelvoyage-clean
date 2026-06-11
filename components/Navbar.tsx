@@ -149,21 +149,21 @@ export function Navbar() {
 
                 {/* Dropdown */}
                 {megaOpen === item.label && (
-                  <div className="absolute left-0 top-full z-50 mt-1.5 min-w-[260px] overflow-hidden rounded-2xl border border-soft-200 bg-white shadow-[0_20px_60px_-10px_rgba(8,28,58,0.20)]">
-                    <div className="h-0.5 bg-gradient-to-r from-navy via-blue to-gold" />
+                  <div className="dropdown-menu absolute left-0 top-full z-50 mt-1.5 min-w-[280px]">
+                    <div className="h-0.5 bg-gradient-to-r from-navy via-gold to-gold-light" />
                     <div className="p-2">
                       {item.sub.map((s) => (
                         <Link
                           key={s.href + s.label}
                           href={s.href}
-                          className="group/item flex items-start gap-3 rounded-xl px-4 py-3 transition-colors hover:bg-soft"
+                          className="dropdown-item group/item"
                         >
-                          <span className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-gold/35 transition-colors group-hover/item:bg-gold" />
+                          <span className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-gold/50 transition-colors group-hover/item:bg-gold" />
                           <div>
-                            <span className="block text-sm font-semibold text-navy transition-colors group-hover/item:text-blue">
+                            <span className="dropdown-item-title group-hover/item:text-navy">
                               {s.label}
                             </span>
-                            <span className="mt-0.5 block text-xs leading-relaxed text-charcoal/50">
+                            <span className="dropdown-item-desc">
                               {s.desc}
                             </span>
                           </div>
@@ -281,7 +281,7 @@ export function Navbar() {
                           key={s.href + s.label}
                           href={s.href}
                           onClick={() => setOpen(false)}
-                          className="block rounded-xl px-3 py-2 text-sm font-medium text-charcoal/60 transition-colors hover:bg-soft hover:text-navy"
+                          className="block rounded-xl px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-[var(--gtv-hover-gold)] hover:text-navy"
                         >
                           {s.label}
                         </Link>

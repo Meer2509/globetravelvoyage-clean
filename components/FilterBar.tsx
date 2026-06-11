@@ -46,7 +46,7 @@ export function FilterBar({ fields, chips = [], onSearch, className = "" }: Filt
               placeholder={f.placeholder}
               value={values[key] ?? ""}
               onChange={(e) => setValues((v) => ({ ...v, [key]: e.target.value }))}
-              className="w-full rounded-xl border border-soft-200 bg-soft/50 px-4 py-3 text-sm text-navy placeholder:text-navy/40 focus:border-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue/15"
+              className="input bg-soft/80 focus:bg-white"
             />
           );
         })}
@@ -65,7 +65,7 @@ export function FilterBar({ fields, chips = [], onSearch, className = "" }: Filt
               className={`rounded-full border px-3 py-1 text-xs font-semibold transition-all ${
                 selectedChips.includes(c)
                   ? "border-blue bg-blue text-white shadow-[var(--shadow-glow)]"
-                  : "border-soft-200 bg-soft text-charcoal/60 hover:border-navy/30 hover:text-navy"
+                  : "border-soft-200 bg-white text-muted hover:border-gold/40 hover:bg-[var(--gtv-hover-gold)] hover:text-navy"
               }`}
             >
               {c}

@@ -64,7 +64,7 @@ export function DashboardLayout({
                   <div className="min-w-0">
                     <p className="truncate font-bold text-navy">{name}</p>
                     {email && (
-                      <p className="truncate text-xs text-charcoal/45">{email}</p>
+                      <p className="truncate text-xs text-muted">{email}</p>
                     )}
                     {profileCompletion !== undefined && (
                       <p className="mt-1 text-[11px] font-semibold text-blue">
