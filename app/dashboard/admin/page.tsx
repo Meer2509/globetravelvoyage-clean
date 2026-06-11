@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { isSupabaseConfigured } from "@/lib/auth";
-import { fetchAdminCounts, fetchAdminVisaRequests, fetchAdminProfiles, type AdminDashboardCounts, type AdminProfileRow } from "@/lib/supabase/queries";
+import {
+  fetchAdminCounts,
+  fetchAdminVisaRequests,
+  fetchAdminProfiles,
+  fetchAdminPayments,
+  type AdminDashboardCounts,
+  type AdminProfileRow,
+  type AdminPaymentRow,
+} from "@/lib/supabase/queries";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
 import { ROLE_LABELS } from "@/lib/auth";
@@ -85,12 +93,6 @@ const adminBookings = [
   { id: "#10419", type: "Tour", item: "Desert Safari x4", customer: "M. Saeed", agency: "Voyage Pro", amount: "$220", status: "Pending", date: "Jun 13" },
   { id: "#10418", type: "Ticket", item: "Burj Khalifa x2", customer: "R. Iqbal", agency: "Voyage Pro", amount: "$84", status: "Confirmed", date: "Jun 12" },
   { id: "#10417", type: "Package", item: "Turkey Discovery", customer: "F. Khan", agency: "Orient Express", amount: "$2,300", status: "Pending", date: "Jun 12" },
-];
-
-const payments = [
-  { id: "PAY-5510", booking: "#10421", payee: "Voyage Pro Travels", amount: "$3,560", fee: "$178", net: "$3,382", method: "Card", date: "Jun 14", status: "Settled" },
-  { id: "PAY-5509", booking: "#10420", payee: "Orient Express", amount: "$3,300", fee: "$165", net: "$3,135", method: "Card", date: "Jun 13", status: "Settled" },
-  { id: "PAY-5508", booking: "#10419", payee: "Voyage Pro Travels", amount: "$220", fee: "$11", net: "$209", method: "Card", date: "Jun 13", status: "Pending" },
 ];
 
 const referrals = [
@@ -972,11 +974,16 @@ export default function AdminDashboard() {
   const [liveCounts, setLiveCounts] = useState<AdminDashboardCounts | null>(null);
   const [adminToast, setAdminToast] = useState<string | null>(null);
   const [liveProfiles, setLiveProfiles] = useState<AdminProfileRow[]>([]);
+  const [livePayments, setLivePayments] = useState<AdminPaymentRow[]>([]);
+
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     fetchAdminCounts().then(setLiveCounts);
     fetchAdminProfiles().then((res) => {
       if (!res.tableMissing && res.profiles.length > 0) setLiveProfiles(res.profiles);
+    });
+    fetchAdminPayments().then((res) => {
+      if (!res.tableMissing) setLivePayments(res.payments);
     });
   }, []);
   const [usersData, setUsersData]   = useState(allUsers.map((u) => ({ ...u })));
@@ -1380,34 +1387,68 @@ export default function AdminDashboard() {
 
     payments: (
       <div className="space-y-5">
+        <DatabaseStatusBanner health={dashUser.databaseHealth} />
         <div className="grid gap-4 sm:grid-cols-4">
-          <StatCard label="Total processed" value="$48.2k" icon="star" delta="+22%" color="blue" />
-          <StatCard label="Platform fees" value="$2,410" icon="users" hint="5% avg fee" color="gold" />
-          <StatCard label="Payouts pending" value="$8,400" icon="doc" color="green" />
-          <StatCard label="Disputes open" value="2" icon="shield" color="navy" />
+          <StatCard
+            label="Total payments"
+            value={String(livePayments.length)}
+            icon="star"
+            hint={liveCounts ? `${liveCounts.payments} in DB` : "Live from Supabase"}
+            color="blue"
+          />
+          <StatCard
+            label="Paid"
+            value={String(livePayments.filter((p) => p.status === "paid").length)}
+            icon="check"
+            color="green"
+          />
+          <StatCard
+            label="Pending"
+            value={String(livePayments.filter((p) => p.status === "pending").length)}
+            icon="doc"
+            color="gold"
+          />
+          <StatCard
+            label="Total volume"
+            value={new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
+              livePayments.filter((p) => p.status === "paid").reduce((s, p) => s + Number(p.amount), 0)
+            )}
+            icon="shield"
+            color="navy"
+          />
         </div>
 
-        <Panel title="Recent Transactions" noPad>
-          <div className="divide-y divide-soft-200">
-            {payments.map((p) => (
-              <div key={p.id} className="flex items-center justify-between p-5">
-                <div>
-                  <p className="font-bold text-navy">{p.id}</p>
-                  <p className="text-sm text-charcoal/55">{p.payee} · Booking {p.booking} · {p.date}</p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right text-xs text-charcoal/50">
-                    <p>Gross: {p.amount}</p>
-                    <p>Fee: {p.fee}</p>
+        <Panel title="Stripe payments" subtitle="Live from Supabase payments table" noPad>
+          {livePayments.length === 0 ? (
+            <p className="p-8 text-center text-sm text-charcoal/50">
+              No payments recorded yet. Completed Stripe checkouts appear here.
+            </p>
+          ) : (
+            <div className="divide-y divide-soft-200">
+              {livePayments.map((p) => (
+                <div key={p.id} className="flex items-center justify-between gap-4 p-5">
+                  <div className="min-w-0">
+                    <p className="font-bold text-navy truncate">{p.description ?? "Payment"}</p>
+                    <p className="text-sm text-charcoal/55 truncate">
+                      {p.customer_name ?? p.customer_email ?? "Guest"} ·{" "}
+                      {new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </p>
+                    {p.stripe_payment_id && (
+                      <p className="text-xs text-charcoal/40 truncate">Stripe: {p.stripe_payment_id}</p>
+                    )}
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-navy">{p.net}</p>
-                    <span className={`chip text-xs ${p.status === "Settled" ? "bg-emerald-50 text-emerald-700" : "bg-gold/15 text-navy"}`}>{p.status}</span>
+                  <div className="shrink-0 text-right">
+                    <p className="font-bold text-navy">
+                      {new Intl.NumberFormat("en-US", { style: "currency", currency: p.currency ?? "USD" }).format(Number(p.amount))}
+                    </p>
+                    <span className={`chip text-xs ${p.status === "paid" ? "bg-emerald-50 text-emerald-700" : "bg-gold/15 text-navy"}`}>
+                      {p.status}
+                    </span>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </Panel>
       </div>
     ),

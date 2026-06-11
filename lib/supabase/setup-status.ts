@@ -8,6 +8,7 @@ import { isAdminClientConfigured } from "./admin";
 export interface SupabaseSetupStatus {
   hasSupabaseJs: boolean;
   hasSupabaseSsr: boolean;
+  hasStripe: boolean;
   schemaExecuted: boolean;
   tablesFound: string[];
   rlsStatus: "done" | "partial" | "todo";
@@ -22,7 +23,7 @@ const CORE_TABLES = [
   "lead_requests",
 ];
 
-function readPackageDeps(): { hasSupabaseJs: boolean; hasSupabaseSsr: boolean } {
+function readPackageDeps(): { hasSupabaseJs: boolean; hasSupabaseSsr: boolean; hasStripe: boolean } {
   try {
     const raw = readFileSync(join(process.cwd(), "package.json"), "utf8");
     const pkg = JSON.parse(raw) as { dependencies?: Record<string, string> };
@@ -30,9 +31,10 @@ function readPackageDeps(): { hasSupabaseJs: boolean; hasSupabaseSsr: boolean } 
     return {
       hasSupabaseJs: Boolean(deps["@supabase/supabase-js"]),
       hasSupabaseSsr: Boolean(deps["@supabase/ssr"]),
+      hasStripe: Boolean(deps["stripe"]),
     };
   } catch {
-    return { hasSupabaseJs: false, hasSupabaseSsr: false };
+    return { hasSupabaseJs: false, hasSupabaseSsr: false, hasStripe: false };
   }
 }
 

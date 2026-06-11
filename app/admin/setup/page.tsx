@@ -363,15 +363,26 @@ export default async function AdminSetupPage() {
           items={[
             {
               label: "STRIPE_SECRET_KEY",
-              detail: "Server-only Stripe key from dashboard.stripe.com/apikeys",
+              detail: hasStripeSecret
+                ? "Server key configured — Stripe Checkout API enabled"
+                : "Server-only Stripe key from dashboard.stripe.com/apikeys",
               status: hasStripeSecret ? "done" : "todo",
               docsUrl: "https://stripe.com/docs/keys",
             },
             {
               label: "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
-              detail: "Public key — used in browser for Stripe Elements / Checkout",
+              detail: hasStripePublic
+                ? "Publishable key configured — /checkout page enabled"
+                : "Public key for Stripe Checkout redirect flow",
               status: hasStripePublic ? "done" : "todo",
               docsUrl: "https://stripe.com/docs/keys",
+            },
+            {
+              label: "Stripe Checkout routes",
+              detail: hasStripeSecret && hasStripePublic
+                ? "/api/stripe/checkout · /checkout · /payment-success"
+                : "Add Stripe keys to enable hosted checkout",
+              status: hasStripeSecret && hasStripePublic ? "done" : hasStripeSecret || hasStripePublic ? "partial" : "todo",
             },
             {
               label: "STRIPE_WEBHOOK_SECRET",
@@ -381,8 +392,10 @@ export default async function AdminSetupPage() {
             },
             {
               label: "stripe npm package installed",
-              detail: "Run: npm install stripe @stripe/stripe-js",
-              status: "todo",
+              detail: supabaseStatus.hasStripe
+                ? "stripe package found in package.json"
+                : "Run: npm install stripe",
+              status: supabaseStatus.hasStripe ? "done" : "todo",
               docsUrl: "https://stripe.com/docs/stripe-js",
             },
           ]}

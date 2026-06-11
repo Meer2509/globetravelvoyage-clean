@@ -250,6 +250,76 @@ export async function fetchAdminVisaRequests() {
   return data ?? [];
 }
 
+export interface AdminPaymentRow {
+  id: string;
+  user_id: string | null;
+  amount: number;
+  currency: string;
+  status: string;
+  description: string | null;
+  stripe_payment_id: string | null;
+  payee_name: string | null;
+  created_at: string;
+  customer_name: string | null;
+  customer_email: string | null;
+}
+
+export async function fetchAdminPayments(): Promise<{
+  payments: AdminPaymentRow[];
+  error?: string;
+  tableMissing?: boolean;
+}> {
+  const admin = createAdminClient();
+  if (!admin) return { payments: [] };
+
+  const { data, error } = await admin
+    .from("payments")
+    .select("id, user_id, amount, currency, status, description, stripe_payment_id, payee_name, created_at")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      return { payments: [], tableMissing: true, error: error.message };
+    }
+    return { payments: [], error: error.message };
+  }
+
+  const rows = (data ?? []) as Array<{
+    id: string;
+    user_id: string | null;
+    amount: number;
+    currency: string;
+    status: string;
+    description: string | null;
+    stripe_payment_id: string | null;
+    payee_name: string | null;
+    created_at: string;
+  }>;
+
+  const userIds = [...new Set(rows.map((r) => r.user_id).filter(Boolean))] as string[];
+  const profileMap: Record<string, { full_name: string | null; email: string }> = {};
+
+  if (userIds.length > 0) {
+    const { data: profiles } = await admin
+      .from("profiles")
+      .select("id, full_name, email")
+      .in("id", userIds);
+
+    for (const p of (profiles ?? []) as Array<{ id: string; full_name: string | null; email: string }>) {
+      profileMap[p.id] = { full_name: p.full_name, email: p.email };
+    }
+  }
+
+  const payments: AdminPaymentRow[] = rows.map((row) => ({
+    ...row,
+    customer_name: row.user_id ? profileMap[row.user_id]?.full_name ?? null : null,
+    customer_email: row.user_id ? profileMap[row.user_id]?.email ?? null : null,
+  }));
+
+  return { payments };
+}
+
 export async function fetchAdminBookingRequests() {
   const admin = createAdminClient();
   if (!admin) return [];

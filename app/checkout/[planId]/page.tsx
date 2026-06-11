@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getPlanById, isPricingPlan } from "@/lib/pricing";
 import { isStripeConfigured } from "@/lib/stripe";
+import { checkoutProductKeyForPlan } from "@/lib/stripe/plan-map";
+import { StripeCheckoutButton } from "@/components/StripeCheckoutButton";
 import { Icon } from "@/components/Icon";
 
 // ── Mock card input formatter ─────────────────────────────────────────────────
@@ -86,6 +88,7 @@ export default function CheckoutPage({
   const planPrice = plan.price;
   const planSuffix = isPricingPlan(plan) ? plan.priceSuffix : "one-time payment";
   const planFeatures = isPricingPlan(plan) ? plan.features : ("includes" in plan ? plan.includes : []);
+  const stripeProductKey = checkoutProductKeyForPlan(planId);
 
   return (
     <div className="min-h-screen bg-soft">
@@ -124,6 +127,20 @@ export default function CheckoutPage({
           <div>
             <h1 className="mb-6 text-2xl font-extrabold text-navy">Complete your order</h1>
 
+            {isStripeConfigured && stripeProductKey && (
+              <div className="card mb-6 p-5">
+                <h2 className="mb-2 font-bold text-navy">Pay with Stripe Checkout</h2>
+                <p className="mb-4 text-sm text-charcoal/55">
+                  Secure hosted checkout — recommended. Use test card 4242 4242 4242 4242 in test mode.
+                </p>
+                <StripeCheckoutButton
+                  productKey={stripeProductKey}
+                  label={`Pay $${finalPrice} with Stripe`}
+                  fullWidth
+                />
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Contact */}
               <div className="card p-5">
@@ -141,10 +158,12 @@ export default function CheckoutPage({
                 </div>
               </div>
 
-              {/* Payment details */}
+              {/* Payment details — demo fallback when Stripe not configured */}
               <div className="card p-5">
                 <div className="mb-4 flex items-center justify-between">
-                  <h2 className="font-bold text-navy">Payment details</h2>
+                  <h2 className="font-bold text-navy">
+                    {isStripeConfigured ? "Or use demo form" : "Payment details"}
+                  </h2>
                   <div className="flex items-center gap-1.5 text-xl" aria-label="Accepted cards">
                     💳 🏦
                   </div>
