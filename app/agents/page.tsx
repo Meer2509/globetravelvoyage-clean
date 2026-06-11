@@ -170,7 +170,7 @@ export default function AgentsPage() {
       <CTASection
         title="Are you a visa agent?"
         subtitle="Create a verified profile, receive leads, manage client applications and grow your reviews."
-        primary={{ label: "Become an agent", href: "/register" }}
+        primary={{ label: "Become an agent", href: "/register?role=agent" }}
         secondary={{ label: "Open agent dashboard", href: "/dashboard/agent" }}
       />
 

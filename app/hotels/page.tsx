@@ -168,7 +168,7 @@ export default function HotelsPage() {
       <CTASection
         title="Host your property on Globe Travel Voyage"
         subtitle="List houses, apartments and travel stays, capture leads and manage bookings from your host dashboard."
-        primary={{ label: "Become a host", href: "/register" }}
+        primary={{ label: "Become a host", href: "/register?role=host" }}
         secondary={{ label: "Browse properties", href: "/properties" }}
       />
 

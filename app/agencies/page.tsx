@@ -150,7 +150,7 @@ export default function AgenciesPage() {
       <CTASection
         title="Grow your travel agency with us"
         subtitle="List packages, tickets and tours, manage leads and bookings, and earn a verification badge."
-        primary={{ label: "Register your agency", href: "/register" }}
+        primary={{ label: "Register your agency", href: "/register?role=agency" }}
         secondary={{ label: "Open agency dashboard", href: "/dashboard/agency" }}
       />
 

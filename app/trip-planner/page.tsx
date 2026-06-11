@@ -1,34 +1,284 @@
-import type { Metadata } from "next";
-import { PageHeader } from "@/components/PageHeader";
+"use client";
+
+import { useState, useMemo } from "react";
+import Link from "next/link";
 import { SectionHeader } from "@/components/SectionHeader";
-import { AIPlanner } from "@/components/AIPlanner";
-import { ListingGrid } from "@/components/ListingGrid";
 import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
+import { ContactModal } from "@/components/ContactModal";
 import { packages } from "@/lib/data";
 
-export const metadata: Metadata = {
-  title: "AI Trip Planner — Plan by Budget & Days",
-  description:
-    "Tell the AI your destination, budget and travel days, and get a budget breakdown, day-by-day itinerary and visa reminders. Estimates only.",
+// ── Mock AI trip plan ─────────────────────────────────────────────────────────
+
+type TripPlan = {
+  destination: string;
+  days: number;
+  budget: string;
+  style: string;
+  breakdown: { label: string; amount: string; emoji: string }[];
+  itinerary: { day: number; title: string; activities: string[] }[];
+  visaNote: string;
+  disclaimer: string;
 };
 
+function generateMockPlan(dest: string, days: number, budget: number, style: string): TripPlan {
+  const flight = Math.round(budget * 0.30);
+  const hotel  = Math.round(budget * 0.35);
+  const tours  = Math.round(budget * 0.18);
+  const food   = Math.round(budget * 0.12);
+  const misc   = budget - flight - hotel - tours - food;
+
+  const templates: Record<string, { visa: string; days: { title: string; acts: string[] }[] }> = {
+    dubai: {
+      visa: "Pakistani nationals typically need a UAE tourist visa. Process time 3–5 business days. No interview required.",
+      days: [
+        { title: "Arrival & Dubai Marina",   acts: ["Check in, rest", "JBR Beach walk", "Dubai Marina dinner cruise"] },
+        { title: "Old Dubai & Gold Souk",    acts: ["Dubai Museum", "Gold & Spice Souks", "Abra boat ride"] },
+        { title: "Downtown & Burj Khalifa",  acts: ["Dubai Mall", "Burj Khalifa observation deck", "Dubai Fountain show"] },
+        { title: "Desert Safari",            acts: ["Morning relaxation", "Afternoon desert safari", "BBQ dinner under stars"] },
+        { title: "Day trip — Abu Dhabi",     acts: ["Sheikh Zayed Grand Mosque", "Louvre Abu Dhabi", "Corniche"] },
+        { title: "Shopping & departure",     acts: ["Dubai Outlet Mall", "Souvenir shopping", "Airport transfer"] },
+        { title: "Optional extra day",       acts: ["Wild Wadi water park", "Atlantis aquaventure", "Beach day"] },
+      ],
+    },
+    turkey: {
+      visa: "Pakistani nationals require an e-Visa for Turkey. Apply online at evisa.gov.tr. Processing time 1–3 business days.",
+      days: [
+        { title: "Istanbul arrival",              acts: ["Sultanahmet hotel check-in", "Blue Mosque", "Hagia Sophia"] },
+        { title: "Grand Bazaar & Topkapi",        acts: ["Topkapi Palace", "Grand Bazaar shopping", "Bosphorus evening cruise"] },
+        { title: "Galata & Modern Istanbul",      acts: ["Galata Tower", "Taksim Square", "Istiklal Street dining"] },
+        { title: "Cappadocia — hot air balloon",  acts: ["Flight to Cappadocia", "Hot air balloon at sunrise", "Cave hotel"] },
+        { title: "Rock formations & valleys",     acts: ["Göreme Open-Air Museum", "Devrent & Pasabag valleys", "Sunset at Uçhisar"] },
+        { title: "Return to Istanbul",            acts: ["Morning flight", "Bosphorus walk", "Shopping at Arasta Bazaar"] },
+        { title: "Departure",                     acts: ["Hotel checkout", "Final breakfast", "Airport transfer"] },
+      ],
+    },
+  };
+
+  const key = dest.toLowerCase().includes("dubai") || dest.toLowerCase().includes("uae") ? "dubai"
+    : dest.toLowerCase().includes("turkey") || dest.toLowerCase().includes("istanbul") ? "turkey"
+    : null;
+
+  const visaNote = key ? templates[key].visa : `Check the official embassy website for ${dest} visa requirements well in advance. Globe Travel Voyage's AI Visa Assistant can guide you.`;
+
+  const daysTemplate = key ? templates[key].days : [
+    { title: "Arrival & orientation",   acts: ["Check in", "Explore the neighbourhood", "Welcome dinner"] },
+    { title: "Main attractions",        acts: ["Top landmark 1", "Top landmark 2", "Local cuisine"] },
+    { title: "Cultural experience",     acts: ["Museum or heritage site", "Local market", "Street food tour"] },
+    { title: "Nature or adventure",     acts: ["Day excursion", "Scenic viewpoint", "Outdoor activity"] },
+    { title: "Relaxation day",          acts: ["Spa or beach", "Shopping", "Sunset photo spot"] },
+    { title: "Day trip",                acts: ["Nearby attraction", "Countryside", "Return evening"] },
+    { title: "Departure day",           acts: ["Final breakfast", "Last souvenir run", "Airport transfer"] },
+  ];
+
+  const itinerary = Array.from({ length: Math.min(days, 7) }, (_, i) => ({
+    day: i + 1,
+    title: daysTemplate[i]?.title ?? `Day ${i + 1}`,
+    activities: daysTemplate[i]?.acts ?? ["Explore", "Sightsee", "Relax"],
+  }));
+
+  return {
+    destination: dest,
+    days,
+    budget: `$${budget.toLocaleString()}`,
+    style,
+    breakdown: [
+      { label: "Flights (return)", amount: `$${flight}`, emoji: "✈️" },
+      { label: "Accommodation",   amount: `$${hotel}`,  emoji: "🏨" },
+      { label: "Tours & tickets", amount: `$${tours}`,  emoji: "🗺️" },
+      { label: "Food & dining",   amount: `$${food}`,   emoji: "🍽️" },
+      { label: "Transport & misc", amount: `$${misc}`,  emoji: "🚕" },
+    ],
+    itinerary,
+    visaNote,
+    disclaimer: "These are sample estimates for planning purposes only. Prices may vary significantly based on season, availability, and booking source. Globe Travel Voyage does not guarantee any price or service. Always verify with official providers before booking.",
+  };
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+
+const TRAVEL_STYLES = ["Budget traveller", "Comfort seeker", "Luxury explorer", "Adventure lover", "Family trip", "Business + leisure"];
+
 export default function TripPlannerPage() {
+  const [destination, setDestination] = useState("");
+  const [days, setDays]               = useState(5);
+  const [budget, setBudget]           = useState(1500);
+  const [style, setStyle]             = useState("Comfort seeker");
+  const [travelers, setTravelers]     = useState(2);
+  const [plan, setPlan]               = useState<TripPlan | null>(null);
+  const [loading, setLoading]         = useState(false);
+  const [modal, setModal]             = useState(false);
+
+  const pkgFilter = useMemo(() => packages.filter((p) => !destination || p.destinations.toLowerCase().includes(destination.toLowerCase())).slice(0, 4), [destination]);
+
+  async function generatePlan(e: React.FormEvent) {
+    e.preventDefault();
+    if (!destination.trim()) return;
+    setLoading(true);
+    setPlan(null);
+    await new Promise((r) => setTimeout(r, 2000));
+    setPlan(generateMockPlan(destination, days, budget * travelers, style));
+    setLoading(false);
+  }
+
   return (
     <>
-      <PageHeader
-        eyebrow="AI trip planner"
-        title="Plan your whole trip by budget & days"
-        subtitle="Our AI splits your budget across flights, stays, food, tours and transport, drafts a day-by-day itinerary and flags the visa steps you'll need."
-        breadcrumbs={[{ label: "Home", href: "/" }, { label: "Trip Planner" }]}
-      />
+      {/* Hero */}
+      <div className="bg-hero-gradient py-16">
+        <div className="container-px">
+          <nav className="mb-4 text-xs text-white/40">
+            <Link href="/" className="hover:text-white/70">Home</Link>
+            <span className="mx-2">/</span>
+            <span className="text-white/70">Trip Planner</span>
+          </nav>
+          <span className="eyebrow-white mb-3">AI trip planner</span>
+          <h1 className="text-4xl font-extrabold text-white sm:text-5xl">Plan your trip by budget & days</h1>
+          <p className="mt-3 max-w-2xl text-lg text-white/60">
+            Tell our AI your destination, budget, and travel days — get a full budget breakdown, day-by-day itinerary, and visa checklist instantly.
+          </p>
+        </div>
+      </div>
 
+      {/* Planner form */}
       <section className="section">
         <div className="container-px">
-          <AIPlanner />
+          <div className="mx-auto max-w-3xl">
+            <div className="card p-6 sm:p-8">
+              <h2 className="text-xl font-extrabold text-navy mb-6">✨ AI trip planner</h2>
+              <form onSubmit={generatePlan} className="space-y-5">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="label">Destination *</label>
+                    <input className="input" placeholder="Dubai, Istanbul, Thailand…" value={destination} onChange={(e) => setDestination(e.target.value)} required />
+                  </div>
+                  <div>
+                    <label className="label">Travel days: {days} days</label>
+                    <input type="range" min={3} max={14} value={days} onChange={(e) => setDays(Number(e.target.value))} className="w-full accent-blue" />
+                    <div className="flex justify-between text-xs text-charcoal/40 mt-1"><span>3</span><span>14</span></div>
+                  </div>
+                  <div>
+                    <label className="label">Budget per person: ${budget.toLocaleString()}</label>
+                    <input type="range" min={500} max={10000} step={100} value={budget} onChange={(e) => setBudget(Number(e.target.value))} className="w-full accent-blue" />
+                    <div className="flex justify-between text-xs text-charcoal/40 mt-1"><span>$500</span><span>$10,000</span></div>
+                  </div>
+                  <div>
+                    <label className="label">Number of travelers</label>
+                    <div className="flex items-center gap-3">
+                      <button type="button" onClick={() => setTravelers((n) => Math.max(1, n - 1))} className="btn-outline h-9 w-9 text-lg font-bold">−</button>
+                      <span className="text-lg font-extrabold text-navy w-8 text-center">{travelers}</span>
+                      <button type="button" onClick={() => setTravelers((n) => Math.min(10, n + 1))} className="btn-outline h-9 w-9 text-lg font-bold">+</button>
+                      <span className="text-xs text-charcoal/40">Total budget: ${(budget * travelers).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="label">Travel style</label>
+                  <div className="flex flex-wrap gap-2">
+                    {TRAVEL_STYLES.map((s) => (
+                      <button key={s} type="button" onClick={() => setStyle(s)}
+                        className={`chip transition-all ${style === s ? "border-blue bg-blue/10 text-navy font-semibold" : "hover:border-navy/30"}`}>
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button type="submit" disabled={loading || !destination.trim()} className="btn-primary w-full py-3.5 disabled:opacity-50">
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z" />
+                      </svg>
+                      Generating your trip plan…
+                    </span>
+                  ) : "✨ Generate AI trip plan"}
+                </button>
+              </form>
+            </div>
+
+            {/* AI Output */}
+            {plan && (
+              <div className="mt-8 space-y-6">
+                {/* Header */}
+                <div className="card p-6">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-2xl font-extrabold text-navy">{plan.destination}</h3>
+                      <p className="text-charcoal/55">{plan.days} days · {plan.budget} total budget · {plan.style}</p>
+                    </div>
+                    <button onClick={() => setModal(true)} className="btn-primary py-2.5 px-5">Book this trip</button>
+                  </div>
+                </div>
+
+                {/* Budget breakdown */}
+                <div className="card p-6">
+                  <h4 className="font-extrabold text-navy mb-4">💰 Budget breakdown</h4>
+                  <div className="space-y-3">
+                    {plan.breakdown.map((b) => {
+                      const total = plan.breakdown.reduce((sum, x) => sum + parseInt(x.amount.replace(/[$,]/g, "")), 0);
+                      const pct = Math.round((parseInt(b.amount.replace(/[$,]/g, "")) / total) * 100);
+                      return (
+                        <div key={b.label} className="flex items-center gap-3">
+                          <span className="text-xl w-7">{b.emoji}</span>
+                          <div className="flex-1">
+                            <div className="flex justify-between text-sm mb-1">
+                              <span className="font-semibold text-navy">{b.label}</span>
+                              <span className="font-extrabold text-navy">{b.amount}</span>
+                            </div>
+                            <div className="h-1.5 rounded-full bg-soft-200 overflow-hidden">
+                              <div className="h-full rounded-full bg-blue transition-all" style={{ width: `${pct}%` }} />
+                            </div>
+                          </div>
+                          <span className="text-xs text-charcoal/40 w-8 text-right">{pct}%</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Itinerary */}
+                <div className="card p-6">
+                  <h4 className="font-extrabold text-navy mb-4">🗓️ Day-by-day itinerary</h4>
+                  <div className="space-y-4">
+                    {plan.itinerary.map((d) => (
+                      <div key={d.day} className="flex gap-4">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy text-xs font-extrabold text-gold">{d.day}</div>
+                        <div>
+                          <p className="font-bold text-navy text-sm">{d.title}</p>
+                          <ul className="mt-1 space-y-0.5">
+                            {d.activities.map((a) => <li key={a} className="text-sm text-charcoal/60 before:mr-2 before:content-['→']">{a}</li>)}
+                          </ul>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Visa note */}
+                <div className="card border border-blue/15 bg-blue/5 p-5">
+                  <h4 className="font-extrabold text-navy mb-2">🛂 Visa note</h4>
+                  <p className="text-sm text-charcoal/65 leading-relaxed">{plan.visaNote}</p>
+                  <Link href="/visa/start" className="btn-primary mt-3 inline-block py-2 px-4 text-sm">Start visa application →</Link>
+                </div>
+
+                {/* Disclaimer */}
+                <Disclaimer>
+                  {plan.disclaimer}
+                </Disclaimer>
+
+                <div className="flex gap-3">
+                  <button onClick={() => setModal(true)} className="btn-primary flex-1 py-3">📩 Request expert help</button>
+                  <Link href="/ai-visa-assistant" className="btn-outline flex-1 py-3 text-center">🤖 Visa AI assistant</Link>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
+      {/* Packages section */}
       <section className="section bg-soft/50">
         <div className="container-px">
           <SectionHeader
@@ -38,30 +288,37 @@ export default function TripPlannerPage() {
             linkHref="/agencies"
             linkLabel="View agencies"
           />
-          <ListingGrid
-            columns={4}
-            items={packages.map((p) => ({
-              id: p.id,
-              emoji: p.emoji,
-              title: p.title,
-              subtitle: `${p.destinations} · ${p.nights} nights`,
-              price: p.price,
-              priceNote: "per person",
-              tags: p.includes,
-              ctaLabel: "View package",
-            }))}
-          />
-          <div className="mt-8">
-            <Disclaimer>
-              The AI Trip Planner produces estimates using sample data for guidance
-              only. It is not a quote, booking or financial advice, and prices are
-              not guaranteed.
-            </Disclaimer>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {pkgFilter.map((p) => (
+              <div key={p.id} className="card card-hover flex flex-col p-5">
+                <span className="text-3xl">{p.emoji}</span>
+                <h3 className="mt-3 font-bold text-navy">{p.title}</h3>
+                <p className="text-sm text-charcoal/55">{p.destinations} · {p.nights} nights</p>
+                <div className="mt-2 flex flex-wrap gap-1">{p.includes.slice(0, 2).map((i) => <span key={i} className="chip text-[10px]">{i}</span>)}</div>
+                <div className="mt-4 flex items-center justify-between border-t border-soft-200 pt-4">
+                  <div>
+                    <p className="text-lg font-extrabold text-navy">{p.price}</p>
+                    <p className="text-xs text-charcoal/40">per person</p>
+                  </div>
+                  <Link href="/booking/request" className="btn-blue px-3 py-1.5 text-xs">Book</Link>
+                </div>
+              </div>
+            ))}
           </div>
+          <div className="mt-8"><Disclaimer variant="compact" /></div>
         </div>
       </section>
 
-      <CTASection />
+      <CTASection
+        title="Want a real expert to plan your trip?"
+        subtitle="Connect with a verified travel agency or AI-assisted trip consultant who specialises in your destination."
+        primary={{ label: "Find travel agencies", href: "/agencies" }}
+        secondary={{ label: "AI visa assistant", href: "/ai-visa-assistant" }}
+      />
+
+      {modal && (
+        <ContactModal open={modal} onClose={() => setModal(false)} mode="request_quote" subjectName={plan ? `AI Trip Plan — ${plan.destination}` : "Custom trip"} />
+      )}
     </>
   );
 }

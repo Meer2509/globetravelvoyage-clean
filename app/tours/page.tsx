@@ -203,7 +203,7 @@ export default function ToursPage() {
       <CTASection
         title="Are you a local tour guide?"
         subtitle="List your tours, set pricing and availability, and grow your reviews on Globe Travel Voyage."
-        primary={{ label: "Become a guide", href: "/register" }}
+        primary={{ label: "Become a guide", href: "/register?role=guide" }}
         secondary={{ label: "View verified guides", href: "/agents" }}
       />
 

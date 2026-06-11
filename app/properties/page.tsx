@@ -174,7 +174,7 @@ export default function PropertiesPage() {
         <CTASection
           title="List your property for rent or sale"
           subtitle="Create a host account to publish listings, capture leads and manage inquiries."
-          primary={{ label: "Become a host", href: "/register" }}
+          primary={{ label: "Become a host", href: "/register?role=host" }}
           secondary={{ label: "Open host dashboard", href: "/dashboard/agency" }}
         />
       </div>

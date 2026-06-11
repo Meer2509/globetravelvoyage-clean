@@ -568,13 +568,18 @@ export default function Home() {
 
           {/* Type filter */}
           <div className="mb-6 flex flex-wrap gap-2">
-            {["🌙 Vacation stays", "🏢 Monthly rentals", "💰 For sale / invest", "📋 Post a listing"].map((f) => (
+            {[
+              { label: "🌙 Vacation stays",      href: "/properties" },
+              { label: "🏢 Monthly rentals",     href: "/properties" },
+              { label: "💰 For sale / invest",   href: "/properties" },
+              { label: "📋 Post a listing",      href: "/properties/post" },
+            ].map((f) => (
               <Link
-                key={f}
-                href="/properties"
+                key={f.label}
+                href={f.href}
                 className="rounded-full border border-soft-200 bg-white px-4 py-2 text-xs font-semibold text-navy hover:border-blue hover:text-blue transition-colors"
               >
-                {f}
+                {f.label}
               </Link>
             ))}
           </div>

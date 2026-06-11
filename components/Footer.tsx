@@ -47,14 +47,24 @@ const navCols = [
     ],
   },
   {
-    title: "Marketplace",
+    title: "Join as a partner",
     links: [
-      { label: "Verified Agencies", href: "/agencies" },
-      { label: "Tour Guides", href: "/tours" },
-      { label: "Referral Program", href: "/referrals" },
+      { label: "Become a visa agent", href: "/register?role=agent" },
+      { label: "Become a travel agency", href: "/register?role=agency" },
+      { label: "Become a tour guide", href: "/register?role=guide" },
+      { label: "Become a property host", href: "/register?role=host" },
+      { label: "Referral program", href: "/referrals" },
+      { label: "Post a property listing", href: "/properties/post" },
+    ],
+  },
+  {
+    title: "Account",
+    links: [
       { label: "Log in", href: "/login" },
       { label: "Register free", href: "/register" },
       { label: "Dashboard", href: "/dashboard" },
+      { label: "Saved items", href: "/saved" },
+      { label: "Support", href: "/support" },
     ],
   },
   {
