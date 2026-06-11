@@ -5,6 +5,17 @@ import { getSiteUrl } from "@/lib/site-url";
 import { getCheckoutProduct } from "@/lib/stripe/products";
 import { getStripe, isStripeServerConfigured } from "@/lib/stripe/server";
 import { createPaymentRecord } from "@/lib/stripe/payment-records";
+import { createPendingBooking } from "@/lib/stripe/create-booking";
+
+interface CheckoutBody {
+  productKey?: string;
+  providerServiceId?: string;
+  agentId?: string;
+  listingId?: string;
+  listingTitle?: string;
+  listingType?: string;
+  providerUserId?: string;
+}
 
 export async function POST(request: Request) {
   if (!isStripeServerConfigured()) {
@@ -22,7 +33,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Stripe client could not be initialized." }, { status: 503 });
   }
 
-  let body: { productKey?: string; providerServiceId?: string };
+  let body: CheckoutBody;
   try {
     body = await request.json();
   } catch {
@@ -82,9 +93,21 @@ export async function POST(request: Request) {
     }
     name = product.name;
     description = product.description;
+    if (body.listingTitle) {
+      description = `${product.description} — ${body.listingTitle}`;
+      name = `${product.name}: ${body.listingTitle}`;
+    }
     amountCents = product.amountCents;
     currency = product.currency;
-    metadata = { ...metadata, product_key: product.key };
+    metadata = {
+      ...metadata,
+      product_key: product.key,
+      agent_id: body.agentId ?? "",
+      listing_id: body.listingId ?? "",
+      listing_title: body.listingTitle ?? "",
+      listing_type: body.listingType ?? "",
+      provider_user_id: body.providerUserId ?? "",
+    };
   }
 
   if (amountCents < 50) {
@@ -134,6 +157,23 @@ export async function POST(request: Request) {
 
     if (!record.ok) {
       console.error("Payment record insert failed:", record.error);
+    } else {
+      const bookingResult = await createPendingBooking({
+        userId,
+        email: userEmail ?? null,
+        providerUserId: metadata.provider_user_id || null,
+        productKey,
+        amount,
+        currency,
+        stripeSessionId: session.id,
+        paymentId: record.id,
+        agentId: metadata.agent_id || null,
+        listingId: metadata.listing_id || null,
+        listingTitle: metadata.listing_title || name,
+      });
+      if (!bookingResult.ok) {
+        console.error("Pending booking insert failed:", bookingResult.error);
+      }
     }
 
     return NextResponse.json({

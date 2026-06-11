@@ -8,6 +8,7 @@ import { TrustBadge } from "@/components/TrustBadge";
 import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
 import { ContactModal } from "@/components/ContactModal";
+import { StripeCheckoutButton } from "@/components/StripeCheckoutButton";
 import { trustItems } from "@/lib/data";
 import { fetchMarketplaceExperts, type MarketplaceExpertRow } from "@/lib/supabase/mvp-queries";
 import { isSupabaseConfigured } from "@/lib/auth";
@@ -169,6 +170,18 @@ export default function AgentsPage() {
                   })}
                   onContact={() => setModal({ open: true, agent })}
                   ctaLabel="Contact expert"
+                  payAction={
+                    <StripeCheckoutButton
+                      productKey="visa_expert_consultation"
+                      checkoutMeta={{
+                        agentId: agent.id,
+                        listingTitle: agent.name,
+                      }}
+                      label="Book consultation"
+                      className="btn-gold w-full py-2.5 text-sm"
+                      fullWidth
+                    />
+                  }
                 />
               ))}
             </div>

@@ -11,7 +11,9 @@ export type CheckoutProductKey =
   | "expert_featured_listing"
   | "property_featured_listing"
   | "guide_featured_listing"
+  | "tour_booking_deposit"
   | "tour_booking_request"
+  | "property_reservation_deposit"
   | "cruise_booking_request"
   | "concierge_travel_planning"
   | "provider_subscription"
@@ -111,12 +113,30 @@ export const CHECKOUT_PRODUCTS: CheckoutProduct[] = [
     category: "Marketplace",
   },
   {
+    key: "tour_booking_deposit",
+    name: "Tour Booking Deposit",
+    description: "Refundable deposit to reserve your tour with a verified local guide.",
+    amountCents: 2500,
+    currency: "usd",
+    emoji: "🗺️",
+    category: "Bookings",
+  },
+  {
     key: "tour_booking_request",
     name: "Tour Booking Request",
     description: "Platform fee for a tour booking request with a verified guide.",
     amountCents: 1900,
     currency: "usd",
     emoji: "🗺️",
+    category: "Bookings",
+  },
+  {
+    key: "property_reservation_deposit",
+    name: "Property Reservation Deposit",
+    description: "Reservation deposit for a property stay, rental, or travel accommodation.",
+    amountCents: 5000,
+    currency: "usd",
+    emoji: "🏠",
     category: "Bookings",
   },
   {

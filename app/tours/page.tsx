@@ -8,6 +8,7 @@ import { CTASection } from "@/components/CTASection";
 import { ContactModal } from "@/components/ContactModal";
 import { SaveButton } from "@/components/SaveButton";
 import { Stars } from "@/components/Stars";
+import { StripeCheckoutButton } from "@/components/StripeCheckoutButton";
 import { tours, tickets } from "@/lib/data";
 
 const CATEGORY_CHIPS = ["Food", "Heritage", "Adventure", "City tour", "Half day", "Full day", "Beach", "Desert"];
@@ -132,16 +133,29 @@ export default function ToursPage() {
                         </span>
                         Guide: {tour.guide}
                       </div>
-                      <div className="mt-5 flex items-end justify-between border-t border-soft-200 pt-4">
-                        <div>
-                          <p className="text-lg font-extrabold text-navy">{tour.price}</p>
-                          <p className="text-xs text-charcoal/45">per person</p>
+                      <div className="mt-5 border-t border-soft-200 pt-4 space-y-2">
+                        <div className="flex items-end justify-between">
+                          <div>
+                            <p className="text-lg font-extrabold text-navy">{tour.price}</p>
+                            <p className="text-xs text-muted">per person · sample estimate</p>
+                          </div>
                         </div>
+                        <StripeCheckoutButton
+                          productKey="tour_booking_deposit"
+                          checkoutMeta={{
+                            listingId: tour.id,
+                            listingTitle: tour.title,
+                            listingType: "tour",
+                          }}
+                          label="Pay deposit"
+                          className="btn-gold w-full py-2.5 text-sm"
+                          fullWidth
+                        />
                         <button
                           onClick={() => setModalTour(tour)}
-                          className="btn-blue px-4 py-2 text-sm"
+                          className="btn-outline w-full py-2 text-sm"
                         >
-                          Book tour
+                          Request booking
                         </button>
                       </div>
                     </div>

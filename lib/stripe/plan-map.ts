@@ -11,7 +11,9 @@ export const PLAN_ID_TO_CHECKOUT: Record<string, CheckoutProductKey> = {
   "featured-expert": "expert_featured_listing",
   "featured-guide": "guide_featured_listing",
   "property-lead": "property_featured_listing",
-  "tour-booking": "tour_booking_request",
+  "tour-booking": "tour_booking_deposit",
+  "tour-deposit": "tour_booking_deposit",
+  "property-deposit": "property_reservation_deposit",
   "cruise-booking": "cruise_booking_request",
 };
 

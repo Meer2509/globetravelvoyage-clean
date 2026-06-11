@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Icon } from "./Icon";
 import { Stars } from "./Stars";
 import { VerifiedBadge } from "./TrustBadge";
@@ -20,6 +21,7 @@ export function MarketplaceCard({
   ctaLabel = "Contact expert",
   onContact,
   onSave,
+  payAction,
 }: {
   id?: string;
   initials: string;
@@ -35,6 +37,7 @@ export function MarketplaceCard({
   ctaLabel?: string;
   onContact?: () => void;
   onSave?: (saved: boolean) => void;
+  payAction?: ReactNode;
 }) {
   const vstatus = verificationStatus ?? (verified ? "verified" : "unverified");
 
@@ -90,12 +93,15 @@ export function MarketplaceCard({
         </p>
       )}
 
-      <button
-        className="btn-outline mt-5 w-full py-2.5 text-sm"
-        onClick={onContact}
-      >
-        {ctaLabel}
-      </button>
+      <div className="mt-5 space-y-2">
+        {payAction}
+        <button
+          className="btn-outline w-full py-2.5 text-sm"
+          onClick={onContact}
+        >
+          {ctaLabel}
+        </button>
+      </div>
     </div>
   );
 }

@@ -26,18 +26,26 @@ export async function GET(request: Request) {
     const productKey = session.metadata?.product_key ?? "";
     const product = productKey ? getCheckoutProduct(productKey) : undefined;
 
+    let bookingId: string | undefined;
     if (paid) {
-      await fulfillStripeCheckoutSession(session);
+      const fulfill = await fulfillStripeCheckoutSession(session);
+      if (fulfill.ok && fulfill.bookingId) bookingId = fulfill.bookingId;
     }
+
+    const listingTitle = session.metadata?.listing_title;
+    const displayName = listingTitle
+      ? `${product?.name ?? "Purchase"}: ${listingTitle}`
+      : product?.name ?? session.metadata?.product_key ?? "Your purchase";
 
     return NextResponse.json({
       ok: true,
       paid,
       sessionId: session.id,
-      productName: product?.name ?? session.metadata?.product_key ?? "Your purchase",
+      productName: displayName,
       serviceType: productKey || null,
       amount,
       currency: session.currency?.toUpperCase() ?? "USD",
+      bookingId,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Could not verify payment session.";

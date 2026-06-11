@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { type TripInput, type TripResult } from "@/lib/ai-mock";
 import { generateTripPlanWithAi } from "@/lib/ai-api";
+import { StripeCheckoutButton } from "@/components/StripeCheckoutButton";
 
 function DownloadItineraryButton({ destination, totalDays }: { destination: string; totalDays: number }) {
   const [done, setDone] = useState(false);
@@ -447,7 +448,13 @@ export default function AITripPlannerPage() {
 
             {/* Actions */}
             <div className="flex flex-wrap gap-3 pt-2">
-              <Link href="/agents" className="btn-primary py-3 px-6 text-sm">Book a tour guide</Link>
+              <StripeCheckoutButton
+                productKey="premium_ai_trip_plan"
+                checkoutMeta={{ listingTitle: result.destination }}
+                label="Purchase premium plan"
+                className="btn-gold py-3 px-6 text-sm"
+              />
+              <Link href="/agents" className="btn-outline py-3 px-6 text-sm">Book a tour guide</Link>
               <Link href="/ai-visa-assistant" className="btn-outline py-3 px-6 text-sm">Check visa requirements</Link>
               <Link href="/ai-flight-finder" className="btn-outline py-3 px-6 text-sm">Find flights</Link>
               <DownloadItineraryButton destination={result.destination} totalDays={result.totalDays} />

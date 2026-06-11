@@ -7,6 +7,7 @@ import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
 import { ContactModal } from "@/components/ContactModal";
 import { SaveButton } from "@/components/SaveButton";
+import { StripeCheckoutButton } from "@/components/StripeCheckoutButton";
 import type { MarketplacePropertyRow } from "@/lib/supabase/mvp-queries";
 
 const PROPERTY_EMOJI: Record<string, string> = {
@@ -183,16 +184,29 @@ export function PropertiesCatalog({
                         <span>🚿 {property.baths} bath{property.baths !== 1 ? "s" : ""}</span>
                       )}
                     </div>
-                    <div className="mt-5 flex items-end justify-between border-t border-soft-200 pt-4">
+                    <div className="mt-5 border-t border-soft-200 pt-4 space-y-2">
                       <div>
                         <p className="text-lg font-extrabold text-navy">
                           {formatPrice(property.price, property.price_period, property.listing_type)}
                         </p>
                         <p className="text-xs text-muted capitalize">{property.property_type}</p>
                       </div>
+                      {property.listing_type !== "sale" && (
+                        <StripeCheckoutButton
+                          productKey="property_reservation_deposit"
+                          checkoutMeta={{
+                            listingId: property.id,
+                            listingTitle: property.title,
+                            listingType: "property",
+                          }}
+                          label="Pay deposit"
+                          className="btn-gold w-full py-2.5 text-sm"
+                          fullWidth
+                        />
+                      )}
                       <button
                         onClick={() => setModal({ open: true, property })}
-                        className="btn-blue px-4 py-2 text-sm"
+                        className="btn-outline w-full py-2 text-sm"
                       >
                         {property.listing_type === "sale" ? "Inquire" : "Contact host"}
                       </button>

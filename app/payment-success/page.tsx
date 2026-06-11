@@ -13,6 +13,7 @@ function PaymentSuccessContent() {
   const [productName, setProductName] = useState("Your purchase");
   const [amount, setAmount] = useState<number | null>(null);
   const [currency, setCurrency] = useState("USD");
+  const [bookingConfirmed, setBookingConfirmed] = useState(false);
 
   useEffect(() => {
     if (!sessionId || !isStripeConfigured) {
@@ -27,6 +28,7 @@ function PaymentSuccessContent() {
           productName?: string;
           amount?: number | null;
           currency?: string;
+          bookingId?: string;
           error?: string;
         };
         if (!res.ok) {
@@ -73,10 +75,10 @@ function PaymentSuccessContent() {
         </div>
       )}
 
-      {!isStripeConfigured && (
-        <div className="mt-4 rounded-xl border border-gold/20 bg-gold/5 p-3 text-xs text-charcoal/60">
-          Stripe is not configured — this page is shown for preview only.
-        </div>
+      {bookingConfirmed && (
+        <p className="mt-4 text-sm text-navy font-semibold">
+          Your booking has been confirmed and saved to your account.
+        </p>
       )}
 
       <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
