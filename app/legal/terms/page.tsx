@@ -35,7 +35,7 @@ const sections = [
   },
   {
     title: "Payments",
-    body: "Payment processing is not currently enabled on this platform (demo mode). When payment processing is introduced, additional payment terms will apply. We do not guarantee any specific pricing for third-party services.",
+    body: "Selected platform services are processed via Stripe Checkout. Third-party travel services may have separate payment terms with their providers. We do not guarantee any specific pricing for third-party services. See our Refund Policy and Cancellation Policy for platform payments.",
   },
   {
     title: "Intellectual property",

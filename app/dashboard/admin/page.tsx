@@ -7,10 +7,13 @@ import {
   fetchAdminVisaRequests,
   fetchAdminProfiles,
   fetchAdminPayments,
+  fetchAdminBookingRequests,
+  fetchAdminSupportTickets,
   type AdminDashboardCounts,
   type AdminProfileRow,
   type AdminPaymentRow,
 } from "@/lib/supabase/queries";
+import { fetchAdminProviders, fetchAdminProviderServices } from "@/lib/supabase/mvp-queries";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
 import { ROLE_LABELS } from "@/lib/auth";
@@ -976,6 +979,23 @@ export default function AdminDashboard() {
   const [adminToast, setAdminToast] = useState<string | null>(null);
   const [liveProfiles, setLiveProfiles] = useState<AdminProfileRow[]>([]);
   const [livePayments, setLivePayments] = useState<AdminPaymentRow[]>([]);
+  const [liveBookings, setLiveBookings] = useState<Array<{
+    id: string;
+    service_name: string | null;
+    service_type: string;
+    full_name: string;
+    email: string;
+    status: string;
+    created_at: string;
+  }>>([]);
+  const [liveSupport, setLiveSupport] = useState<Array<{
+    id: string;
+    subject: string;
+    status: string;
+    created_at: string;
+  }>>([]);
+  const [liveExperts, setLiveExperts] = useState<Array<{ id: string; is_verified: boolean; is_active: boolean }>>([]);
+  const [liveServices, setLiveServices] = useState<Array<{ id: string; title: string; category: string | null; price: number; is_active: boolean }>>([]);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
@@ -986,6 +1006,10 @@ export default function AdminDashboard() {
     fetchAdminPayments().then((res) => {
       if (!res.tableMissing) setLivePayments(res.payments);
     });
+    fetchAdminBookingRequests().then((rows) => setLiveBookings(rows as typeof liveBookings));
+    fetchAdminSupportTickets().then((rows) => setLiveSupport(rows as typeof liveSupport));
+    fetchAdminProviders().then((res) => setLiveExperts(res.experts as typeof liveExperts));
+    fetchAdminProviderServices().then((rows) => setLiveServices(rows as typeof liveServices));
   }, []);
   const [usersData, setUsersData]   = useState(allUsers.map((u) => ({ ...u })));
   const [featureToggles, setFeatureToggles] = useState([
@@ -996,13 +1020,11 @@ export default function AdminDashboard() {
     { label: "New user registrations",      enabled: true  },
     { label: "Maintenance mode",            enabled: false },
   ]);
-  const [supportData, setSupportData] = useState(supportTickets.map((t) => ({ ...t })));
-  const [propertiesData, setPropertiesData] = useState([
-    { name: "Marina 2BR Apartment",    host: "Omar F.",   city: "Dubai Marina",     type: "For Rent",    price: "$2,400/mo", status: "Active" as "Active" | "Removed" },
-    { name: "Furnished Studio",        host: "Omar F.",   city: "JLT, Dubai",       type: "Travel Stay", price: "$650/mo",   status: "Active" as "Active" | "Removed" },
-    { name: "3BR Villa — Jumeirah",    host: "Omar F.",   city: "Jumeirah, Dubai",  type: "For Sale",    price: "$1.2M",     status: "Active" as "Active" | "Draft" },
-    { name: "Penthouse — Downtown",    host: "Khalid R.", city: "Downtown Dubai",   type: "For Rent",    price: "$5,500/mo", status: "Active" as "Active" | "Removed" },
-  ]);
+  const [supportData, setSupportData] = useState<Array<{ id: string; subject: string; status: string; created_at: string }>>([]);
+
+  useEffect(() => {
+    setSupportData(liveSupport);
+  }, [liveSupport]);
 
   function showToast(msg: string) {
     setAdminToast(msg);
@@ -1021,12 +1043,7 @@ export default function AdminDashboard() {
 
   function updateTicketStatus(id: string, status: string) {
     setSupportData((prev) => prev.map((t) => t.id === id ? { ...t, status } : t));
-    showToast(`Ticket ${id} updated to "${status}"`);
-  }
-
-  function removeProperty(name: string) {
-    setPropertiesData((prev) => prev.map((p) => p.name === name ? { ...p, status: "Removed" } : p));
-    showToast(`Listing "${name}" removed`);
+    showToast(`Ticket updated to "${status}" (refresh to sync with Supabase)`);
   }
 
   const sections: Record<string, React.ReactNode> = {
@@ -1047,36 +1064,48 @@ export default function AdminDashboard() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          <Panel title="User Distribution">
-            <div className="space-y-3">
-              <MiniBar label="Customers" value={1080} max={1240} color="bg-blue" />
-              <MiniBar label="Visa Experts" value={94} max={1240} color="bg-gold" />
-              <MiniBar label="Agencies" value={38} max={1240} color="bg-emerald-500" />
-              <MiniBar label="Tour Guides" value={21} max={1240} color="bg-purple-500" />
-              <MiniBar label="Hosts" value={7} max={1240} color="bg-amber-500" />
+          <Panel title="Platform activity">
+            <div className="space-y-2">
+              {[
+                { label: "Lead requests", value: liveCounts?.leadRequests ?? 0 },
+                { label: "Property listings", value: liveCounts?.propertyListings ?? 0 },
+                { label: "Referrals", value: liveCounts?.referrals ?? 0 },
+                { label: "Payments", value: liveCounts?.payments ?? 0 },
+              ].map((s) => (
+                <div key={s.label} className="flex items-center justify-between rounded-xl bg-soft p-3 text-sm">
+                  <span className="text-charcoal/65">{s.label}</span>
+                  <span className="font-bold text-navy">{s.value}</span>
+                </div>
+              ))}
             </div>
           </Panel>
 
-          <Panel title="Booking Breakdown">
-            <div className="space-y-3">
-              <MiniBar label="Packages" value={148} max={284} color="bg-blue" />
-              <MiniBar label="Tours" value={82} max={284} color="bg-gold" />
-              <MiniBar label="Tickets" value={34} max={284} color="bg-emerald-500" />
-              <MiniBar label="Properties" value={20} max={284} color="bg-purple-500" />
+          <Panel title="Booking requests">
+            <div className="space-y-2">
+              {liveBookings.length === 0 ? (
+                <p className="text-sm text-charcoal/50 py-4 text-center">No booking requests yet.</p>
+              ) : (
+                liveBookings.slice(0, 5).map((b) => (
+                  <div key={b.id} className="rounded-xl bg-soft p-3 text-sm">
+                    <p className="font-semibold text-navy">{b.service_name ?? b.service_type}</p>
+                    <p className="text-xs text-charcoal/50">{b.full_name} · {b.status}</p>
+                  </div>
+                ))
+              )}
             </div>
           </Panel>
 
           <Panel title="Support Overview">
             <div className="space-y-2">
               {[
-                { label: "Open tickets", value: 8, color: "bg-red-400" },
-                { label: "In progress", value: 3, color: "bg-gold" },
-                { label: "Resolved today", value: 5, color: "bg-emerald-500" },
-                { label: "Avg response time", value: "2.4h", isText: true },
+                { label: "Open", value: liveSupport.filter((t) => t.status === "open").length, color: "bg-red-400" },
+                { label: "In progress", value: liveSupport.filter((t) => t.status === "in_progress").length, color: "bg-gold" },
+                { label: "Resolved", value: liveSupport.filter((t) => t.status === "resolved").length, color: "bg-emerald-500" },
+                { label: "Total tickets", value: liveSupport.length, color: "bg-blue" },
               ].map((s) => (
                 <div key={s.label} className="flex items-center justify-between rounded-xl bg-soft p-3 text-sm">
                   <div className="flex items-center gap-2">
-                    {!s.isText && <span className={`h-2.5 w-2.5 rounded-full ${s.color}`} />}
+                    <span className={`h-2.5 w-2.5 rounded-full ${s.color}`} />
                     <span className="text-charcoal/65">{s.label}</span>
                   </div>
                   <span className="font-bold text-navy">{s.value}</span>
@@ -1087,23 +1116,27 @@ export default function AdminDashboard() {
         </div>
 
         <Panel title="Recent Bookings">
-          {adminBookings.slice(0, 4).map((b) => (
-            <TableRow
-              key={b.id}
-              cells={[b.id, b.item, b.customer]}
-              badge={b.status}
-              badgeColor={b.status === "Confirmed" ? "green" : "gold"}
-              action={<span className="font-bold text-navy text-sm">{b.amount}</span>}
-            />
-          ))}
+          {liveBookings.length === 0 ? (
+            <p className="p-6 text-center text-sm text-charcoal/50">No booking requests in Supabase yet.</p>
+          ) : (
+            liveBookings.slice(0, 4).map((b) => (
+              <TableRow
+                key={b.id}
+                cells={[b.id.slice(0, 8), b.service_name ?? b.service_type, b.full_name]}
+                badge={b.status}
+                badgeColor={b.status === "confirmed" ? "green" : "gold"}
+                action={<span className="text-xs text-charcoal/50">{formatJoinedDate(b.created_at)}</span>}
+              />
+            ))
+          )}
         </Panel>
 
         <div className="grid gap-4 sm:grid-cols-4">
           {[
-            { label: "Total agencies", value: "38", color: "green" as const },
-            { label: "Visa experts", value: "94", color: "gold" as const },
-            { label: "Active listings", value: "312", color: "blue" as const },
-            { label: "Reviews written", value: "2,180", color: "navy" as const },
+            { label: "Visa experts", value: String(liveExperts.length), color: "gold" as const },
+            { label: "Provider services", value: String(liveServices.length), color: "blue" as const },
+            { label: "Booking requests", value: String(liveBookings.length), color: "green" as const },
+            { label: "Support tickets", value: String(liveSupport.length), color: "navy" as const },
           ].map((s) => (
             <StatCard key={s.label} label={s.label} value={s.value} icon="globe" color={s.color} />
           ))}
@@ -1248,38 +1281,34 @@ export default function AdminDashboard() {
     visaexperts: (
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-3">
-          <StatCard label="Total experts" value="94" icon="visa" color="blue" />
-          <StatCard label="Verified" value="82" icon="check" color="green" />
-          <StatCard label="Pending review" value="4" icon="shield" color="gold" />
+          <StatCard label="Total experts" value={String(liveExperts.length)} icon="visa" color="blue" />
+          <StatCard label="Verified" value={String(liveExperts.filter((e) => e.is_verified).length)} icon="check" color="green" />
+          <StatCard label="Active" value={String(liveExperts.filter((e) => e.is_active).length)} icon="shield" color="gold" />
         </div>
 
         <Panel title="All Visa Experts" noPad>
-          <div className="divide-y divide-soft-200">
-            {visaExperts.map((e) => (
-              <div key={e.name} className="flex items-center justify-between p-5">
-                <div>
-                  <p className="font-bold text-navy">{e.name}</p>
-                  <p className="text-sm text-charcoal/55">
-                    {e.country} · {e.specialties} · {e.clients} active clients
-                  </p>
+          {liveExperts.length === 0 ? (
+            <p className="p-8 text-center text-sm text-charcoal/50">No visa experts registered yet.</p>
+          ) : (
+            <div className="divide-y divide-soft-200">
+              {liveExperts.map((e) => (
+                <div key={e.id} className="flex items-center justify-between p-5">
+                  <div>
+                    <p className="font-bold text-navy font-mono text-sm">{e.id.slice(0, 8)}…</p>
+                    <p className="text-sm text-charcoal/55">Expert profile in Supabase</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={`chip text-xs ${e.is_verified ? "bg-emerald-50 text-emerald-700" : "bg-gold/15 text-navy"}`}>
+                      {e.is_verified ? "Verified" : "Unverified"}
+                    </span>
+                    <span className={`chip text-xs ${e.is_active ? "bg-blue/10 text-blue" : "bg-soft text-charcoal/50"}`}>
+                      {e.is_active ? "Active" : "Inactive"}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  {e.reviews > 0 ? (
-                    <div className="flex items-center gap-1 text-sm">
-                      <span className="text-gold">★</span>
-                      <span className="font-bold text-navy">{e.rating}</span>
-                      <span className="text-charcoal/40">({e.reviews})</span>
-                    </div>
-                  ) : null}
-                  <span className={`chip text-xs ${
-                    e.status === "Active" ? "bg-emerald-50 text-emerald-700" :
-                    e.status === "Pending" ? "bg-gold/15 text-navy" : "bg-soft text-charcoal/50"
-                  }`}>{e.status}</span>
-                  <button className="text-xs text-blue font-semibold hover:underline">View</button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </Panel>
       </div>
     ),
@@ -1289,35 +1318,33 @@ export default function AdminDashboard() {
     tours: (
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-4">
-          <StatCard label="Active tours" value="142" icon="ticket" color="blue" />
-          <StatCard label="Active tickets" value="88" icon="globe" color="gold" />
-          <StatCard label="Sold (month)" value="620" icon="users" color="green" />
-          <StatCard label="Revenue (tours)" value="$18.4k" icon="star" color="navy" />
+          <StatCard label="Provider services" value={String(liveServices.length)} icon="ticket" color="blue" />
+          <StatCard label="Active" value={String(liveServices.filter((s) => s.is_active).length)} icon="globe" color="gold" />
+          <StatCard label="Tours & tickets" value={String(liveServices.filter((s) => (s.category ?? "").match(/tour|ticket/i)).length)} icon="users" color="green" />
+          <StatCard label="From Supabase" value="Live" icon="star" color="navy" />
         </div>
 
-        <Panel title="Tours & Tickets — Quick View" noPad>
-          <div className="divide-y divide-soft-200">
-            {[
-              { name: "Old Dubai Heritage Walk", type: "Tour", agency: "Khalid R. (Guide)", price: "$45", sold: 88, status: "Active" },
-              { name: "Desert Safari — Evening BBQ", type: "Tour", agency: "Voyage Pro Travels", price: "$55", sold: 175, status: "Active" },
-              { name: "Burj Khalifa Skip-the-Line", type: "Ticket", agency: "Voyage Pro Travels", price: "$42", sold: 210, status: "Active" },
-              { name: "Bosphorus Sunset Cruise", type: "Tour", agency: "Orient Express", price: "$38", sold: 64, status: "Active" },
-              { name: "Cappadocia Hot Air Balloon", type: "Experience", agency: "Orient Express", price: "$185", sold: 29, status: "Active" },
-            ].map((t) => (
-              <div key={t.name} className="flex items-center justify-between p-5">
-                <div>
-                  <p className="font-bold text-navy">{t.name}</p>
-                  <p className="text-sm text-charcoal/55">{t.agency} · {t.type} · {t.sold} sold</p>
+        <Panel title="Provider services — tours & tickets" noPad>
+          {liveServices.length === 0 ? (
+            <p className="p-8 text-center text-sm text-charcoal/50">No provider services listed yet. Guides and agencies add services from their dashboards.</p>
+          ) : (
+            <div className="divide-y divide-soft-200">
+              {liveServices.map((t) => (
+                <div key={t.id} className="flex items-center justify-between p-5">
+                  <div>
+                    <p className="font-bold text-navy">{t.title}</p>
+                    <p className="text-sm text-charcoal/55">{t.category ?? "Service"}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-bold text-navy">${t.price}</span>
+                    <span className={`chip text-xs ${t.is_active ? "bg-emerald-50 text-emerald-700" : "bg-soft text-charcoal/50"}`}>
+                      {t.is_active ? "Active" : "Inactive"}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="font-bold text-navy">{t.price}</span>
-                  <span className="chip text-xs bg-emerald-50 text-emerald-700">{t.status}</span>
-                  <button className="text-xs text-blue font-semibold hover:underline">Edit</button>
-                  <button className="text-xs text-red-500 font-semibold hover:underline">Remove</button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </Panel>
       </div>
     ),
@@ -1325,31 +1352,18 @@ export default function AdminDashboard() {
     properties: (
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-4">
-          <StatCard label="Total listings" value="47" icon="property" color="blue" />
-          <StatCard label="For rent" value="31" icon="globe" color="gold" />
-          <StatCard label="For sale" value="9" icon="star" color="green" />
-          <StatCard label="Travel stays" value="7" icon="planner" color="navy" />
+          <StatCard label="Property listings" value={String(liveCounts?.propertyListings ?? 0)} icon="property" color="blue" />
+          <StatCard label="Lead requests" value={String(liveCounts?.leadRequests ?? 0)} icon="globe" color="gold" />
+          <StatCard label="From Supabase" value="Live" icon="star" color="green" />
+          <StatCard label="Host dashboard" value="→" icon="planner" color="navy" />
         </div>
 
-        <Panel title="Property Listings — Quick View" noPad>
-          <div className="divide-y divide-soft-200">
-            {propertiesData.filter((p) => p.status !== "Removed").map((p) => (
-              <div key={p.name} className="flex items-center justify-between p-5">
-                <div>
-                  <p className="font-bold text-navy">{p.name}</p>
-                  <p className="text-sm text-charcoal/55">{p.host} · {p.city} · {p.type}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="font-bold text-navy">{p.price}</span>
-                  <span className={`chip text-xs ${p.status === "Active" ? "bg-emerald-50 text-emerald-700" : "bg-soft text-charcoal/50"}`}>{p.status}</span>
-                  <button onClick={() => removeProperty(p.name)} className="text-xs text-red-500 font-semibold hover:underline transition-colors">Remove</button>
-                </div>
-              </div>
-            ))}
-            {propertiesData.every((p) => p.status === "Removed") && (
-              <div className="py-10 text-center text-sm text-charcoal/40">All listings removed this session.</div>
-            )}
-          </div>
+        <Panel title="Property listings" noPad>
+          <p className="p-8 text-center text-sm text-charcoal/50">
+            {(liveCounts?.propertyListings ?? 0) === 0
+              ? "No property listings in Supabase yet. Hosts add listings from the host dashboard."
+              : `${liveCounts?.propertyListings} listing(s) in property_listings table — manage from host dashboard and admin tools.`}
+          </p>
         </Panel>
       </div>
     ),
@@ -1357,31 +1371,31 @@ export default function AdminDashboard() {
     bookings: (
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-4">
-          <StatCard label="Total (month)" value="284" icon="doc" delta="+18%" color="blue" />
-          <StatCard label="Confirmed" value="241" icon="check" color="green" />
-          <StatCard label="Pending" value="31" icon="shield" color="gold" />
-          <StatCard label="Cancelled" value="12" icon="globe" color="navy" />
+          <StatCard label="Total requests" value={String(liveBookings.length)} icon="doc" color="blue" />
+          <StatCard label="Pending" value={String(liveBookings.filter((b) => b.status === "pending").length)} icon="shield" color="gold" />
+          <StatCard label="Confirmed" value={String(liveBookings.filter((b) => b.status === "confirmed").length)} icon="check" color="green" />
+          <StatCard label="Other" value={String(liveBookings.filter((b) => !["pending", "confirmed"].includes(b.status)).length)} icon="globe" color="navy" />
         </div>
 
-        <Panel title="All Bookings" noPad>
-          <div className="divide-y divide-soft-200">
-            {adminBookings.map((b) => (
-              <div key={b.id} className="flex items-center justify-between p-5">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-mono text-charcoal/40">{b.id}</span>
-                  <div>
-                    <p className="text-sm font-semibold text-navy">{b.item}</p>
-                    <p className="text-xs text-charcoal/50">{b.customer} · {b.agency} · {b.date}</p>
+        <Panel title="All booking requests" noPad>
+          {liveBookings.length === 0 ? (
+            <p className="p-8 text-center text-sm text-charcoal/50">No booking requests yet. Customer requests appear here from Supabase.</p>
+          ) : (
+            <div className="divide-y divide-soft-200">
+              {liveBookings.map((b) => (
+                <div key={b.id} className="flex items-center justify-between p-5">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-mono text-charcoal/40">{b.id.slice(0, 8)}</span>
+                    <div>
+                      <p className="text-sm font-semibold text-navy">{b.service_name ?? b.service_type}</p>
+                      <p className="text-xs text-charcoal/50">{b.full_name} · {b.email} · {formatJoinedDate(b.created_at)}</p>
+                    </div>
                   </div>
+                  <span className={`chip text-xs ${b.status === "confirmed" ? "bg-emerald-50 text-emerald-700" : "bg-gold/15 text-navy"}`}>{b.status}</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="chip text-xs">{b.type}</span>
-                  <span className={`chip text-xs ${b.status === "Confirmed" ? "bg-emerald-50 text-emerald-700" : "bg-gold/15 text-navy"}`}>{b.status}</span>
-                  <span className="font-bold text-navy">{b.amount}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </Panel>
       </div>
     ),
@@ -1467,39 +1481,40 @@ export default function AdminDashboard() {
     support: (
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-4">
-          <StatCard label="Open tickets" value="8" icon="shield" color="gold" />
-          <StatCard label="In progress" value="3" icon="users" color="blue" />
-          <StatCard label="Resolved today" value="5" icon="check" color="green" />
-          <StatCard label="Avg response" value="2.4h" icon="globe" color="navy" />
+          <StatCard label="Open" value={String(liveSupport.filter((t) => t.status === "open").length)} icon="shield" color="gold" />
+          <StatCard label="In progress" value={String(liveSupport.filter((t) => t.status === "in_progress").length)} icon="users" color="blue" />
+          <StatCard label="Resolved" value={String(liveSupport.filter((t) => t.status === "resolved").length)} icon="check" color="green" />
+          <StatCard label="Total" value={String(liveSupport.length)} icon="globe" color="navy" />
         </div>
 
         <Panel title="Support Tickets" noPad>
-          <div className="divide-y divide-soft-200">
-            {supportData.map((t) => (
-              <div key={t.id} className="flex items-center justify-between p-5 flex-wrap gap-3">
-                <div>
-                  <p className="font-bold text-navy">{t.subject}</p>
-                  <p className="text-sm text-charcoal/55">{t.id} · {t.user} · Assigned: {t.assigned} · {t.date}</p>
+          {supportData.length === 0 ? (
+            <p className="p-8 text-center text-sm text-charcoal/50">No support tickets yet. Customer messages appear here from Supabase.</p>
+          ) : (
+            <div className="divide-y divide-soft-200">
+              {supportData.map((t) => (
+                <div key={t.id} className="flex items-center justify-between p-5 flex-wrap gap-3">
+                  <div>
+                    <p className="font-bold text-navy">{t.subject}</p>
+                    <p className="text-sm text-charcoal/55">{t.id.slice(0, 8)} · {formatJoinedDate(t.created_at)}</p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`chip text-xs ${t.status === "resolved" ? "bg-emerald-50 text-emerald-700" : t.status === "in_progress" ? "bg-blue/10 text-blue" : "bg-gold/15 text-navy"}`}>
+                      {t.status}
+                    </span>
+                    {t.status !== "resolved" && (
+                      <button onClick={() => updateTicketStatus(t.id, t.status === "open" ? "in_progress" : "resolved")} className={`text-xs font-semibold hover:underline ${t.status === "open" ? "text-blue" : "text-emerald-600"}`}>
+                        {t.status === "open" ? "Start →" : "✓ Resolve"}
+                      </button>
+                    )}
+                    {t.status === "resolved" && (
+                      <button onClick={() => updateTicketStatus(t.id, "open")} className="text-xs text-charcoal/40 font-semibold hover:underline">Reopen</button>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className={`chip text-xs ${t.priority === "High" ? "bg-red-50 text-red-600" : t.priority === "Medium" ? "bg-gold/15 text-navy" : "bg-soft text-charcoal/50"}`}>
-                    {t.priority}
-                  </span>
-                  <span className={`chip text-xs ${t.status === "Resolved" ? "bg-emerald-50 text-emerald-700" : t.status === "In Progress" ? "bg-blue/10 text-blue" : "bg-gold/15 text-navy"}`}>
-                    {t.status}
-                  </span>
-                  {t.status !== "Resolved" && (
-                    <button onClick={() => updateTicketStatus(t.id, t.status === "Open" ? "In Progress" : "Resolved")} className={`text-xs font-semibold hover:underline ${t.status === "Open" ? "text-blue" : "text-emerald-600"}`}>
-                      {t.status === "Open" ? "Start →" : "✓ Resolve"}
-                    </button>
-                  )}
-                  {t.status === "Resolved" && (
-                    <button onClick={() => updateTicketStatus(t.id, "Open")} className="text-xs text-charcoal/40 font-semibold hover:underline">Reopen</button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </Panel>
       </div>
     ),

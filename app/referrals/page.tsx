@@ -8,11 +8,6 @@ import { Icon } from "@/components/Icon";
 import { Disclaimer } from "@/components/Disclaimer";
 import { submitReferralSignup } from "@/lib/supabase/actions";
 
-// ── Mock data ─────────────────────────────────────────────────────────────────
-
-const MOCK_REFERRAL_CODE = "GTV-AHMED2024";
-const MOCK_REFERRAL_LINK = `https://globetravelvoyage.com/register?ref=${MOCK_REFERRAL_CODE}`;
-
 type CommissionStatus = "pending" | "approved" | "paid";
 
 interface Referral {
@@ -25,25 +20,11 @@ interface Referral {
   status: CommissionStatus;
 }
 
-const mockReferrals: Referral[] = [
-  { id: "R001", name: "Sara Malik",    email: "sara@example.com",    date: "Jun 10", action: "AI Visa Guidance", amount: 4.35,  status: "pending"  },
-  { id: "R002", name: "Omar Hassan",   email: "omar@example.com",    date: "Jun 9",  action: "First purchase",  amount: 7.50,  status: "approved" },
-  { id: "R003", name: "Fatima Ali",    email: "fatima@example.com",  date: "Jun 7",  action: "Expert signup",   amount: 29.80, status: "paid"     },
-  { id: "R004", name: "Bilal Ahmed",   email: "bilal@example.com",   date: "Jun 5",  action: "Bundle purchase", amount: 17.88, status: "paid"     },
-  { id: "R005", name: "Nadia Iqbal",   email: "nadia@example.com",   date: "Jun 3",  action: "User signup",     amount: 2.00,  status: "approved" },
-  { id: "R006", name: "Khalid Raza",   email: "khalid@example.com",  date: "May 30", action: "Trip plan",       amount: 1.90,  status: "pending"  },
-  { id: "R007", name: "Amira Yusuf",   email: "amira@example.com",   date: "May 25", action: "First purchase",  amount: 12.00, status: "paid"     },
-];
-
 const STATUS_LABELS: Record<CommissionStatus, { label: string; dot: string; badge: string }> = {
   pending:  { label: "Pending",  dot: "bg-gold",       badge: "bg-gold/10 text-gold"         },
   approved: { label: "Approved", dot: "bg-blue",       badge: "bg-blue/10 text-blue"         },
   paid:     { label: "Paid",     dot: "bg-emerald-500", badge: "bg-emerald-50 text-emerald-700" },
 };
-
-const totalEarned   = mockReferrals.filter((r) => r.status === "paid").reduce((s, r) => s + r.amount, 0);
-const totalApproved = mockReferrals.filter((r) => r.status === "approved").reduce((s, r) => s + r.amount, 0);
-const totalPending  = mockReferrals.filter((r) => r.status === "pending").reduce((s, r) => s + r.amount, 0);
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -62,21 +43,26 @@ function StatCard({ label, value, sub, color }: { label: string; value: string; 
 export default function ReferralsPage() {
   const [copied, setCopied]           = useState(false);
   const [activeTab, setActiveTab]     = useState<"all" | CommissionStatus>("all");
-  const [payoutLoading, setPayoutLoading] = useState(false);
-  const [payoutRequested, setPayoutRequested] = useState(false);
-  const [referralCode, setReferralCode] = useState(MOCK_REFERRAL_CODE);
+  const [referralHistory] = useState<Referral[]>([]);
+  const [referralCode, setReferralCode] = useState("");
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupLoading, setSignupLoading] = useState(false);
   const [signupError, setSignupError] = useState("");
   const [signupDone, setSignupDone] = useState(false);
 
-  const [referralLink, setReferralLink] = useState(
-    `https://globetravelvoyage.com/register?ref=${MOCK_REFERRAL_CODE}`
-  );
+  const [referralLink, setReferralLink] = useState("");
+
+  const totalEarned   = referralHistory.filter((r) => r.status === "paid").reduce((s, r) => s + r.amount, 0);
+  const totalApproved = referralHistory.filter((r) => r.status === "approved").reduce((s, r) => s + r.amount, 0);
+  const totalPending  = referralHistory.filter((r) => r.status === "pending").reduce((s, r) => s + r.amount, 0);
 
   useEffect(() => {
-    setReferralLink(`${window.location.origin}/register?ref=${referralCode}`);
+    if (referralCode) {
+      setReferralLink(`${window.location.origin}/register?ref=${referralCode}`);
+    } else {
+      setReferralLink("");
+    }
   }, [referralCode]);
 
   async function handleSignup(e: React.FormEvent) {
@@ -106,20 +92,13 @@ export default function ReferralsPage() {
     setTimeout(() => setCopied(false), 2500);
   }
 
-  async function handlePayoutRequest() {
-    setPayoutLoading(true);
-    await new Promise((r) => setTimeout(r, 1400));
-    setPayoutLoading(false);
-    setPayoutRequested(true);
-  }
-
-  const filtered = activeTab === "all" ? mockReferrals : mockReferrals.filter((r) => r.status === activeTab);
+  const filtered = activeTab === "all" ? referralHistory : referralHistory.filter((r) => r.status === activeTab);
 
   const TABS: { key: "all" | CommissionStatus; label: string; count: number }[] = [
-    { key: "all",      label: "All",      count: mockReferrals.length },
-    { key: "pending",  label: "Pending",  count: mockReferrals.filter((r) => r.status === "pending").length  },
-    { key: "approved", label: "Approved", count: mockReferrals.filter((r) => r.status === "approved").length },
-    { key: "paid",     label: "Paid",     count: mockReferrals.filter((r) => r.status === "paid").length     },
+    { key: "all",      label: "All",      count: referralHistory.length },
+    { key: "pending",  label: "Pending",  count: referralHistory.filter((r) => r.status === "pending").length  },
+    { key: "approved", label: "Approved", count: referralHistory.filter((r) => r.status === "approved").length },
+    { key: "paid",     label: "Paid",     count: referralHistory.filter((r) => r.status === "paid").length     },
   ];
 
   return (
@@ -182,7 +161,7 @@ export default function ReferralsPage() {
 
         {/* ── Stats row ── */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <StatCard label="Total referrals"    value={String(mockReferrals.length)} sub="all time"              color="text-navy"         />
+          <StatCard label="Total referrals"    value={String(referralHistory.length)} sub="all time"              color="text-navy"         />
           <StatCard label="Pending"            value={`$${totalPending.toFixed(2)}`}  sub="under review"          color="text-gold"         />
           <StatCard label="Approved"           value={`$${totalApproved.toFixed(2)}`} sub="ready to request"      color="text-blue"         />
           <StatCard label="Total paid"         value={`$${totalEarned.toFixed(2)}`}   sub="paid to your account"  color="text-emerald-600"  />
@@ -223,7 +202,7 @@ export default function ReferralsPage() {
                 🔑 Code: <strong className="text-navy font-mono">{referralCode}</strong>
               </span>
               <span className="flex items-center gap-2 rounded-lg bg-blue/5 px-3 py-1.5 text-xs text-blue">
-                📊 {mockReferrals.length} referrals total
+                📊 {referralHistory.length} referrals total
               </span>
               <span className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700">
                 💰 ${(totalEarned + totalApproved + totalPending).toFixed(2)} lifetime earnings
@@ -258,35 +237,12 @@ export default function ReferralsPage() {
           <div className="flex flex-col gap-3 border-b border-soft-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="font-extrabold text-navy">Commission history</h2>
-              <p className="text-xs text-charcoal/50">{mockReferrals.length} referrals tracked</p>
+              <p className="text-xs text-charcoal/50">{referralHistory.length} referrals tracked</p>
             </div>
-            {/* Payout request */}
             <div>
-              {totalApproved > 0 && !payoutRequested ? (
-                <button
-                  onClick={handlePayoutRequest}
-                  disabled={payoutLoading}
-                  className="btn-primary py-2 px-4 text-sm disabled:opacity-60"
-                >
-                  {payoutLoading ? (
-                    <span className="flex items-center gap-2">
-                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z" />
-                      </svg>
-                      Requesting…
-                    </span>
-                  ) : (
-                    <>💸 Request payout (${totalApproved.toFixed(2)})</>
-                  )}
-                </button>
-              ) : payoutRequested ? (
-                <span className="inline-flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
-                  ✓ Payout requested — processing within 3–5 business days
-                </span>
-              ) : (
-                <span className="text-xs text-charcoal/40">No approved balance to request</span>
-              )}
+              <span className="inline-flex items-center gap-2 rounded-xl bg-soft px-4 py-2 text-xs font-semibold text-charcoal/60">
+                Provider payouts coming soon — commissions track in Supabase when referrals convert
+              </span>
             </div>
           </div>
 
@@ -358,8 +314,8 @@ export default function ReferralsPage() {
           )}
 
           <div className="border-t border-soft-200 px-5 py-3 flex items-center justify-between text-xs text-charcoal/40">
-            <span>Showing {filtered.length} of {mockReferrals.length} referrals</span>
-            <span>Mock data — commission tracking coming soon</span>
+            <span>Showing {filtered.length} of {referralHistory.length} referrals</span>
+            <span>Commissions appear here when referrals convert in Supabase</span>
           </div>
         </div>
 

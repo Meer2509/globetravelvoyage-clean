@@ -149,9 +149,12 @@ export default async function AdminSetupPage() {
       {/* Header */}
       <div className="bg-hero-gradient px-5 py-10 text-white">
         <div className="mx-auto max-w-4xl">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex flex-wrap items-center gap-4 mb-4">
             <Link href="/dashboard/admin" className="text-white/50 hover:text-white text-sm transition-colors">
               ← Admin dashboard
+            </Link>
+            <Link href="/admin/audit" className="text-white/50 hover:text-white text-sm transition-colors">
+              Production audit →
             </Link>
           </div>
           <div className="flex items-start justify-between gap-4">

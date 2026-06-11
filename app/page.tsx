@@ -12,7 +12,6 @@ import {
   usaRoutes,
   stays,
   visas,
-  reviews,
   roles,
   faqs,
   trustItems,
@@ -678,30 +677,19 @@ export default function Home() {
         <div className="container-px">
           <SectionHeader
             eyebrow="Trusted by travelers"
-            title="Real reviews from real travelers"
+            title="Verified reviews"
+            subtitle="Reviews from completed bookings appear here as travelers share feedback."
             center
           />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {reviews.slice(0, 6).map((r) => (
-              <div key={r.name} className="card p-6 flex flex-col">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-navy text-sm font-bold text-gold">
-                      {r.avatar}
-                    </div>
-                    <div>
-                      <p className="font-bold text-navy text-sm">{r.name}</p>
-                      <p className="text-xs text-charcoal/50">{r.location}</p>
-                    </div>
-                  </div>
-                  <Stars rating={r.rating} />
-                </div>
-                <p className="mt-4 flex-1 text-sm leading-relaxed text-charcoal/70">
-                  &ldquo;{r.text}&rdquo;
-                </p>
-                <p className="mt-4 text-xs text-charcoal/40 border-t border-soft-200 pt-3">{r.service}</p>
-              </div>
-            ))}
+          <div className="rounded-2xl border-2 border-dashed border-soft-200 bg-white py-16 text-center">
+            <p className="font-bold text-navy text-lg">No platform reviews yet</p>
+            <p className="mt-2 max-w-md mx-auto text-sm text-charcoal/50">
+              Authentic reviews from verified bookings will show here. Browse verified experts and agencies to get started.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <Link href="/agents" className="btn-primary px-5 py-2.5 text-sm">Find visa experts</Link>
+              <Link href="/agencies" className="btn-outline px-5 py-2.5 text-sm">Browse agencies</Link>
+            </div>
           </div>
         </div>
       </section>

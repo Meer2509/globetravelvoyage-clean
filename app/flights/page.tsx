@@ -67,7 +67,7 @@ export default function FlightsPage() {
             { key: "depart",   placeholder: "Departure", type: "date" },
             { key: "travelers", placeholder: "Travelers" },
           ]}
-          chips={["Direct only", "1 stop", "Economy", "Business", "Refundable"]}
+          chips={["Direct only", "1 stop", "Economy", "Business"]}
           onSearch={handleSearch}
         />
       </div>

@@ -235,6 +235,54 @@ export async function fetchPayoutAccount(userId: string): Promise<PayoutAccountR
   return data as PayoutAccountRow | null;
 }
 
+export interface MarketplaceAgencyRow {
+  id: string;
+  user_id: string;
+  agency_name: string;
+  description: string | null;
+  services: string[] | null;
+  registration_country: string | null;
+  is_verified: boolean;
+  rating: number;
+  review_count: number;
+}
+
+export async function fetchMarketplaceAgencies(): Promise<MarketplaceAgencyRow[]> {
+  const admin = createAdminClient();
+  if (!admin) return [];
+
+  const { data, error } = await admin
+    .from("agencies")
+    .select("id, user_id, agency_name, description, services, registration_country, verification_status, rating, review_count, is_active")
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error || !data?.length) return [];
+
+  return (data as Array<{
+    id: string;
+    user_id: string;
+    agency_name: string;
+    description: string | null;
+    services: string[] | null;
+    registration_country: string | null;
+    verification_status: string;
+    rating: number;
+    review_count: number;
+  }>).map((a) => ({
+    id: a.id,
+    user_id: a.user_id,
+    agency_name: a.agency_name,
+    description: a.description,
+    services: a.services,
+    registration_country: a.registration_country,
+    is_verified: a.verification_status === "verified",
+    rating: Number(a.rating ?? 0),
+    review_count: a.review_count ?? 0,
+  }));
+}
+
 export async function fetchMarketplaceExperts(): Promise<MarketplaceExpertRow[]> {
   const admin = createAdminClient();
   if (!admin) return [];

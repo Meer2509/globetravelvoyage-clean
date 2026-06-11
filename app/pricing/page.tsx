@@ -249,7 +249,7 @@ export default function PricingPage() {
               },
               {
                 q: "When will Stripe payment be available?",
-                a: "We are integrating Stripe for secure payment processing. Currently in demo mode — payment UI is live but no charges will occur. Full payment will be enabled in an upcoming release.",
+                a: "Platform fees and selected services are processed via Stripe Checkout when Stripe is configured. You will see a secure Stripe payment page before any charge is made.",
               },
               {
                 q: "Are refunds available?",

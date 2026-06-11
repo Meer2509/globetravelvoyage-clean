@@ -14,6 +14,11 @@ type Property = (typeof properties)[0];
 const CITY_CHIPS    = [...new Set(properties.map((p) => p.city))];
 const TYPE_CHIPS    = ["For rent", "For sale", "Travel stay", "Apartment", "House", "Villa"];
 
+function parsePriceNum(price: string): number {
+  const m = price.replace(/,/g, "").match(/[\d.]+/);
+  return m ? Number(m[0]) : 0;
+}
+
 export default function PropertiesPage() {
   const [modal, setModal]       = useState<{ open: boolean; property: Property | null }>({ open: false, property: null });
   const [search, setSearch]     = useState("");
@@ -45,6 +50,14 @@ export default function PropertiesPage() {
     const cityChips = chips.filter((c) => CITY_CHIPS.includes(c));
     if (cityChips.length > 0) list = list.filter((p) => cityChips.includes(p.city));
     if (beds) list = list.filter((p) => p.beds >= Number(beds));
+    if (minPrice) {
+      const min = Number(minPrice);
+      if (!Number.isNaN(min)) list = list.filter((p) => parsePriceNum(p.price) >= min);
+    }
+    if (maxPrice) {
+      const max = Number(maxPrice);
+      if (!Number.isNaN(max)) list = list.filter((p) => parsePriceNum(p.price) <= max);
+    }
     return list;
   }, [search, chips, activeTab, beds, minPrice, maxPrice]);
 
@@ -175,7 +188,7 @@ export default function PropertiesPage() {
           title="List your property for rent or sale"
           subtitle="Create a host account to publish listings, capture leads and manage inquiries."
           primary={{ label: "Become a host", href: "/register?role=host" }}
-          secondary={{ label: "Open host dashboard", href: "/dashboard/agency" }}
+          secondary={{ label: "Open host dashboard", href: "/dashboard/host" }}
         />
       </div>
 

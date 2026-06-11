@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Icon } from "./Icon";
 import { DISCLAIMER_SHORT } from "@/lib/data";
+import { submitLeadRequest } from "@/lib/supabase/actions";
 
 const navCols = [
   {
@@ -79,17 +80,22 @@ const navCols = [
       { label: "Legal Disclaimer", href: "/legal/disclaimer" },
       { label: "Privacy Policy", href: "/legal/privacy" },
       { label: "Terms of Service", href: "/legal/terms" },
+      { label: "Customer Terms", href: "/legal/customer-terms" },
+      { label: "Provider Terms", href: "/legal/provider-terms" },
+      { label: "Refund Policy", href: "/legal/refund" },
+      { label: "Cancellation Policy", href: "/legal/cancellation" },
+      { label: "Cookie Policy", href: "/legal/cookies" },
     ],
   },
 ];
 
 const socials = [
-  { label: "WhatsApp", icon: "💬", href: "#" },
-  { label: "Instagram", icon: "📸", href: "#" },
-  { label: "Facebook", icon: "📘", href: "#" },
-  { label: "Twitter / X", icon: "🐦", href: "#" },
-  { label: "YouTube", icon: "▶️", href: "#" },
-  { label: "LinkedIn", icon: "💼", href: "#" },
+  { label: "WhatsApp", icon: "💬", href: "/contact" },
+  { label: "Instagram", icon: "📸", href: "/contact" },
+  { label: "Facebook", icon: "📘", href: "/contact" },
+  { label: "Twitter / X", icon: "🐦", href: "/contact" },
+  { label: "YouTube", icon: "▶️", href: "/contact" },
+  { label: "LinkedIn", icon: "💼", href: "/contact" },
 ];
 
 const popularRoutes = [
@@ -105,15 +111,23 @@ function NewsletterBar() {
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email.includes("@")) { setError("Please enter a valid email address."); return; }
     setError("");
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setSubmitted(true);
-    }, 1200);
+    const result = await submitLeadRequest({
+      name: "Newsletter subscriber",
+      email,
+      leadType: "newsletter",
+      message: "Footer newsletter signup",
+    });
+    setLoading(false);
+    if (!result.ok && !result.demo) {
+      setError(result.error ?? "Could not subscribe. Try again or contact support.");
+      return;
+    }
+    setSubmitted(true);
   }
 
   return (
