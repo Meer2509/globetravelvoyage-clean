@@ -154,6 +154,221 @@ function MiniBar({ label, value, max, color = "bg-blue" }: { label: string; valu
   );
 }
 
+// ─── Verification Queue Tab ──────────────────────────────────────────────────
+
+type VerifStatus = "pending" | "approved" | "rejected" | "reviewing";
+
+interface VerifItem {
+  name: string;
+  type: string;
+  country: string;
+  submitted: string;
+  docs: number;
+  status: VerifStatus;
+}
+
+const INITIAL_VERIF: VerifItem[] = verificationQueue.map((v) => ({ ...v, status: "pending" as VerifStatus }));
+
+function VerificationQueueTab() {
+  const [items, setItems] = useState<VerifItem[]>(INITIAL_VERIF);
+  const [filter, setFilter] = useState<"all" | VerifStatus>("all");
+
+  function updateStatus(name: string, status: VerifStatus) {
+    setItems((prev) => prev.map((v) => v.name === name ? { ...v, status } : v));
+  }
+
+  const filtered = filter === "all" ? items : items.filter((v) => v.status === filter);
+
+  const counts = {
+    pending:   items.filter((v) => v.status === "pending").length,
+    approved:  items.filter((v) => v.status === "approved").length,
+    rejected:  items.filter((v) => v.status === "rejected").length,
+    reviewing: items.filter((v) => v.status === "reviewing").length,
+  };
+
+  const STATUS_STYLE: Record<VerifStatus, string> = {
+    pending:   "bg-gold/10 text-gold",
+    approved:  "bg-emerald-50 text-emerald-700",
+    rejected:  "bg-red-50 text-red-600",
+    reviewing: "bg-blue/10 text-blue",
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-4">
+        <StatCard label="Awaiting review" value={String(counts.pending)} icon="shield" color="gold" />
+        <StatCard label="Under review" value={String(counts.reviewing)} icon="doc" color="blue" />
+        <StatCard label="Approved (session)" value={String(counts.approved)} icon="check" color="green" />
+        <StatCard label="Rejected (session)" value={String(counts.rejected)} icon="globe" color="navy" />
+      </div>
+
+      {/* Filter tabs */}
+      <div className="flex gap-1 w-fit rounded-xl bg-soft border border-soft-200 p-1">
+        {(["all", "pending", "reviewing", "approved", "rejected"] as const).map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`rounded-lg px-4 py-1.5 text-xs font-semibold capitalize transition-all ${
+              filter === f ? "bg-white text-navy shadow-sm" : "text-charcoal/50 hover:text-navy"
+            }`}
+          >
+            {f === "all" ? `All (${items.length})` : `${f.charAt(0).toUpperCase() + f.slice(1)} (${counts[f]})`}
+          </button>
+        ))}
+      </div>
+
+      <Panel title="Verification Queue" subtitle="Review and approve business verifications" noPad>
+        {filtered.length === 0 ? (
+          <div className="py-12 text-center text-charcoal/40 text-sm">No items in this category.</div>
+        ) : (
+          <div className="divide-y divide-soft-200">
+            {filtered.map((v) => (
+              <div key={v.name} className="flex items-center justify-between gap-4 p-5 flex-wrap">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy/5 text-sm font-bold text-navy">
+                    {v.type[0]}
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-navy">{v.name}</p>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_STYLE[v.status]}`}>
+                        {v.status.charAt(0).toUpperCase() + v.status.slice(1)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-charcoal/55">
+                      {v.country} · {v.type} · {v.docs} docs · Submitted {v.submitted}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {v.status === "pending" && (
+                    <button onClick={() => updateStatus(v.name, "reviewing")} className="btn-outline px-3 py-1.5 text-xs text-blue border-blue/30 hover:bg-blue/5">
+                      Start review
+                    </button>
+                  )}
+                  {(v.status === "pending" || v.status === "reviewing") && (
+                    <>
+                      <button onClick={() => updateStatus(v.name, "approved")} className="btn-outline px-3 py-1.5 text-xs text-emerald-600 border-emerald-200 hover:bg-emerald-50">
+                        ✓ Approve
+                      </button>
+                      <button onClick={() => updateStatus(v.name, "rejected")} className="btn-outline px-3 py-1.5 text-xs text-red-500 border-red-200 hover:bg-red-50">
+                        ✕ Reject
+                      </button>
+                    </>
+                  )}
+                  {v.status === "approved" && (
+                    <button onClick={() => updateStatus(v.name, "pending")} className="btn-outline px-3 py-1.5 text-xs text-charcoal/50">
+                      Undo
+                    </button>
+                  )}
+                  {v.status === "rejected" && (
+                    <button onClick={() => updateStatus(v.name, "pending")} className="btn-outline px-3 py-1.5 text-xs text-gold border-gold/30">
+                      Re-review
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Panel>
+    </div>
+  );
+}
+
+// ─── Reviews Tab ─────────────────────────────────────────────────────────────
+
+type ReviewAction = "pending" | "approved" | "removed" | "contacted";
+
+interface AdminReview {
+  id: string;
+  reviewer: string;
+  target: string;
+  rating: number;
+  text: string;
+  flag: string;
+  date: string;
+  action: ReviewAction;
+}
+
+const INITIAL_REVIEWS: AdminReview[] = flaggedReviews.map((r) => ({ ...r, action: "pending" as ReviewAction }));
+
+function ReviewsManagementTab() {
+  const [reviews, setReviews] = useState<AdminReview[]>(INITIAL_REVIEWS);
+
+  function updateAction(id: string, action: ReviewAction) {
+    setReviews((prev) => prev.map((r) => r.id === id ? { ...r, action } : r));
+  }
+
+  const ACTION_STYLE: Record<ReviewAction, string> = {
+    pending:   "bg-gold/10 text-gold",
+    approved:  "bg-emerald-50 text-emerald-700",
+    removed:   "bg-red-50 text-red-500",
+    contacted: "bg-blue/10 text-blue",
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard label="Total reviews" value="2,180" icon="star" color="blue" />
+        <StatCard label="Avg platform rating" value="4.7 ★" icon="star" color="gold" />
+        <StatCard label="Flagged / pending" value={String(reviews.filter((r) => r.action === "pending").length)} icon="shield" color="navy" />
+      </div>
+
+      <Panel title="Flagged Reviews — Requires Action" noPad>
+        {reviews.length === 0 ? (
+          <div className="py-12 text-center text-charcoal/40 text-sm">No flagged reviews.</div>
+        ) : (
+          <div className="divide-y divide-soft-200">
+            {reviews.map((r) => (
+              <div key={r.id} className="p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-bold text-navy">{r.reviewer}</p>
+                      <span className="chip bg-red-50 text-red-500 text-xs">{r.flag}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${ACTION_STYLE[r.action]}`}>
+                        {r.action.charAt(0).toUpperCase() + r.action.slice(1)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-charcoal/50">Target: {r.target} · {r.date}</p>
+                    <p className="mt-2 text-sm text-charcoal/70 italic">"{r.text}"</p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <span key={i} className={`text-sm ${i < r.rating ? "text-gold" : "text-soft-200"}`}>★</span>
+                    ))}
+                  </div>
+                </div>
+                {r.action === "pending" && (
+                  <div className="mt-3 flex gap-2 flex-wrap">
+                    <button onClick={() => updateAction(r.id, "approved")} className="btn-outline px-3 py-1.5 text-xs text-emerald-600 border-emerald-200 hover:bg-emerald-50">
+                      ✓ Approve review
+                    </button>
+                    <button onClick={() => updateAction(r.id, "removed")} className="btn-outline px-3 py-1.5 text-xs text-red-500 border-red-200 hover:bg-red-50">
+                      ✕ Remove review
+                    </button>
+                    <button onClick={() => updateAction(r.id, "contacted")} className="btn-outline px-3 py-1.5 text-xs text-blue border-blue/30 hover:bg-blue/5">
+                      📧 Contact reviewer
+                    </button>
+                  </div>
+                )}
+                {r.action !== "pending" && (
+                  <div className="mt-2">
+                    <button onClick={() => updateAction(r.id, "pending")} className="text-xs text-charcoal/40 hover:text-navy underline">
+                      Undo action
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </Panel>
+    </div>
+  );
+}
+
 // ─── Admin Commissions Tab ─────────────────────────────────────────────────────
 
 const COMM_STATUS_STYLES: Record<CommissionStatus, { badge: string; dot: string; label: string }> = {
@@ -534,33 +749,7 @@ export default function AdminDashboard() {
       </div>
     ),
 
-    verification: (
-      <div className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <StatCard label="Awaiting review" value="7" icon="shield" color="gold" />
-          <StatCard label="Approved (month)" value="24" icon="check" color="green" />
-          <StatCard label="Rejected (month)" value="3" icon="globe" color="navy" />
-        </div>
-
-        <Panel title="Verification Queue" subtitle="Review and approve business verifications" noPad>
-          <div className="divide-y divide-soft-200">
-            {verificationQueue.map((v) => (
-              <div key={v.name} className="flex items-center justify-between p-5">
-                <div>
-                  <p className="font-bold text-navy">{v.name}</p>
-                  <p className="text-sm text-charcoal/55">{v.country} · {v.type} · {v.docs} docs uploaded · Submitted {v.submitted}</p>
-                </div>
-                <div className="flex gap-2">
-                  <button className="btn-primary px-3 py-1.5 text-xs text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100">Approve</button>
-                  <button className="btn-outline px-3 py-1.5 text-xs">Review docs</button>
-                  <button className="btn-outline px-3 py-1.5 text-xs text-red-500 border-red-200">Reject</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Panel>
-      </div>
-    ),
+    verification: <VerificationQueueTab />,
 
     agencies: (
       <div className="space-y-4">
@@ -776,44 +965,7 @@ export default function AdminDashboard() {
 
     referrals: <AdminCommissionsTab />,
 
-    reviews: (
-      <div className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <StatCard label="Total reviews" value="2,180" icon="star" color="blue" />
-          <StatCard label="Avg platform rating" value="4.7 ★" icon="star" color="gold" />
-          <StatCard label="Flagged / pending" value="3" icon="shield" color="navy" />
-        </div>
-
-        <Panel title="Flagged Reviews — Requires Action" noPad>
-          <div className="divide-y divide-soft-200">
-            {flaggedReviews.map((r) => (
-              <div key={r.id} className="p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-bold text-navy">{r.reviewer}</p>
-                      <span className="chip bg-red-50 text-red-500 text-xs">{r.flag}</span>
-                    </div>
-                    <p className="text-xs text-charcoal/50">Target: {r.target} · {r.date}</p>
-                    <p className="mt-2 text-sm text-charcoal/70">"{r.text}"</p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1">
-                    {"★".repeat(r.rating).split("").map((_, i) => (
-                      <span key={i} className="text-gold text-sm">★</span>
-                    ))}
-                  </div>
-                </div>
-                <div className="mt-3 flex gap-2">
-                  <button className="btn-outline px-3 py-1.5 text-xs text-emerald-600 border-emerald-200">Approve</button>
-                  <button className="btn-outline px-3 py-1.5 text-xs text-red-500 border-red-200">Remove</button>
-                  <button className="btn-outline px-3 py-1.5 text-xs">Contact reviewer</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Panel>
-      </div>
-    ),
+    reviews: <ReviewsManagementTab />,
 
     support: (
       <div className="space-y-4">

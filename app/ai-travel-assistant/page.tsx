@@ -70,7 +70,7 @@ export default function AITravelAssistantPage() {
               }]}
               suggestedPrompts={PROMPTS}
               onUserMessage={async (text) => {
-                const { default: { mockDelay } } = await import("@/lib/ai-mock");
+                const { mockDelay } = await import("@/lib/ai-mock");
                 await mockDelay(1000, 1800);
                 return mockTravelReply(text);
               }}
