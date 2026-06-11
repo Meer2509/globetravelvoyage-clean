@@ -66,13 +66,27 @@ const VALID_ROLES: UserRole[] = [
   "customer", "visa_agent", "travel_agency", "tour_guide", "property_host", "admin",
 ];
 
+/** Map legacy/alternate role strings to canonical UserRole values. */
+export function normalizeUserRole(role: string | null | undefined): UserRole {
+  if (!role) return "customer";
+  if (role === "visa_expert") return "visa_agent";
+  return VALID_ROLES.includes(role as UserRole) ? (role as UserRole) : "customer";
+}
+
+export function getRoleLabel(role: UserRole | string | null | undefined): string {
+  return ROLE_LABELS[normalizeUserRole(role ?? undefined)] ?? "Traveler";
+}
+
+export function isVisaExpertRole(role: UserRole | string | null | undefined): boolean {
+  return normalizeUserRole(role ?? undefined) === "visa_agent";
+}
+
 /**
  * Get role from user_metadata (fallback when DB unavailable).
  */
 export function getUserRole(user: { user_metadata?: Record<string, unknown> } | null): UserRole {
   if (!user?.user_metadata?.role) return "customer";
-  const role = user.user_metadata.role as string;
-  return VALID_ROLES.includes(role as UserRole) ? (role as UserRole) : "customer";
+  return normalizeUserRole(user.user_metadata.role as string);
 }
 
 /**
@@ -91,7 +105,7 @@ export async function getUserRoleFromDb(userId: string): Promise<UserRole | null
 
   const row = data as { role: UserRole } | null;
   if (error || !row?.role) return null;
-  return VALID_ROLES.includes(row.role) ? row.role : null;
+  return normalizeUserRole(row.role);
 }
 
 /**

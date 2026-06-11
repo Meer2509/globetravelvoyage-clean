@@ -15,6 +15,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+import { normalizeUserRole } from "@/lib/auth";
 import type { UserRole } from "@/lib/supabase/types";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
@@ -35,6 +36,7 @@ const AUTH_PAGES = ["/login", "/register"];
 const ROLE_DASHBOARD: Record<string, string> = {
   customer:       "/dashboard/customer",
   visa_agent:     "/dashboard/agent",
+  visa_expert:    "/dashboard/agent",
   travel_agency:  "/dashboard/agency",
   tour_guide:     "/dashboard/guide",
   property_host:  "/dashboard/host",
@@ -42,7 +44,8 @@ const ROLE_DASHBOARD: Record<string, string> = {
 };
 
 function getDashboardForRole(role: UserRole | string | undefined): string {
-  return ROLE_DASHBOARD[role ?? "customer"] ?? "/dashboard";
+  const normalized = normalizeUserRole(role);
+  return ROLE_DASHBOARD[normalized] ?? ROLE_DASHBOARD[role ?? ""] ?? "/dashboard";
 }
 
 async function getPrimaryRoleFromDb(userId: string): Promise<UserRole | undefined> {
@@ -60,7 +63,8 @@ async function getPrimaryRoleFromDb(userId: string): Promise<UserRole | undefine
     .eq("is_primary", true)
     .maybeSingle();
 
-  return (data as { role: UserRole } | null)?.role;
+  const role = (data as { role: string } | null)?.role;
+  return role ? normalizeUserRole(role) : undefined;
 }
 
 export async function proxy(request: NextRequest) {
@@ -114,7 +118,7 @@ export async function proxy(request: NextRequest) {
   // Logged-in user on login/register or generic /dashboard → role dashboard
   if (user && (isAuthPage || pathname === "/dashboard")) {
     const dbRole = await getPrimaryRoleFromDb(user.id);
-    const role = dbRole ?? (user.user_metadata?.role as UserRole | undefined);
+    const role = dbRole ?? normalizeUserRole(user.user_metadata?.role as string | undefined);
     return NextResponse.redirect(
       new URL(getDashboardForRole(role), request.url)
     );
@@ -123,7 +127,7 @@ export async function proxy(request: NextRequest) {
   // Role-specific dashboard must match signup role
   if (user && pathname.startsWith("/dashboard/")) {
     const dbRole = await getPrimaryRoleFromDb(user.id);
-    const role = dbRole ?? (user.user_metadata?.role as UserRole | undefined) ?? "customer";
+    const role = dbRole ?? normalizeUserRole(user.user_metadata?.role as string | undefined);
     const expected = getDashboardForRole(role);
     if (pathname !== expected && pathname !== "/dashboard/profile" && role !== "admin") {
       return NextResponse.redirect(new URL(expected, request.url));

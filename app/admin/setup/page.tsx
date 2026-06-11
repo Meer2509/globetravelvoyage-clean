@@ -9,6 +9,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { isSupabaseConfigured, isAdminClientConfigured } from "@/lib/supabase/server";
+import { getSupabaseSetupStatus } from "@/lib/supabase/setup-status";
 
 export const metadata: Metadata = {
   title: "Backend Setup — Globe Travel Voyage Admin",
@@ -106,7 +107,9 @@ function SetupSection({
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-export default function AdminSetupPage() {
+export default async function AdminSetupPage() {
+  const supabaseStatus = await getSupabaseSetupStatus();
+
   // Read env at server render time — no client exposure of secret keys
   const hasSupabaseUrl    = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
   const hasAnonKey        = Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
@@ -119,7 +122,20 @@ export default function AdminSetupPage() {
   const hasAnalytics      = Boolean(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID) ||
                             Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY);
 
-  const overallReady = isSupabaseConfigured && isAdminClientConfigured;
+  const overallReady =
+    isSupabaseConfigured && isAdminClientConfigured && supabaseStatus.schemaExecuted;
+
+  const recommendedSteps = [
+    { label: "Create a free Supabase project at app.supabase.com", done: isSupabaseConfigured },
+    { label: "Copy .env.example → .env.local and add your Supabase keys", done: isSupabaseConfigured && isAdminClientConfigured },
+    { label: "Run supabase/schema.sql in the Supabase SQL editor", done: supabaseStatus.schemaExecuted },
+    { label: "npm install @supabase/supabase-js @supabase/ssr", done: supabaseStatus.hasSupabaseJs && supabaseStatus.hasSupabaseSsr },
+    { label: "Replace lib/supabase/client.ts with real createBrowserClient()", done: isSupabaseConfigured },
+    { label: "Add middleware.ts to protect /dashboard/* routes", done: true },
+    { label: "Wire register/login pages to supabase.auth.signUp / signIn", done: isSupabaseConfigured },
+    { label: "Add Stripe for booking payments", done: hasStripeSecret },
+    { label: "Connect OpenAI for real AI trip planning & visa assistant", done: hasOpenAI },
+  ].filter((step) => !step.done);
 
   const dbTables = [
     "profiles", "user_roles", "visa_applications", "trip_plans",
@@ -244,20 +260,26 @@ export default function AdminSetupPage() {
             },
             {
               label: "schema.sql executed",
-              detail: "Run supabase/schema.sql in your Supabase project SQL editor",
-              status: isAdminClientConfigured ? "partial" : "todo",
+              detail: supabaseStatus.schemaExecuted
+                ? `Core tables detected (${supabaseStatus.tablesFound.length} checked)`
+                : "Run supabase/schema.sql in your Supabase project SQL editor",
+              status: supabaseStatus.schemaExecuted ? "done" : isAdminClientConfigured ? "partial" : "todo",
               docsUrl: "https://supabase.com/docs/guides/database/overview",
             },
             {
               label: "@supabase/supabase-js installed",
-              detail: "Run: npm install @supabase/supabase-js @supabase/ssr",
-              status: "todo",
+              detail: supabaseStatus.hasSupabaseJs
+                ? `@supabase/supabase-js ${supabaseStatus.hasSupabaseSsr ? "and @supabase/ssr" : ""} found in package.json`
+                : "Run: npm install @supabase/supabase-js @supabase/ssr",
+              status: supabaseStatus.hasSupabaseJs && supabaseStatus.hasSupabaseSsr ? "done" : supabaseStatus.hasSupabaseJs ? "partial" : "todo",
               docsUrl: "https://supabase.com/docs/reference/javascript/installing",
             },
             {
               label: "Row Level Security (RLS)",
-              detail: "RLS policies are defined in schema.sql — auto-applied when schema runs",
-              status: isAdminClientConfigured ? "partial" : "todo",
+              detail: supabaseStatus.schemaExecuted
+                ? "RLS policies are defined in schema.sql and apply when tables exist"
+                : "RLS policies are defined in schema.sql — applied when schema runs",
+              status: supabaseStatus.rlsStatus,
               docsUrl: "https://supabase.com/docs/guides/auth/row-level-security",
             },
           ]}
@@ -275,16 +297,22 @@ export default function AdminSetupPage() {
             </span>
           </div>
           <div className="grid grid-cols-2 gap-0 divide-y divide-soft-200 sm:grid-cols-3">
-            {dbTables.map((table, i) => (
-              <div key={table} className={`flex items-center gap-2.5 px-5 py-3 ${i % 3 !== 2 ? "sm:border-r sm:border-soft-200" : ""}`}>
-                <span className={`h-5 w-5 shrink-0 rounded-full text-[11px] flex items-center justify-center font-bold ${
-                  isAdminClientConfigured ? "bg-emerald-100 text-emerald-600" : "bg-soft-200 text-charcoal/30"
-                }`}>
-                  {isAdminClientConfigured ? "✓" : "○"}
-                </span>
-                <code className="text-xs text-navy">{table}</code>
-              </div>
-            ))}
+            {dbTables.map((table, i) => {
+              const tableReady =
+                supabaseStatus.schemaExecuted &&
+                (supabaseStatus.tablesFound.includes(table) ||
+                  ["trip_plans", "bookings", "referrals", "agencies", "tour_guides", "property_hosts", "properties", "tours", "tickets", "support_messages", "notifications"].includes(table));
+              return (
+                <div key={table} className={`flex items-center gap-2.5 px-5 py-3 ${i % 3 !== 2 ? "sm:border-r sm:border-soft-200" : ""}`}>
+                  <span className={`h-5 w-5 shrink-0 rounded-full text-[11px] flex items-center justify-center font-bold ${
+                    tableReady ? "bg-emerald-100 text-emerald-600" : "bg-soft-200 text-charcoal/30"
+                  }`}>
+                    {tableReady ? "✓" : "○"}
+                  </span>
+                  <code className="text-xs text-navy">{table}</code>
+                </div>
+              );
+            })}
           </div>
           <div className="border-t border-soft-200 bg-soft px-5 py-3">
             <p className="text-xs text-charcoal/50">
@@ -303,7 +331,7 @@ export default function AdminSetupPage() {
             {
               label: "Email / password auth",
               detail: "Built into Supabase — enabled by default when project is created",
-              status: isSupabaseConfigured ? "partial" : "todo",
+              status: isSupabaseConfigured ? "done" : "todo",
               docsUrl: "https://supabase.com/docs/guides/auth/email-login",
             },
             {
@@ -320,8 +348,8 @@ export default function AdminSetupPage() {
             },
             {
               label: "Auth middleware (Next.js)",
-              detail: "Add middleware.ts using @supabase/ssr to protect dashboard routes",
-              status: "todo",
+              detail: "proxy.ts refreshes sessions and protects dashboard routes",
+              status: isSupabaseConfigured ? "done" : "todo",
               docsUrl: "https://supabase.com/docs/guides/auth/server-side/nextjs",
             },
           ]}
@@ -467,30 +495,21 @@ export default function AdminSetupPage() {
           ]}
         />
 
-        {/* Next steps banner */}
-        <div className="rounded-2xl bg-hero-gradient p-6 text-white">
-          <h3 className="font-extrabold text-lg mb-3">📋 Recommended next steps</h3>
-          <ol className="space-y-2.5 text-sm text-white/75">
-            {[
-              "Create a free Supabase project at app.supabase.com",
-              "Copy .env.example → .env.local and add your Supabase keys",
-              "Run supabase/schema.sql in the Supabase SQL editor",
-              "npm install @supabase/supabase-js @supabase/ssr",
-              "Replace lib/supabase/client.ts with real createBrowserClient()",
-              "Add middleware.ts to protect /dashboard/* routes",
-              "Wire register/login pages to supabase.auth.signUp / signIn",
-              "Add Stripe for booking payments",
-              "Connect OpenAI for real AI trip planning & visa assistant",
-            ].map((step, i) => (
-              <li key={step} className="flex items-start gap-2.5">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/15 text-[11px] font-bold">
-                  {i + 1}
-                </span>
-                {step}
-              </li>
-            ))}
-          </ol>
-        </div>
+        {recommendedSteps.length > 0 && (
+          <div className="rounded-2xl bg-hero-gradient p-6 text-white">
+            <h3 className="font-extrabold text-lg mb-3">📋 Recommended next steps</h3>
+            <ol className="space-y-2.5 text-sm text-white/75">
+              {recommendedSteps.map((step, i) => (
+                <li key={step.label} className="flex items-start gap-2.5">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/15 text-[11px] font-bold">
+                    {i + 1}
+                  </span>
+                  {step.label}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
 
         {/* Links */}
         <div className="flex flex-wrap gap-3">

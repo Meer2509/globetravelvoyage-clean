@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchDashboardUser, type DashboardUserResult } from "@/lib/supabase/queries";
 import { getInitials } from "@/lib/supabase/profile-utils";
-import { ROLE_LABELS } from "@/lib/auth";
+import { getRoleLabel } from "@/lib/auth";
 import type { UserRole } from "@/lib/supabase/types";
 
 export interface DashboardUserState {
@@ -60,7 +60,7 @@ function buildState(
     displayName: name,
     email: result.profile.email,
     initials: getInitials(name),
-    roleLabel: ROLE_LABELS[result.role] ?? "Traveler",
+    roleLabel: getRoleLabel(result.role),
     role: result.role,
     completion: result.completion,
     missingFields: result.missingFields,

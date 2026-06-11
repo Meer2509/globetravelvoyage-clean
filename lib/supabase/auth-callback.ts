@@ -7,18 +7,9 @@
 import { createServerSupabaseClient } from "./server";
 import { createAdminClient } from "./admin";
 import { syncUserRole } from "./actions";
-import { saveProfileOnSignup } from "./profile-actions";
-import { parseCommaList } from "./profile-utils";
+import { ensureProfileForUserId } from "./ensure-user-profile";
+import { normalizeUserRole } from "@/lib/auth";
 import type { UserRole } from "./types";
-
-const VALID_ROLES: UserRole[] = [
-  "customer",
-  "visa_agent",
-  "travel_agency",
-  "tour_guide",
-  "property_host",
-  "admin",
-];
 
 const ROLE_DASHBOARD: Record<UserRole, string> = {
   customer: "/dashboard/customer",
@@ -59,7 +50,7 @@ function formatCallbackError(message: string): { error: string; code?: string } 
   return { error: "We couldn't complete sign-in. Please try again or request a new link." };
 }
 
-async function ensureUserProfile(user: {
+async function ensureAuthUserProfile(user: {
   id: string;
   email?: string | null;
   user_metadata?: Record<string, unknown>;
@@ -76,21 +67,18 @@ async function ensureUserProfile(user: {
   if (existing) return;
 
   const meta = user.user_metadata ?? {};
-  const role = (meta.role as UserRole | undefined) ?? "customer";
-  const specs = meta.specializations as string | undefined;
+  const role = normalizeUserRole(meta.role as string | undefined);
 
-  await saveProfileOnSignup({
-    userId: user.id,
-    email: user.email ?? "",
+  await ensureProfileForUserId(user.id, user.email ?? "", {
     fullName: (meta.full_name as string | undefined) ?? "",
-    phone: meta.phone as string | undefined,
-    country: meta.country as string | undefined,
-    city: meta.city as string | undefined,
+    email: user.email ?? "",
+    phone: (meta.phone as string | undefined) ?? null,
+    country: (meta.country as string | undefined) ?? null,
+    city: (meta.city as string | undefined) ?? null,
     role,
-    companyName: meta.company_name as string | undefined,
+    companyName: (meta.company_name as string | undefined) ?? null,
     businessType: (meta.business_type as string | undefined) ?? role,
-    specializations: specs ? parseCommaList(specs) : undefined,
-    bio: meta.bio as string | undefined,
+    bio: (meta.bio as string | undefined) ?? null,
   });
 }
 
@@ -100,8 +88,7 @@ async function resolveRoleAfterCallback(user: {
 }): Promise<UserRole> {
   const admin = createAdminClient();
   if (!admin) {
-    const meta = user.user_metadata?.role as UserRole | undefined;
-    return meta && VALID_ROLES.includes(meta) ? meta : "customer";
+    return normalizeUserRole(user.user_metadata?.role as string | undefined);
   }
 
   const { data: roleRow } = await admin
@@ -111,11 +98,11 @@ async function resolveRoleAfterCallback(user: {
     .eq("is_primary", true)
     .maybeSingle();
 
-  const existing = (roleRow as { role: UserRole } | null)?.role;
-  if (existing && VALID_ROLES.includes(existing)) return existing;
+  const existing = (roleRow as { role: string } | null)?.role;
+  if (existing) return normalizeUserRole(existing);
 
-  const metaRole = user.user_metadata?.role as UserRole | undefined;
-  if (metaRole && VALID_ROLES.includes(metaRole)) {
+  const metaRole = normalizeUserRole(user.user_metadata?.role as string | undefined);
+  if (metaRole !== "customer" || user.user_metadata?.role) {
     await syncUserRole(user.id, metaRole);
     return metaRole;
   }
@@ -145,7 +132,7 @@ export async function completeAuthCallback(input: {
   }
 
   const user = data.session.user;
-  await ensureUserProfile(user);
+  await ensureAuthUserProfile(user);
   const role = await resolveRoleAfterCallback(user);
 
   if (input.type === "recovery") {

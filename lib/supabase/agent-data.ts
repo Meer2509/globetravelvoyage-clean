@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient } from "./server";
 import { createAdminClient } from "./admin";
+import { ensureUserProfile, upsertVisaExpertForProfile } from "./ensure-user-profile";
 import { isDatabaseSetupError } from "./profile-utils";
 import { parseExpertServices, serializeExpertServices, type ExpertService } from "@/lib/expert-services";
 
@@ -207,36 +208,15 @@ export async function fetchAgentDashboardData(): Promise<AgentDataResult<AgentDa
 }
 
 export async function saveExpertServices(services: ExpertService[]): Promise<AgentDataResult<ExpertService[]>> {
-  const supabase = await createServerSupabaseClient();
-  if (!supabase) return { ok: false, error: "Supabase is not configured." };
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "You must be signed in." };
-
-  const admin = createAdminClient();
-  if (!admin) return { ok: false, error: "Supabase admin client is not configured." };
+  const profileResult = await ensureUserProfile();
+  if (!profileResult.ok) return { ok: false, error: profileResult.error };
 
   const serialized = serializeExpertServices(services);
-  const { data: existing } = await admin
-    .from("visa_experts")
-    .select("id")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const expertResult = await upsertVisaExpertForProfile(profileResult.profile, {
+    services: serialized,
+  });
 
-  if (!existing) {
-    const { error } = await admin.from("visa_experts").insert({
-      user_id: user.id,
-      services: serialized,
-      verification_status: "pending",
-    });
-    if (error) return { ok: false, error: error.message };
-  } else {
-    const { error } = await admin
-      .from("visa_experts")
-      .update({ services: serialized })
-      .eq("user_id", user.id);
-    if (error) return { ok: false, error: error.message };
-  }
+  if (!expertResult.ok) return { ok: false, error: expertResult.error };
 
   return { ok: true, data: services };
 }

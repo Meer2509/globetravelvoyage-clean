@@ -6,6 +6,7 @@
 
 import { createServerSupabaseClient } from "./server";
 import { createAdminClient } from "./admin";
+import { normalizeUserRole } from "@/lib/auth";
 import { computeProfileCompletion, isDatabaseSetupError } from "./profile-utils";
 import type { Profile, UserRole, VisaExpert } from "./types";
 
@@ -68,11 +69,11 @@ export async function fetchDashboardUser(): Promise<DashboardUserResult> {
     .eq("is_primary", true)
     .maybeSingle();
 
-  const role =
-    (roleRes.data as { role: UserRole } | null)?.role ??
-    (profileRes.data as Profile | null)?.role as UserRole | undefined ??
-    (user.user_metadata?.role as UserRole | undefined) ??
-    "customer";
+  const role = normalizeUserRole(
+    (roleRes.data as { role: string } | null)?.role ??
+    (profileRes.data as Profile | null)?.role ??
+    (user.user_metadata?.role as string | undefined)
+  );
 
   let visaExpert: VisaExpert | null = null;
   if (role === "visa_agent") {

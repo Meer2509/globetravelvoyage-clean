@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DatabaseSetupBanner } from "@/components/DatabaseSetupBanner";
 import { ProgressBar } from "@/components/DashboardLayout";
-import { ROLE_LABELS } from "@/lib/auth";
+import { getRoleLabel } from "@/lib/auth";
 import { fetchDashboardUser } from "@/lib/supabase/queries";
 import { updateUserProfile } from "@/lib/supabase/profile-actions";
 import { joinCommaList } from "@/lib/supabase/profile-utils";
@@ -124,7 +124,7 @@ export default function DashboardProfilePage() {
           <div className="card p-6">
             <div className="mb-6">
               <p className="text-sm text-charcoal/55">
-                Role: <span className="font-bold text-navy">{ROLE_LABELS[role as keyof typeof ROLE_LABELS] ?? role}</span>
+                Role: <span className="font-bold text-navy">{getRoleLabel(role)}</span>
               </p>
               <div className="mt-3">
                 <ProgressBar label={`Profile completion (${completion}%)`} pct={completion} color="blue" />
