@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Disclaimer } from "@/components/Disclaimer";
+import { submitLeadRequest } from "@/lib/supabase/actions";
 
 const EXPERT_TYPES = [
   { value: "visa_agent",   label: "Visa agent",       emoji: "🛂", desc: "Document prep & interview guidance" },
@@ -16,6 +17,7 @@ const PURPOSES = ["Get a quote", "Ask a question", "Request a consultation", "Fo
 export default function LeadContactPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
   const [form, setForm] = useState({
     expertType: "", name: "", email: "", phone: "",
     purpose: "", message: "", preferredTime: "",
@@ -27,9 +29,27 @@ export default function LeadContactPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1500));
+
+    const result = await submitLeadRequest({
+      expertType: form.expertType,
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      purpose: form.purpose,
+      message: form.message,
+      preferredTime: form.preferredTime,
+      leadType: "contact_expert",
+    });
+
     setLoading(false);
+
+    if (!result.ok) {
+      if (result.demo) { setSubmitted(true); return; }
+      setError(result.error);
+      return;
+    }
     setSubmitted(true);
   }
 

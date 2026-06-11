@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Disclaimer } from "@/components/Disclaimer";
+import { submitBookingRequest } from "@/lib/supabase/actions";
 
 const SERVICE_TYPES = [
   { value: "tour",     label: "Guided tour",      emoji: "🗺️" },
@@ -17,6 +18,7 @@ const SERVICE_TYPES = [
 export default function BookingRequestPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
   const [form, setForm] = useState({
     serviceType: "", serviceName: "",
     name: "", email: "", phone: "",
@@ -30,9 +32,29 @@ export default function BookingRequestPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1600));
+
+    const result = await submitBookingRequest({
+      serviceType: form.serviceType,
+      serviceName: form.serviceName,
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      date: form.date,
+      endDate: form.endDate,
+      travelers: form.travelers,
+      budget: form.budget,
+      message: form.message,
+    });
+
     setLoading(false);
+
+    if (!result.ok) {
+      if (result.demo) { setSubmitted(true); return; }
+      setError(result.error);
+      return;
+    }
     setSubmitted(true);
   }
 

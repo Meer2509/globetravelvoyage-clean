@@ -62,17 +62,47 @@ export async function getCurrentUser() {
   return user;
 }
 
+const VALID_ROLES: UserRole[] = [
+  "customer", "visa_agent", "travel_agency", "tour_guide", "property_host", "admin",
+];
+
 /**
- * Get the current user's role from user_metadata.
- * Stored at signup via options.data.role.
+ * Get role from user_metadata (fallback when DB unavailable).
  */
 export function getUserRole(user: { user_metadata?: Record<string, unknown> } | null): UserRole {
   if (!user?.user_metadata?.role) return "customer";
   const role = user.user_metadata.role as string;
-  const validRoles: UserRole[] = [
-    "customer", "visa_agent", "travel_agency", "tour_guide", "property_host", "admin"
-  ];
-  return validRoles.includes(role as UserRole) ? (role as UserRole) : "customer";
+  return VALID_ROLES.includes(role as UserRole) ? (role as UserRole) : "customer";
+}
+
+/**
+ * Fetch primary role from user_roles table (preferred when Supabase is live).
+ */
+export async function getUserRoleFromDb(userId: string): Promise<UserRole | null> {
+  const supabase = createClient();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("is_primary", true)
+    .maybeSingle();
+
+  const row = data as { role: UserRole } | null;
+  if (error || !row?.role) return null;
+  return VALID_ROLES.includes(row.role) ? row.role : null;
+}
+
+/**
+ * Resolve role: DB first, then metadata fallback.
+ */
+export async function resolveUserRole(
+  user: { id: string; user_metadata?: Record<string, unknown> } | null
+): Promise<UserRole> {
+  if (!user) return "customer";
+  const dbRole = await getUserRoleFromDb(user.id);
+  return dbRole ?? getUserRole(user);
 }
 
 /**

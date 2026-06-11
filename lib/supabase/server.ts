@@ -14,9 +14,7 @@ import type { Database } from "./types";
 import { SUPABASE_URL, SUPABASE_ANON_KEY, isSupabaseConfigured } from "./client";
 
 export { isSupabaseConfigured };
-
-export const isAdminClientConfigured =
-  isSupabaseConfigured && Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
+export { createAdminClient, isAdminClientConfigured } from "./admin";
 
 // ── Server client (per-request, uses auth cookie) ─────────────────────────────
 
@@ -52,33 +50,8 @@ export async function createServerSupabaseClient() {
   });
 }
 
-// ── Admin client (service role — NEVER expose to browser) ─────────────────────
-
-/**
- * Service-role client — bypasses RLS.
- * ONLY use in server-side code (Route Handlers, Server Actions, cron jobs).
- * Returns null when SUPABASE_SERVICE_ROLE_KEY is missing.
- */
+/** @deprecated Use createAdminClient from ./admin instead */
 export async function createAdminSupabaseClient() {
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!isSupabaseConfigured || !serviceKey) return null;
-
-  const cookieStore = await cookies();
-
-  return createServerClient<Database>(SUPABASE_URL, serviceKey, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
-      },
-      setAll(cookiesToSet) {
-        try {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          );
-        } catch {
-          // Server Component context — middleware handles refresh.
-        }
-      },
-    },
-  });
+  const { createAdminClient } = await import("./admin");
+  return createAdminClient();
 }

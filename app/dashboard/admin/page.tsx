@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { isSupabaseConfigured } from "@/lib/auth";
+import { fetchAdminCounts, type AdminDashboardCounts } from "@/lib/supabase/queries";
 import Link from "next/link";
 import { Stars } from "@/components/Stars";
 import { Icon } from "@/components/Icon";
@@ -905,7 +907,13 @@ function AdminCommissionsTab() {
 
 export default function AdminDashboard() {
   const [userSearch, setUserSearch] = useState("");
+  const [liveCounts, setLiveCounts] = useState<AdminDashboardCounts | null>(null);
   const [adminToast, setAdminToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    fetchAdminCounts().then(setLiveCounts);
+  }, []);
   const [usersData, setUsersData]   = useState(allUsers.map((u) => ({ ...u })));
   const [featureToggles, setFeatureToggles] = useState([
     { label: "AI Visa Assistant",           enabled: true  },
@@ -951,12 +959,17 @@ export default function AdminDashboard() {
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
+        {liveCounts && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            ✓ Supabase live — {liveCounts.users} profiles · {liveCounts.visaRequests} visa requests · {liveCounts.bookingRequests} booking requests · {liveCounts.supportTickets} support tickets
+          </div>
+        )}
         {/* Platform stats */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Total users" value="1,240" icon="users" hint="↑ 82 this week" delta="+7%" color="blue" />
-          <StatCard label="Bookings (month)" value="284" icon="doc" hint="↑ 43 vs last month" delta="+18%" color="gold" />
-          <StatCard label="Platform revenue" value="$48.2k" icon="star" delta="+22%" color="green" />
-          <StatCard label="Pending verifications" value="7" icon="shield" hint="Need review" color="navy" />
+          <StatCard label="Total users" value={liveCounts ? String(liveCounts.users) : "1,240"} icon="users" hint={liveCounts ? "Live from Supabase" : "↑ 82 this week"} delta={liveCounts ? undefined : "+7%"} color="blue" />
+          <StatCard label="Booking requests" value={liveCounts ? String(liveCounts.bookingRequests) : "284"} icon="doc" hint={liveCounts ? "Live intake table" : "↑ 43 vs last month"} delta={liveCounts ? undefined : "+18%"} color="gold" />
+          <StatCard label="Visa requests" value={liveCounts ? String(liveCounts.visaRequests) : "14"} icon="visa" hint={liveCounts ? "Live intake table" : "Pending review"} color="green" />
+          <StatCard label="Support tickets" value={liveCounts ? String(liveCounts.supportTickets) : "12"} icon="shield" hint={liveCounts ? "Live from DB" : "Need review"} color="navy" />
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">

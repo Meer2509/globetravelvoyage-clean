@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { submitSupportTicket } from "@/lib/supabase/actions";
 
 const HELP_CATEGORIES = [
   { icon: "🛂", title: "Visa & immigration",     desc: "Visa types, documents, application status", href: "/visa" },
@@ -54,14 +55,30 @@ export default function SupportPage() {
   const [form, setForm]         = useState({ name: "", email: "", subject: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
 
   function set(k: keyof typeof form, v: string) { setForm((f) => ({ ...f, [k]: v })); }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1400));
+
+    const result = await submitSupportTicket({
+      name: form.name,
+      email: form.email,
+      subject: form.subject,
+      message: form.message,
+      category: form.subject,
+    });
+
     setLoading(false);
+
+    if (!result.ok) {
+      if (result.demo) { setSubmitted(true); return; }
+      setError(result.error);
+      return;
+    }
     setSubmitted(true);
   }
 
@@ -141,6 +158,11 @@ export default function SupportPage() {
             ) : (
               <div className="card p-6 sm:p-8">
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {error && (
+                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                      {error}
+                    </div>
+                  )}
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <label className="label">Your name *</label>

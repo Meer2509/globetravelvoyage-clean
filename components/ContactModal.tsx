@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Disclaimer } from "./Disclaimer";
+import { submitContactModal } from "@/lib/supabase/actions";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -180,6 +181,7 @@ export function ContactModal({ open, onClose, mode, subjectName, subjectMeta }: 
   const [values, setValues]     = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
   const overlayRef              = useRef<HTMLDivElement>(null);
 
   const config = CONFIGS[mode];
@@ -204,9 +206,18 @@ export function ContactModal({ open, onClose, mode, subjectName, subjectMeta }: 
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1400));
+
+    const result = await submitContactModal(mode, values, subjectName, subjectMeta);
+
     setLoading(false);
+
+    if (!result.ok) {
+      if (result.demo) { setSubmitted(true); return; }
+      setError(result.error);
+      return;
+    }
     setSubmitted(true);
   }
 
@@ -251,6 +262,11 @@ export function ContactModal({ open, onClose, mode, subjectName, subjectMeta }: 
         <div className="px-6 py-5">
           {!submitted ? (
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
               {subjectName && (
                 <p className="text-xs text-charcoal/50 -mt-1">{config.subtitle}</p>
               )}

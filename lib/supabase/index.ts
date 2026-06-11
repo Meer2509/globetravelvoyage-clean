@@ -13,8 +13,9 @@ export type { SupabaseBrowserClient } from "./client";
 export {
   createServerSupabaseClient,
   createAdminSupabaseClient,
-  isAdminClientConfigured,
 } from "./server";
+
+export { createAdminClient, isAdminClientConfigured } from "./admin";
 
 // All DB types (Database, Profile, Booking, TableName, etc.)
 export type * from "./types";

@@ -357,6 +357,112 @@ export interface Notification {
   created_at: string;
 }
 
+export interface VisaRequest {
+  id: string;
+  user_id: string | null;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  whatsapp: string | null;
+  nationality: string | null;
+  current_country: string | null;
+  destination: string;
+  purpose: string | null;
+  travel_date: string | null;
+  previous_refusals: string | null;
+  message: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BookingRequest {
+  id: string;
+  user_id: string | null;
+  service_type: string;
+  service_name: string | null;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  travelers: number;
+  budget: string | null;
+  message: string | null;
+  status: string;
+  created_at: string;
+}
+
+export interface LeadRequest {
+  id: string;
+  user_id: string | null;
+  expert_type: string | null;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  purpose: string | null;
+  message: string | null;
+  preferred_time: string | null;
+  lead_type: string;
+  subject_name: string | null;
+  subject_meta: string | null;
+  extra_data: Record<string, unknown>;
+  status: string;
+  created_at: string;
+}
+
+export interface PropertyListing {
+  id: string;
+  user_id: string | null;
+  listing_type: string;
+  property_type: string;
+  title: string;
+  city: string;
+  country: string | null;
+  address: string | null;
+  price: number | null;
+  price_period: string | null;
+  beds: number | null;
+  baths: number | null;
+  area_sqft: number | null;
+  description: string | null;
+  contact_name: string;
+  contact_email: string;
+  contact_phone: string | null;
+  status: string;
+  created_at: string;
+}
+
+export interface TourListing {
+  id: string;
+  user_id: string | null;
+  title: string;
+  city: string | null;
+  country: string | null;
+  tour_type: string | null;
+  duration: string | null;
+  price: number | null;
+  description: string | null;
+  contact_name: string;
+  contact_email: string;
+  contact_phone: string | null;
+  status: string;
+  created_at: string;
+}
+
+export interface Payment {
+  id: string;
+  user_id: string | null;
+  booking_id: string | null;
+  amount: number;
+  currency: string;
+  status: string;
+  stripe_payment_id: string | null;
+  payee_name: string | null;
+  description: string | null;
+  created_at: string;
+}
+
 // ── Convenience alias ─────────────────────────────────────────────────────────
 export type TableName = keyof Database["public"]["Tables"];
 
@@ -366,7 +472,11 @@ export interface Database {
   public: {
     Tables: {
       profiles: { Row: Profile; Insert: Partial<Profile>; Update: Partial<Profile> };
-      user_roles: { Row: UserRoleRow; Insert: Partial<UserRoleRow>; Update: Partial<UserRoleRow> };
+      user_roles: {
+        Row: UserRoleRow;
+        Insert: { id?: string; user_id: string; role: UserRole; is_primary?: boolean; granted_at?: string };
+        Update: Partial<UserRoleRow>;
+      };
       visa_experts: { Row: VisaExpert; Insert: Partial<VisaExpert>; Update: Partial<VisaExpert> };
       agencies: { Row: Agency; Insert: Partial<Agency>; Update: Partial<Agency> };
       tour_guides: { Row: TourGuide; Insert: Partial<TourGuide>; Update: Partial<TourGuide> };
@@ -381,6 +491,49 @@ export interface Database {
       reviews: { Row: Review; Insert: Partial<Review>; Update: Partial<Review> };
       support_messages: { Row: SupportMessage; Insert: Partial<SupportMessage>; Update: Partial<SupportMessage> };
       notifications: { Row: Notification; Insert: Partial<Notification>; Update: Partial<Notification> };
+      visa_requests: {
+        Row: VisaRequest;
+        Insert: Omit<VisaRequest, "id" | "created_at" | "updated_at"> & { id?: string; created_at?: string; updated_at?: string };
+        Update: Partial<VisaRequest>;
+      };
+      booking_requests: {
+        Row: BookingRequest;
+        Insert: Omit<BookingRequest, "id" | "created_at"> & { id?: string; created_at?: string };
+        Update: Partial<BookingRequest>;
+      };
+      lead_requests: {
+        Row: LeadRequest;
+        Insert: Omit<LeadRequest, "id" | "created_at"> & { id?: string; created_at?: string };
+        Update: Partial<LeadRequest>;
+      };
+      property_listings: {
+        Row: PropertyListing;
+        Insert: Omit<PropertyListing, "id" | "created_at"> & { id?: string; created_at?: string };
+        Update: Partial<PropertyListing>;
+      };
+      tour_listings: {
+        Row: TourListing;
+        Insert: Omit<TourListing, "id" | "created_at"> & { id?: string; created_at?: string };
+        Update: Partial<TourListing>;
+      };
+      payments: {
+        Row: Payment;
+        Insert: Omit<Payment, "id" | "created_at"> & { id?: string; created_at?: string };
+        Update: Partial<Payment>;
+      };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: {
+      user_role: UserRole;
+      verification_status: VerificationStatus;
+      booking_status: BookingStatus;
+      visa_status: VisaStatus;
+      property_type: PropertyType;
+      listing_type: ListingType;
+      support_status: SupportStatus;
+      notification_type: NotificationType;
+    };
+    CompositeTypes: Record<string, never>;
   };
 }

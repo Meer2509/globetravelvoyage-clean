@@ -504,18 +504,38 @@ create policy "Users can manage their own support messages"
 
 -- Auto-create profile row when a new user signs up
 create or replace function public.handle_new_user()
-returns trigger language plpgsql security definer as $$
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  v_role user_role;
 begin
-  insert into public.profiles (id, email, full_name, avatar_url)
+  insert into public.profiles (id, email, full_name, phone, country, avatar_url)
   values (
     new.id,
     new.email,
     new.raw_user_meta_data ->> 'full_name',
+    new.raw_user_meta_data ->> 'phone',
+    new.raw_user_meta_data ->> 'country',
     new.raw_user_meta_data ->> 'avatar_url'
-  );
-  -- Default role: customer
+  )
+  on conflict (id) do update set
+    full_name = excluded.full_name,
+    phone     = excluded.phone,
+    country   = excluded.country,
+    updated_at = now();
+
+  begin
+    v_role := coalesce(
+      (new.raw_user_meta_data ->> 'role')::user_role,
+      'customer'::user_role
+    );
+  exception when others then
+    v_role := 'customer'::user_role;
+  end;
+
   insert into public.user_roles (user_id, role, is_primary)
-  values (new.id, 'customer', true);
+  values (new.id, v_role, true)
+  on conflict (user_id, role) do update set is_primary = true;
+
   return new;
 end;
 $$;
@@ -571,3 +591,8 @@ values
   ('tour-images',  'tour-images',  true),   -- tour/guide photos
   ('agency-logos', 'agency-logos', true)    -- agency brand assets
 on conflict (id) do nothing;
+
+-- =============================================================================
+-- INTAKE TABLES (also in migrations/002_intake_tables.sql)
+-- Run migrations/002_intake_tables.sql after this file for form intake tables.
+-- =============================================================================

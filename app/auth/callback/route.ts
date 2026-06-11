@@ -57,7 +57,16 @@ export async function GET(request: Request) {
   }
 
   const user = data.session.user;
-  const role = user.user_metadata?.role as UserRole | undefined;
+
+  const roleResult = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user.id)
+    .eq("is_primary", true)
+    .maybeSingle();
+
+  const dbRole = (roleResult.data as { role: UserRole } | null)?.role;
+  const role = dbRole ?? (user.user_metadata?.role as UserRole | undefined);
 
   // Password reset flow → send to password update page
   if (type === "recovery") {

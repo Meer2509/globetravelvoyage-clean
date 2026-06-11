@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { isSupabaseConfigured } from "@/lib/auth";
+import { fetchCustomerDashboard, type CustomerDashboardData } from "@/lib/supabase/queries";
 import { Disclaimer } from "@/components/Disclaimer";
 import { Stars } from "@/components/Stars";
 import { Icon } from "@/components/Icon";
@@ -197,13 +199,34 @@ function AiPanel() {
 // ─── Page Component ───────────────────────────────────────────────────────────
 
 export default function CustomerDashboard() {
+  const [live, setLive] = useState<CustomerDashboardData | null>(null);
+  const [displayName, setDisplayName] = useState("Ahmed K.");
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    fetchCustomerDashboard().then((data) => {
+      if (data) {
+        setLive(data);
+        if (data.profile?.full_name) setDisplayName(data.profile.full_name);
+      }
+    });
+  }, []);
+
+  const visaCount = live?.visaRequests.length ?? 2;
+  const bookingCount = live?.bookingRequests.length ?? 3;
+
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
+        {live && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            ✓ Connected to Supabase — showing your live requests below mock samples.
+          </div>
+        )}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Active trips" value="1" icon="planner" hint="New York · Jul 2026" color="blue" />
-          <StatCard label="Visa applications" value="2" icon="visa" hint="1 in progress" color="gold" />
-          <StatCard label="Total bookings" value="3" icon="doc" delta="+1 this month" color="navy" />
+          <StatCard label="Visa applications" value={String(visaCount)} icon="visa" hint={live ? "From your account" : "1 in progress"} color="gold" />
+          <StatCard label="Total bookings" value={String(bookingCount)} icon="doc" delta={live ? undefined : "+1 this month"} color="navy" />
           <StatCard label="Referral earnings" value="$45" icon="users" hint="Silver tier" color="green" />
         </div>
 
@@ -273,6 +296,27 @@ export default function CustomerDashboard() {
         <Disclaimer>
           Globe Travel Voyage assists with preparation only. Visa decisions are made solely by the relevant embassy or government authority. No approval is guaranteed.
         </Disclaimer>
+        {live?.visaRequests.map((v) => (
+          <Panel key={v.id} title={v.destination} subtitle={`Submitted ${new Date(v.created_at).toLocaleDateString()}`}>
+            <div className="grid gap-3 sm:grid-cols-3 text-sm">
+              <div className="rounded-xl bg-soft p-3">
+                <p className="text-xs text-charcoal/50">Purpose</p>
+                <p className="font-semibold text-navy">{v.purpose ?? "—"}</p>
+              </div>
+              <div className="rounded-xl bg-soft p-3">
+                <p className="text-xs text-charcoal/50">Status</p>
+                <p className="font-semibold text-navy capitalize">{v.status}</p>
+              </div>
+              <div className="rounded-xl bg-soft p-3">
+                <p className="text-xs text-charcoal/50">Request ID</p>
+                <p className="font-semibold text-navy font-mono text-xs">{v.id.slice(0, 8)}…</p>
+              </div>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <Link href="/visa/start" className="btn-outline px-4 py-2 text-sm">New request</Link>
+            </div>
+          </Panel>
+        ))}
         {visaApplications.map((v) => (
           <Panel key={v.visa} title={v.visa} subtitle={`${v.country} · Submitted ${v.submitted}`}>
             <div className="mb-4">
@@ -476,11 +520,13 @@ export default function CustomerDashboard() {
     ai: <AiPanel />,
   };
 
+  const initials = displayName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() || "TR";
+
   return (
     <DashboardLayout
       role="Traveler"
-      name="Ali Hassan"
-      initials="AH"
+      name={displayName}
+      initials={initials}
       tabs={tabs}
       sections={sections}
       roleColor="bg-blue/10 text-blue"

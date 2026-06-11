@@ -10,7 +10,7 @@ import {
   isSupabaseConfigured,
   createClient,
   getDashboardUrl,
-  getUserRole,
+  resolveUserRole,
   formatAuthError,
   ROLE_LABELS,
   ROLE_EMOJI,
@@ -107,7 +107,7 @@ function LoginForm() {
     }
 
     if (data.user) {
-      const role = getUserRole(data.user);
+      const role = await resolveUserRole(data.user);
       const destination = nextPath || getDashboardUrl(role);
       router.push(destination);
       router.refresh();

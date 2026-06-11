@@ -11,6 +11,7 @@ import {
   getOnboardingUrl,
   formatAuthError,
 } from "@/lib/auth";
+import { syncUserRole } from "@/lib/supabase/actions";
 
 type AccountType = "customer" | "visa_agent" | "travel_agency" | "tour_guide" | "property_host";
 
@@ -181,8 +182,8 @@ function RegisterForm({
       return;
     }
 
-    if (data.session) {
-      // Auto-confirmed (email confirmation disabled in Supabase)
+    if (data.session && data.user) {
+      await syncUserRole(data.user.id, selectedType);
       onSuccess(getOnboardingUrl(selectedType));
       router.push(getOnboardingUrl(selectedType));
       router.refresh();

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Disclaimer } from "@/components/Disclaimer";
+import { submitPropertyListing } from "@/lib/supabase/actions";
 
 const PROPERTY_TYPES = [
   { value: "apartment", label: "Apartment",       emoji: "🏢" },
@@ -22,6 +23,7 @@ const LISTING_TYPES = [
 export default function PostPropertyPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
   const [form, setForm] = useState({
     listingType: "", propertyType: "",
     title: "", city: "", country: "", address: "",
@@ -37,9 +39,34 @@ export default function PostPropertyPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1800));
+
+    const result = await submitPropertyListing({
+      listingType: form.listingType,
+      propertyType: form.propertyType,
+      title: form.title,
+      city: form.city,
+      country: form.country,
+      address: form.address,
+      price: form.price,
+      pricePeriod: form.pricePeriod,
+      beds: form.beds,
+      baths: form.baths,
+      area: form.area,
+      description: form.description,
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+    });
+
     setLoading(false);
+
+    if (!result.ok) {
+      if (result.demo) { setSubmitted(true); return; }
+      setError(result.error);
+      return;
+    }
     setSubmitted(true);
   }
 

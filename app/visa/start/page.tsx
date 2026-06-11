@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Disclaimer } from "@/components/Disclaimer";
+import { submitVisaRequest } from "@/lib/supabase/actions";
 
 const STEPS = ["Your details", "Destination & purpose", "Case overview"] as const;
 
@@ -17,6 +18,7 @@ export default function VisaStartPage() {
   const [step, setStep]         = useState<Step>(0);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
 
   const [form, setForm] = useState({
     name: "", email: "", phone: "", whatsapp: "",
@@ -37,9 +39,33 @@ export default function VisaStartPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1800));
+
+    const result = await submitVisaRequest({
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      whatsapp: form.whatsapp,
+      nationality: form.nationality,
+      currentCountry: form.currentCountry,
+      destination: form.destination,
+      purpose: form.purpose,
+      travelDate: form.travelDate,
+      previousRefusals: form.previousRefusals,
+      message: form.message,
+    });
+
     setLoading(false);
+
+    if (!result.ok) {
+      if (result.demo) {
+        setSubmitted(true);
+        return;
+      }
+      setError(result.error);
+      return;
+    }
     setSubmitted(true);
   }
 
@@ -104,6 +130,11 @@ export default function VisaStartPage() {
         <div className="mx-auto max-w-2xl">
           <div className="card p-6 sm:p-8">
             <form onSubmit={handleSubmit}>
+              {error && (
+                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
               {/* Step 0: Personal info */}
               {step === 0 && (
                 <div className="space-y-4">
