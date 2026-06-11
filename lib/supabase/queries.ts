@@ -7,7 +7,8 @@
 import { createServerSupabaseClient } from "./server";
 import { createAdminClient } from "./admin";
 import { normalizeUserRole } from "@/lib/auth";
-import { computeProfileCompletion, isDatabaseSetupError } from "./profile-utils";
+import { checkDatabaseHealth } from "./database-health";
+import { computeProfileCompletion, isMissingTableError } from "./profile-utils";
 import type { Profile, UserRole, VisaExpert } from "./types";
 
 export type DashboardUserResult =
@@ -49,17 +50,15 @@ export async function fetchDashboardUser(): Promise<DashboardUserResult> {
     return { ok: false, reason: "not_authenticated", message: "Please sign in to view your dashboard." };
   }
 
+  const health = await checkDatabaseHealth();
+  if (!health.tables.profiles) {
+    return { ok: false, reason: "table_missing", message: health.message };
+  }
+
   const profileRes = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
 
-  if (profileRes.error) {
-    if (isDatabaseSetupError(profileRes.error)) {
-      return {
-        ok: false,
-        reason: "table_missing",
-        message: "Database tables are not set up yet. Run supabase/schema.sql and migrations in your Supabase SQL Editor.",
-      };
-    }
-    return { ok: false, reason: "error", message: profileRes.error.message };
+  if (profileRes.error && isMissingTableError(profileRes.error)) {
+    return { ok: false, reason: "table_missing", message: health.message };
   }
 
   const roleRes = await supabase
@@ -136,7 +135,7 @@ export async function fetchAdminProfiles(): Promise<{
     .limit(100);
 
   if (error) {
-    if (isDatabaseSetupError(error)) {
+    if (isMissingTableError(error)) {
       return { profiles: [], tableMissing: true, error: error.message };
     }
     return { profiles: [], error: error.message };

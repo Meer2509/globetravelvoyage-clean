@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { checkDatabaseHealth, type DatabaseHealthResult } from "@/lib/supabase/database-health";
 import { fetchDashboardUser, type DashboardUserResult } from "@/lib/supabase/queries";
 import { getInitials } from "@/lib/supabase/profile-utils";
 import { getRoleLabel } from "@/lib/auth";
@@ -17,7 +18,8 @@ export interface DashboardUserState {
   completion: number;
   missingFields: string[];
   verified: boolean;
-  setupMessage: string | null;
+  databaseHealth: DatabaseHealthResult | null;
+  dbLive: boolean;
   refresh: () => void;
 }
 
@@ -32,24 +34,28 @@ const FALLBACK = {
   completion: 0,
   missingFields: [] as string[],
   verified: false,
-  setupMessage: null,
+  databaseHealth: null as DatabaseHealthResult | null,
+  dbLive: false,
 };
 
 function buildState(
   result: DashboardUserResult | null,
+  health: DatabaseHealthResult | null,
   refresh: () => void,
   loading = false
 ): DashboardUserState {
+  const dbLive = Boolean(
+    health?.tables.profiles && health?.tables.user_roles && health?.tables.visa_experts
+  );
+
   if (!result?.ok) {
     return {
       ...FALLBACK,
       loading,
       result,
+      databaseHealth: health,
+      dbLive,
       refresh,
-      setupMessage:
-        result?.reason === "table_missing" || result?.reason === "not_configured"
-          ? result.message
-          : null,
     };
   }
 
@@ -65,7 +71,8 @@ function buildState(
     completion: result.completion,
     missingFields: result.missingFields,
     verified: result.visaExpert?.verification_status === "verified",
-    setupMessage: null,
+    databaseHealth: health,
+    dbLive,
     refresh,
   };
 }
@@ -74,16 +81,18 @@ export function useDashboardUser(): DashboardUserState {
   const [refreshKey, setRefreshKey] = useState(0);
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
   const [state, setState] = useState<DashboardUserState>(() =>
-    buildState(null, refresh, true)
+    buildState(null, null, refresh, true)
   );
 
   useEffect(() => {
     let cancelled = false;
     setState((prev) => ({ ...prev, loading: true }));
-    fetchDashboardUser().then((result) => {
+
+    Promise.all([fetchDashboardUser(), checkDatabaseHealth()]).then(([result, health]) => {
       if (cancelled) return;
-      setState(buildState(result, refresh));
+      setState(buildState(result, health, refresh));
     });
+
     return () => {
       cancelled = true;
     };

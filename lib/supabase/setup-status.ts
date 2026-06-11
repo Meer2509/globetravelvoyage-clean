@@ -2,8 +2,8 @@
 
 import { readFileSync } from "fs";
 import { join } from "path";
-import { createAdminClient, isAdminClientConfigured } from "./admin";
-import { isDatabaseSetupError } from "./profile-utils";
+import { checkDatabaseHealth } from "./database-health";
+import { isAdminClientConfigured } from "./admin";
 
 export interface SupabaseSetupStatus {
   hasSupabaseJs: boolean;
@@ -38,44 +38,21 @@ function readPackageDeps(): { hasSupabaseJs: boolean; hasSupabaseSsr: boolean } 
 
 export async function getSupabaseSetupStatus(): Promise<SupabaseSetupStatus> {
   const packages = readPackageDeps();
-  const tablesFound: string[] = [];
+  const health = await checkDatabaseHealth();
 
-  if (!isAdminClientConfigured) {
-    return {
-      ...packages,
-      schemaExecuted: false,
-      tablesFound,
-      rlsStatus: "todo",
-    };
-  }
+  const tablesFound = CORE_TABLES.filter((table) => {
+    if (table === "profiles") return health.tables.profiles;
+    if (table === "user_roles") return health.tables.user_roles;
+    if (table === "visa_experts") return health.tables.visa_experts;
+    return health.ok;
+  });
 
-  const admin = createAdminClient();
-  if (!admin) {
-    return {
-      ...packages,
-      schemaExecuted: false,
-      tablesFound,
-      rlsStatus: "todo",
-    };
-  }
-
-  for (const table of CORE_TABLES) {
-    const { error } = await admin.from(table).select("id", { head: true, count: "exact" });
-    if (!error) {
-      tablesFound.push(table);
-      continue;
-    }
-    if (!isDatabaseSetupError(error)) {
-      tablesFound.push(table);
-    }
-  }
-
-  const schemaExecuted = tablesFound.includes("profiles");
-  const rlsStatus: SupabaseSetupStatus["rlsStatus"] = schemaExecuted
-    ? tablesFound.length >= CORE_TABLES.length
-      ? "done"
-      : "partial"
-    : "todo";
+  const schemaExecuted = health.tables.profiles && health.tables.user_roles;
+  const rlsStatus: SupabaseSetupStatus["rlsStatus"] = health.ok
+    ? "done"
+    : schemaExecuted
+      ? "partial"
+      : "todo";
 
   return {
     ...packages,

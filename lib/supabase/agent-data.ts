@@ -3,7 +3,8 @@
 import { createServerSupabaseClient } from "./server";
 import { createAdminClient } from "./admin";
 import { ensureUserProfile, upsertVisaExpertForProfile } from "./ensure-user-profile";
-import { isDatabaseSetupError } from "./profile-utils";
+import { checkDatabaseHealth } from "./database-health";
+import { isMissingTableError } from "./profile-utils";
 import { parseExpertServices, serializeExpertServices, type ExpertService } from "@/lib/expert-services";
 
 export type AgentDataResult<T> =
@@ -119,12 +120,13 @@ export async function fetchAgentDashboardData(): Promise<AgentDataResult<AgentDa
       .limit(50),
   ]);
 
-  const criticalError = appsRes.error ?? leadsRes.error ?? reviewsRes.error ?? expertRes.error;
-  if (criticalError) {
-    if (isDatabaseSetupError(criticalError)) {
-      return { ok: false, error: "Database tables are not set up yet. Run migrations in Supabase SQL Editor.", tableMissing: true };
-    }
-    return { ok: false, error: criticalError.message };
+  const health = await checkDatabaseHealth();
+  if (!health.tables.profiles || !health.tables.visa_experts) {
+    return { ok: false, error: health.message, tableMissing: true };
+  }
+
+  if (expertRes.error && isMissingTableError(expertRes.error)) {
+    return { ok: false, error: health.message, tableMissing: true };
   }
 
   const applicantIds = [
@@ -153,7 +155,7 @@ export async function fetchAgentDashboardData(): Promise<AgentDataResult<AgentDa
     }
   }
 
-  const applications: AgentApplicationRow[] = ((appsRes.data ?? []) as Array<{
+  const applications: AgentApplicationRow[] = ((appsRes.error ? [] : (appsRes.data ?? [])) as Array<{
     id: string;
     visa_type: string;
     destination_country: string;
@@ -173,8 +175,8 @@ export async function fetchAgentDashboardData(): Promise<AgentDataResult<AgentDa
     notes: row.notes,
   }));
 
-  const leads: AgentLeadRow[] = (leadsRes.data ?? []) as AgentLeadRow[];
-  const reviews: AgentReviewRow[] = ((reviewsRes.data ?? []) as Array<{
+  const leads: AgentLeadRow[] = leadsRes.error ? [] : ((leadsRes.data ?? []) as AgentLeadRow[]);
+  const reviews: AgentReviewRow[] = ((reviewsRes.error ? [] : (reviewsRes.data ?? [])) as Array<{
     id: string;
     rating: number;
     title: string | null;

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { isSupabaseConfigured } from "@/lib/auth";
 import { fetchAdminCounts, fetchAdminVisaRequests, fetchAdminProfiles, type AdminDashboardCounts, type AdminProfileRow } from "@/lib/supabase/queries";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
-import { DatabaseSetupBanner } from "@/components/DatabaseSetupBanner";
+import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
 import { ROLE_LABELS } from "@/lib/auth";
 import type { UserRole } from "@/lib/supabase/types";
 import Link from "next/link";
@@ -972,17 +972,11 @@ export default function AdminDashboard() {
   const [liveCounts, setLiveCounts] = useState<AdminDashboardCounts | null>(null);
   const [adminToast, setAdminToast] = useState<string | null>(null);
   const [liveProfiles, setLiveProfiles] = useState<AdminProfileRow[]>([]);
-  const [profilesSetupMessage, setProfilesSetupMessage] = useState<string | null>(null);
-
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     fetchAdminCounts().then(setLiveCounts);
     fetchAdminProfiles().then((res) => {
-      if (res.tableMissing) {
-        setProfilesSetupMessage("Profiles table not found. Run supabase/schema.sql in your Supabase SQL Editor.");
-        return;
-      }
-      if (res.profiles.length > 0) setLiveProfiles(res.profiles);
+      if (!res.tableMissing && res.profiles.length > 0) setLiveProfiles(res.profiles);
     });
   }, []);
   const [usersData, setUsersData]   = useState(allUsers.map((u) => ({ ...u })));
@@ -1030,7 +1024,7 @@ export default function AdminDashboard() {
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
-        {dashUser.setupMessage && <DatabaseSetupBanner message={dashUser.setupMessage} />}
+        <DatabaseStatusBanner health={dashUser.databaseHealth} />
         {liveCounts && (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
             ✓ Supabase live — {liveCounts.users} profiles · {liveCounts.visaRequests} visa requests · {liveCounts.bookingRequests} booking requests · {liveCounts.supportTickets} support tickets
@@ -1111,7 +1105,7 @@ export default function AdminDashboard() {
 
     users: (
       <div className="space-y-5">
-        {profilesSetupMessage && <DatabaseSetupBanner message={profilesSetupMessage} />}
+        <DatabaseStatusBanner health={dashUser.databaseHealth} />
 
         <div className="grid gap-4 sm:grid-cols-4">
           <StatCard label="Total users" value={liveProfiles.length > 0 ? String(liveProfiles.length) : liveCounts ? String(liveCounts.users) : "—"} icon="users" color="blue" />

@@ -12,7 +12,7 @@ import {
 } from "@/lib/supabase/agent-data";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DashboardProfileSection } from "@/components/DashboardProfileSection";
-import { DatabaseSetupBanner } from "@/components/DatabaseSetupBanner";
+import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
 import { DashboardEmpty } from "@/components/DashboardEmpty";
 import { ExpertServicesPanel } from "@/components/ExpertServicesPanel";
 import { joinCommaList } from "@/lib/supabase/profile-utils";
@@ -183,7 +183,6 @@ export default function AgentDashboard() {
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
-  const [tableMissing, setTableMissing] = useState(false);
 
   function loadAgentData() {
     if (!isSupabaseConfigured) {
@@ -193,8 +192,7 @@ export default function AgentDashboard() {
     fetchAgentDashboardData().then((result) => {
       setDataLoaded(true);
       if (!result.ok) {
-        setDataError(result.error);
-        setTableMissing(Boolean(result.tableMissing));
+        if (!result.tableMissing) setDataError(result.error);
         return;
       }
       setDataError(null);
@@ -246,8 +244,12 @@ export default function AgentDashboard() {
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
-        {user.setupMessage && <DatabaseSetupBanner message={user.setupMessage} />}
-        {dataError && tableMissing && <DatabaseSetupBanner message={dataError} />}
+        <DatabaseStatusBanner health={user.databaseHealth} />
+        {dataError && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {dataError}
+          </div>
+        )}
         <DashboardProfileSection user={user} />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Client applications" value={String(applications.length)} icon="users" hint="Assigned to you" color="blue" />

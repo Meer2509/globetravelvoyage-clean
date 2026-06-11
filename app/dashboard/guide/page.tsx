@@ -5,7 +5,7 @@ import { isSupabaseConfigured } from "@/lib/auth";
 import { fetchGuideTours, fetchRoleDashboardSummary } from "@/lib/supabase/queries";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DashboardProfileSection } from "@/components/DashboardProfileSection";
-import { DatabaseSetupBanner } from "@/components/DatabaseSetupBanner";
+import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
 import { Stars } from "@/components/Stars";
 import {
   DashboardLayout,
@@ -132,7 +132,7 @@ export default function GuideDashboard() {
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
-        {user.setupMessage && <DatabaseSetupBanner message={user.setupMessage} />}
+        <DatabaseStatusBanner health={user.databaseHealth} />
         <DashboardProfileSection user={user} />
         {tourCount !== null && (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">

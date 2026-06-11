@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { DatabaseSetupBanner } from "@/components/DatabaseSetupBanner";
+import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
 import { ProgressBar } from "@/components/DashboardLayout";
 import { getRoleLabel } from "@/lib/auth";
+import { checkDatabaseHealth, type DatabaseHealthResult } from "@/lib/supabase/database-health";
 import { fetchDashboardUser } from "@/lib/supabase/queries";
 import { updateUserProfile } from "@/lib/supabase/profile-actions";
 import { joinCommaList } from "@/lib/supabase/profile-utils";
@@ -16,7 +17,8 @@ export default function DashboardProfilePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [setupMessage, setSetupMessage] = useState<string | null>(null);
+  const [health, setHealth] = useState<DatabaseHealthResult | null>(null);
+  const [formBlocked, setFormBlocked] = useState(false);
   const [role, setRole] = useState<string>("customer");
   const [completion, setCompletion] = useState(0);
 
@@ -32,12 +34,11 @@ export default function DashboardProfilePage() {
   const [yearsExperience, setYearsExperience] = useState("");
 
   async function loadProfile() {
-    const result = await fetchDashboardUser();
+    const [result, healthResult] = await Promise.all([fetchDashboardUser(), checkDatabaseHealth()]);
+    setHealth(healthResult);
+    setFormBlocked(!healthResult.tables.profiles);
     setLoading(false);
-    if (!result.ok) {
-      setSetupMessage(result.message);
-      return;
-    }
+    if (!result.ok) return;
 
     const { profile, role: userRole, visaExpert, completion: pct } = result;
     setRole(userRole);
@@ -118,9 +119,9 @@ export default function DashboardProfilePage() {
       </div>
 
       <div className="container-px py-8 max-w-2xl">
-        {setupMessage && <DatabaseSetupBanner message={setupMessage} />}
+        <DatabaseStatusBanner health={health} />
 
-        {!setupMessage && (
+        {!formBlocked && (
           <div className="card p-6">
             <div className="mb-6">
               <p className="text-sm text-charcoal/55">

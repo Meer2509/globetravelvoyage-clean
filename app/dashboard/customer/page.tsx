@@ -6,7 +6,7 @@ import { isSupabaseConfigured } from "@/lib/auth";
 import { fetchCustomerDashboard, type CustomerDashboardData } from "@/lib/supabase/queries";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DashboardProfileSection } from "@/components/DashboardProfileSection";
-import { DatabaseSetupBanner } from "@/components/DatabaseSetupBanner";
+import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
 import { Disclaimer } from "@/components/Disclaimer";
 import { Stars } from "@/components/Stars";
 import { Icon } from "@/components/Icon";
@@ -219,7 +219,7 @@ export default function CustomerDashboard() {
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
-        {user.setupMessage && <DatabaseSetupBanner message={user.setupMessage} />}
+        <DatabaseStatusBanner health={user.databaseHealth} />
         <DashboardProfileSection user={user} />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Visa requests" value={String(visaCount)} icon="visa" hint="Your submissions" color="gold" />

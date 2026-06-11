@@ -42,15 +42,22 @@ export function joinCommaList(values: string[] | null | undefined): string {
   return values?.join(", ") ?? "";
 }
 
-export function isDatabaseSetupError(error: { code?: string; message?: string } | null): boolean {
+/** True only when a whole table/relation is missing — not column or permission errors. */
+export function isMissingTableError(error: { code?: string; message?: string } | null): boolean {
   if (!error) return false;
-  const msg = (error.message ?? "").toLowerCase();
-  return (
-    error.code === "42P01" ||
-    error.code === "PGRST205" ||
-    msg.includes("does not exist") ||
-    msg.includes("schema cache")
-  );
+  const msg = error.message ?? "";
+  const lower = msg.toLowerCase();
+
+  if (error.code === "42P01" || error.code === "PGRST205") return true;
+  if (/relation .+ does not exist/i.test(msg)) return true;
+  if (lower.includes("could not find the table") && lower.includes("schema cache")) return true;
+
+  return false;
+}
+
+/** @deprecated Use isMissingTableError — kept for gradual migration */
+export function isDatabaseSetupError(error: { code?: string; message?: string } | null): boolean {
+  return isMissingTableError(error);
 }
 
 export function computeProfileCompletion(
