@@ -69,6 +69,7 @@ export async function POST(request: Request) {
       metadata: {
         product_key: product.key,
         user_id: userId ?? "",
+        email: userEmail ?? "",
       },
     });
 
@@ -79,6 +80,8 @@ export async function POST(request: Request) {
     const amount = product.amountCents / 100;
     const record = await createPaymentRecord({
       userId,
+      email: userEmail ?? null,
+      serviceType: product.key,
       amount,
       currency: product.currency,
       description: product.name,

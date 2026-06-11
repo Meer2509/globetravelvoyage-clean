@@ -16,6 +16,7 @@ import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
 import { ROLE_LABELS } from "@/lib/auth";
 import type { UserRole } from "@/lib/supabase/types";
 import Link from "next/link";
+import { formatPaymentAmount, formatPaymentDate, paymentServiceLabel } from "@/lib/payments-display";
 import { Stars } from "@/components/Stars";
 import { Icon } from "@/components/Icon";
 import {
@@ -1428,18 +1429,24 @@ export default function AdminDashboard() {
               {livePayments.map((p) => (
                 <div key={p.id} className="flex items-center justify-between gap-4 p-5">
                   <div className="min-w-0">
-                    <p className="font-bold text-navy truncate">{p.description ?? "Payment"}</p>
-                    <p className="text-sm text-charcoal/55 truncate">
-                      {p.customer_name ?? p.customer_email ?? "Guest"} ·{" "}
-                      {new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    <p className="font-bold text-navy truncate">
+                      {paymentServiceLabel(p.service_type, p.description)}
                     </p>
-                    {p.stripe_payment_id && (
-                      <p className="text-xs text-charcoal/40 truncate">Stripe: {p.stripe_payment_id}</p>
+                    <p className="text-sm text-charcoal/55 truncate">
+                      {p.customer_name ?? p.email ?? p.customer_email ?? "Guest"} ·{" "}
+                      {formatPaymentDate(p.paid_at ?? p.created_at)}
+                    </p>
+                    {(p.stripe_session_id || p.stripe_payment_intent_id) && (
+                      <p className="text-xs text-charcoal/40 truncate">
+                        {p.stripe_payment_intent_id
+                          ? `Payment: ${p.stripe_payment_intent_id}`
+                          : `Session: ${p.stripe_session_id}`}
+                      </p>
                     )}
                   </div>
                   <div className="shrink-0 text-right">
                     <p className="font-bold text-navy">
-                      {new Intl.NumberFormat("en-US", { style: "currency", currency: p.currency ?? "USD" }).format(Number(p.amount))}
+                      {formatPaymentAmount(Number(p.amount), p.currency ?? "USD")}
                     </p>
                     <span className={`chip text-xs ${p.status === "paid" ? "bg-emerald-50 text-emerald-700" : "bg-gold/15 text-navy"}`}>
                       {p.status}

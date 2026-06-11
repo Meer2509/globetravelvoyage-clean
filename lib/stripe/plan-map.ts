@@ -9,6 +9,7 @@ export const PLAN_ID_TO_CHECKOUT: Record<string, CheckoutProductKey> = {
   "featured-expert": "agency_featured_listing",
   "property-lead": "property_featured_listing",
   "tour-booking": "tour_booking_request",
+  "cruise-booking": "cruise_booking_request",
 };
 
 export function checkoutProductKeyForPlan(planId: string): CheckoutProductKey | undefined {

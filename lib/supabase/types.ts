@@ -464,13 +464,18 @@ export interface Payment {
   id: string;
   user_id: string | null;
   booking_id: string | null;
+  email: string | null;
+  service_type: string | null;
   amount: number;
   currency: string;
   status: string;
   stripe_payment_id: string | null;
+  stripe_session_id: string | null;
+  stripe_payment_intent_id: string | null;
   payee_name: string | null;
   description: string | null;
   created_at: string;
+  paid_at: string | null;
 }
 
 // ── Convenience alias ─────────────────────────────────────────────────────────

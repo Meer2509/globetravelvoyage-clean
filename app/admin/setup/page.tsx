@@ -359,7 +359,7 @@ export default async function AdminSetupPage() {
         <SetupSection
           emoji="💳"
           title="Stripe — Payments"
-          note="Stripe integration is planned for a future phase."
+          note="Stripe Checkout runs in test mode until you switch to live keys in production."
           items={[
             {
               label: "STRIPE_SECRET_KEY",
@@ -380,15 +380,24 @@ export default async function AdminSetupPage() {
             {
               label: "Stripe Checkout routes",
               detail: hasStripeSecret && hasStripePublic
-                ? "/api/stripe/checkout · /checkout · /payment-success"
+                ? "/api/stripe/checkout · /checkout · /payment-success · /payment-cancelled"
                 : "Add Stripe keys to enable hosted checkout",
               status: hasStripeSecret && hasStripePublic ? "done" : hasStripeSecret || hasStripePublic ? "partial" : "todo",
             },
             {
               label: "STRIPE_WEBHOOK_SECRET",
-              detail: "For verifying webhook events from Stripe (booking confirmations, refunds)",
+              detail: hasStripeWebhook
+                ? "Webhook secret configured — POST /api/stripe/webhook marks payments paid"
+                : "Add signing secret from Stripe Dashboard → Webhooks (checkout.session.completed)",
               status: hasStripeWebhook ? "done" : "todo",
               docsUrl: "https://stripe.com/docs/webhooks",
+            },
+            {
+              label: "Stripe webhook route",
+              detail: hasStripeWebhook
+                ? "/api/stripe/webhook listens for checkout.session.completed"
+                : "Configure STRIPE_WEBHOOK_SECRET and point Stripe to /api/stripe/webhook",
+              status: hasStripeWebhook ? "done" : "todo",
             },
             {
               label: "stripe npm package installed",

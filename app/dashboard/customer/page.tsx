@@ -3,7 +3,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/auth";
-import { fetchCustomerDashboard, type CustomerDashboardData } from "@/lib/supabase/queries";
+import {
+  fetchCustomerDashboard,
+  fetchCustomerPayments,
+  type CustomerDashboardData,
+  type PaymentRow,
+} from "@/lib/supabase/queries";
+import { formatPaymentAmount, formatPaymentDate, paymentServiceLabel } from "@/lib/payments-display";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DashboardProfileSection } from "@/components/DashboardProfileSection";
 import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
@@ -27,6 +33,7 @@ const tabs: DashboardTab[] = [
   { key: "visas", label: "Visa Applications", icon: "visa", badge: 2 },
   { key: "saved", label: "Saved Trips", icon: "star", badge: 4 },
   { key: "bookings", label: "Bookings", icon: "doc", badge: 3 },
+  { key: "payments", label: "Payments", icon: "star" },
   { key: "documents", label: "Documents", icon: "doc" },
   { key: "referrals", label: "Referrals", icon: "users" },
   { key: "support", label: "Support", icon: "shield", badge: 1 },
@@ -204,13 +211,25 @@ function AiPanel() {
 export default function CustomerDashboard() {
   const user = useDashboardUser();
   const [live, setLive] = useState<CustomerDashboardData | null>(null);
+  const [customerPayments, setCustomerPayments] = useState<PaymentRow[]>([]);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     fetchCustomerDashboard().then((data) => {
       if (data) setLive(data);
     });
+    fetchCustomerPayments().then(setCustomerPayments);
   }, []);
+
+  const paidTotal = customerPayments
+    .filter((p) => p.status === "paid")
+    .reduce((sum, p) => sum + Number(p.amount), 0);
+
+  const customerTabs = tabs.map((t) =>
+    t.key === "payments" && customerPayments.length > 0
+      ? { ...t, badge: customerPayments.length }
+      : t
+  );
 
   const visaCount = live?.visaRequests.length ?? 0;
   const bookingCount = live?.bookingRequests.length ?? 0;
@@ -441,6 +460,54 @@ export default function CustomerDashboard() {
       </div>
     ),
 
+    payments: (
+      <div className="space-y-5">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <StatCard
+            label="Total paid"
+            value={formatPaymentAmount(paidTotal)}
+            icon="star"
+            color="gold"
+          />
+          <StatCard
+            label="Transactions"
+            value={String(customerPayments.length)}
+            icon="doc"
+            hint={`${customerPayments.filter((p) => p.status === "paid").length} completed`}
+            color="blue"
+          />
+        </div>
+
+        {customerPayments.length === 0 ? (
+          <EmptyState
+            emoji="💳"
+            title="No payments yet"
+            description="Your Stripe checkout purchases will appear here after you complete a payment."
+            action={{ label: "Browse checkout", href: "/checkout" }}
+          />
+        ) : (
+          <Panel title="Payment history" subtitle="Live from Supabase payments table">
+            {customerPayments.map((p) => (
+              <TableRow
+                key={p.id}
+                cells={[
+                  paymentServiceLabel(p.service_type, p.description),
+                  formatPaymentDate(p.paid_at ?? p.created_at),
+                  formatPaymentAmount(Number(p.amount), p.currency),
+                ]}
+                badge={p.status}
+                badgeColor={p.status === "paid" ? "green" : "blue"}
+              />
+            ))}
+          </Panel>
+        )}
+
+        <Link href="/checkout" className="btn-outline inline-flex px-4 py-2.5 text-sm">
+          Make a payment
+        </Link>
+      </div>
+    ),
+
     support: (
       <div className="space-y-4">
         {supportMessages.map((msg) => (
@@ -485,7 +552,7 @@ export default function CustomerDashboard() {
       initials={user.initials}
       email={user.email}
       profileCompletion={user.completion}
-      tabs={tabs}
+      tabs={customerTabs}
       sections={sections}
       roleColor="bg-blue/10 text-blue"
       avatarColor="bg-navy text-gold"

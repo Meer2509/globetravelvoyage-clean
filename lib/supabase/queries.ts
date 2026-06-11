@@ -250,18 +250,45 @@ export async function fetchAdminVisaRequests() {
   return data ?? [];
 }
 
-export interface AdminPaymentRow {
+export interface PaymentRow {
   id: string;
   user_id: string | null;
+  email: string | null;
+  service_type: string | null;
   amount: number;
   currency: string;
   status: string;
   description: string | null;
+  stripe_session_id: string | null;
+  stripe_payment_intent_id: string | null;
   stripe_payment_id: string | null;
-  payee_name: string | null;
   created_at: string;
+  paid_at: string | null;
+}
+
+export interface AdminPaymentRow extends PaymentRow {
   customer_name: string | null;
   customer_email: string | null;
+}
+
+export async function fetchCustomerPayments(): Promise<PaymentRow[]> {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return [];
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("payments")
+    .select(
+      "id, user_id, email, service_type, amount, currency, status, description, stripe_session_id, stripe_payment_intent_id, stripe_payment_id, created_at, paid_at"
+    )
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) return [];
+  return (data ?? []) as PaymentRow[];
 }
 
 export async function fetchAdminPayments(): Promise<{
@@ -274,7 +301,9 @@ export async function fetchAdminPayments(): Promise<{
 
   const { data, error } = await admin
     .from("payments")
-    .select("id, user_id, amount, currency, status, description, stripe_payment_id, payee_name, created_at")
+    .select(
+      "id, user_id, email, service_type, amount, currency, status, description, stripe_session_id, stripe_payment_intent_id, stripe_payment_id, created_at, paid_at"
+    )
     .order("created_at", { ascending: false })
     .limit(100);
 
@@ -285,17 +314,7 @@ export async function fetchAdminPayments(): Promise<{
     return { payments: [], error: error.message };
   }
 
-  const rows = (data ?? []) as Array<{
-    id: string;
-    user_id: string | null;
-    amount: number;
-    currency: string;
-    status: string;
-    description: string | null;
-    stripe_payment_id: string | null;
-    payee_name: string | null;
-    created_at: string;
-  }>;
+  const rows = (data ?? []) as PaymentRow[];
 
   const userIds = [...new Set(rows.map((r) => r.user_id).filter(Boolean))] as string[];
   const profileMap: Record<string, { full_name: string | null; email: string }> = {};
@@ -314,7 +333,7 @@ export async function fetchAdminPayments(): Promise<{
   const payments: AdminPaymentRow[] = rows.map((row) => ({
     ...row,
     customer_name: row.user_id ? profileMap[row.user_id]?.full_name ?? null : null,
-    customer_email: row.user_id ? profileMap[row.user_id]?.email ?? null : null,
+    customer_email: row.email ?? (row.user_id ? profileMap[row.user_id]?.email ?? null : null),
   }));
 
   return { payments };

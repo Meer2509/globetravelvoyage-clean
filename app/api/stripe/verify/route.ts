@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getStripe, isStripeServerConfigured } from "@/lib/stripe/server";
-import { updatePaymentBySessionId } from "@/lib/stripe/payment-records";
+import { fulfillStripeCheckoutSession } from "@/lib/stripe/fulfill-session";
 import { getCheckoutProduct } from "@/lib/stripe/products";
 
 export async function GET(request: Request) {
@@ -22,15 +22,12 @@ export async function GET(request: Request) {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
     const paid = session.payment_status === "paid";
-    const amount = session.amount_total ? session.amount_total / 100 : undefined;
+    const amount = session.amount_total ? session.amount_total / 100 : null;
     const productKey = session.metadata?.product_key ?? "";
     const product = productKey ? getCheckoutProduct(productKey) : undefined;
 
     if (paid) {
-      await updatePaymentBySessionId(sessionId, {
-        status: "paid",
-        amount,
-      });
+      await fulfillStripeCheckoutSession(session);
     }
 
     return NextResponse.json({
@@ -38,7 +35,8 @@ export async function GET(request: Request) {
       paid,
       sessionId: session.id,
       productName: product?.name ?? session.metadata?.product_key ?? "Your purchase",
-      amount: amount ?? null,
+      serviceType: productKey || null,
+      amount,
       currency: session.currency?.toUpperCase() ?? "USD",
     });
   } catch (err) {

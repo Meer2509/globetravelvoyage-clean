@@ -4,6 +4,10 @@ export function isStripeServerConfigured(): boolean {
   return Boolean(process.env.STRIPE_SECRET_KEY?.trim());
 }
 
+export function isStripeWebhookConfigured(): boolean {
+  return isStripeServerConfigured() && Boolean(process.env.STRIPE_WEBHOOK_SECRET?.trim());
+}
+
 let stripeClient: Stripe | null = null;
 
 export function getStripe(): Stripe | null {

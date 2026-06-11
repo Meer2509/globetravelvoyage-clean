@@ -31,6 +31,7 @@ import {
   ProgressBar,
   type DashboardTab,
 } from "@/components/DashboardLayout";
+import { formatPaymentAmount, formatPaymentDate, paymentServiceLabel } from "@/lib/payments-display";
 
 function statusToPct(status: string): number {
   const map: Record<string, number> = {
@@ -474,14 +475,14 @@ export default function AgentDashboard() {
             message="Payments will appear here when recorded in your Supabase payments table. Total shows $0 until then."
           />
         ) : (
-          <Panel title="Payment history" subtitle="Live from Supabase payments">
+          <Panel title="Payment history" subtitle="Paid services and platform fees on your account">
             {payments.map((p) => (
               <TableRow
                 key={p.id}
                 cells={[
-                  p.description ?? "Payment",
-                  formatRelativeDate(p.created_at),
-                  formatMoney(Number(p.amount), p.currency ?? "USD"),
+                  paymentServiceLabel(p.service_type, p.description),
+                  formatPaymentDate(p.paid_at ?? p.created_at),
+                  formatPaymentAmount(Number(p.amount), p.currency ?? "USD"),
                 ]}
                 badge={p.status}
                 badgeColor={p.status === "paid" || p.status === "settled" ? "green" : "blue"}

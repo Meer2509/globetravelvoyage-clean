@@ -57,11 +57,15 @@ export interface AgentReviewRow {
 
 export interface AgentPaymentRow {
   id: string;
+  email: string | null;
+  service_type: string | null;
   amount: number;
   currency: string;
   status: string;
   description: string | null;
+  stripe_session_id: string | null;
   created_at: string;
+  paid_at: string | null;
 }
 
 export interface AgentDashboardData {
@@ -114,7 +118,7 @@ export async function fetchAgentDashboardData(): Promise<AgentDataResult<AgentDa
       : Promise.resolve({ data: [], error: null }),
     admin
       .from("payments")
-      .select("id, amount, currency, status, description, created_at")
+      .select("id, email, service_type, amount, currency, status, description, stripe_session_id, created_at, paid_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(50),
