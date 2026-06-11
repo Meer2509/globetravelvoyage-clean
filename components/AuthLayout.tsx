@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Icon } from "./Icon";
 
 // Shared left-panel visual items
@@ -50,14 +51,15 @@ export function AuthLayout({
 
         {/* Top: Logo */}
         <div className="relative z-10">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-gold">
-              <Icon name="globe" className="h-5 w-5" />
-            </span>
-            <span className="text-xl font-extrabold tracking-tight text-white">
-              Globe<span className="text-blue-light">Travel</span>
-              <span className="text-gold">Voyage</span>
-            </span>
+          <Link href="/" className="inline-block group" aria-label="Globe Travel Voyage">
+            <Image
+              src="/logo-white.svg"
+              alt="Globe Travel Voyage"
+              width={210}
+              height={50}
+              className="h-12 w-auto object-contain opacity-95 group-hover:opacity-100 transition-opacity"
+              priority
+            />
           </Link>
 
           {eyebrow && (
@@ -134,17 +136,18 @@ export function AuthLayout({
       {/* ── Right panel (form) ── */}
       <div className="flex flex-1 flex-col">
         {/* Mobile top bar */}
-        <div className="flex items-center justify-between border-b border-soft-200 px-5 py-4 lg:hidden">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-navy text-gold">
-              <Icon name="globe" className="h-4 w-4" />
-            </span>
-            <span className="font-extrabold text-navy">
-              Globe<span className="text-blue">Travel</span>
-              <span className="text-gold">Voyage</span>
-            </span>
+        <div className="flex items-center justify-between border-b border-soft-200 px-5 py-3.5 lg:hidden">
+          <Link href="/" aria-label="Globe Travel Voyage">
+            <Image
+              src="/logo.svg"
+              alt="Globe Travel Voyage"
+              width={160}
+              height={40}
+              className="h-9 w-auto object-contain"
+              priority
+            />
           </Link>
-          <Link href="/" className="text-xs text-charcoal/50 hover:text-navy">
+          <Link href="/" className="text-xs text-charcoal/50 hover:text-navy transition-colors">
             ← Back to site
           </Link>
         </div>

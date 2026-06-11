@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Icon } from "./Icon";
 import { LogoutButton } from "./LogoutButton";
 import type { IconName } from "@/lib/data";
@@ -43,9 +44,14 @@ export function DashboardLayout({
         <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
           {/* ── Sidebar ── */}
           <aside className="h-fit space-y-3 lg:sticky lg:top-20">
+            {/* Logo in sidebar */}
+            <Link href="/" className="block px-1 pb-1" aria-label="Globe Travel Voyage">
+              <Image src="/logo.svg" alt="Globe Travel Voyage" width={180} height={44} className="h-10 w-auto object-contain" />
+            </Link>
+
             {/* Profile card */}
             <div className="card overflow-hidden p-0">
-              <div className="h-2 w-full bg-hero-gradient" />
+              <div className="h-1.5 w-full bg-hero-gradient" />
               <div className="p-5">
                 <div className="flex items-center gap-3">
                   <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-xl font-extrabold ${avatarColor}`}>

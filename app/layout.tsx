@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
@@ -11,30 +11,81 @@ const jakarta = Plus_Jakarta_Sans({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  themeColor: "#081C3A",
+  colorScheme: "light",
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://globetravelvoyage.com"),
   title: {
-    default: "Globe Travel Voyage — AI Travel Command Center",
+    default: "Globe Travel Voyage — AI Powered Global Travel",
     template: "%s · Globe Travel Voyage",
   },
   description:
-    "Your AI Travel Command Center for Visas, Flights, Tours, Rentals & Global Journeys. Plan trips, understand visa requirements, compare flights, and connect with verified travel experts.",
+    "Globe Travel Voyage is your AI-powered global travel marketplace. Search visas, flights, hotels, tours, car rentals, cruises and connect with verified travel experts worldwide.",
   keywords: [
-    "AI travel",
+    "AI travel marketplace",
     "visa assistant",
-    "flights",
-    "hotels",
+    "flight search",
+    "hotel booking",
     "car rentals",
-    "cruises",
-    "tours",
-    "travel marketplace",
+    "cruise booking",
+    "local tours",
+    "travel agents",
+    "visa application",
+    "trip planner AI",
+    "Pakistan to USA visa",
+    "Gulf to Pakistan flights",
+    "travel agencies",
+    "Globe Travel Voyage",
   ],
-  openGraph: {
-    title: "Globe Travel Voyage — AI Travel Command Center",
-    description:
-      "Plan your trip, understand visa requirements, compare flights, find tours, rent cars, book cruises, and connect with verified travel experts — all powered by AI.",
-    type: "website",
+  authors: [{ name: "Globe Travel Voyage" }],
+  creator: "Globe Travel Voyage",
+  publisher: "Globe Travel Voyage",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
   },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://globetravelvoyage.com",
+    siteName: "Globe Travel Voyage",
+    title: "Globe Travel Voyage — AI Powered Global Travel",
+    description:
+      "Your AI Travel Command Center for Visas, Flights, Hotels, Tours & Global Journeys. Compare prices, apply for visas, and connect with verified travel experts — all powered by AI.",
+    images: [
+      {
+        url: "/og-image.svg",
+        width: 1200,
+        height: 630,
+        alt: "Globe Travel Voyage — AI Powered Global Travel",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@GlobeTravelVoyage",
+    creator: "@GlobeTravelVoyage",
+    title: "Globe Travel Voyage — AI Powered Global Travel",
+    description:
+      "AI-powered global travel marketplace. Visas, flights, hotels, tours, rentals and more. Verified experts. 190+ countries.",
+    images: ["/og-image.svg"],
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/logo-mark.svg", sizes: "180x180", type: "image/svg+xml" },
+    ],
+    other: [
+      { rel: "mask-icon", url: "/favicon.svg", color: "#081C3A" },
+    ],
+  },
+  manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({
@@ -44,6 +95,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${jakarta.variable} h-full antialiased`}>
+      <head>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/logo-mark.svg" />
+        <link rel="manifest" href="/site.webmanifest" />
+        <meta name="theme-color" content="#081C3A" />
+      </head>
       <body className="flex min-h-full flex-col bg-white">
         <Navbar />
         <main className="flex-1">{children}</main>

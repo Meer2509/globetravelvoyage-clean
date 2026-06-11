@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Icon } from "./Icon";
 import { DISCLAIMER_SHORT } from "@/lib/data";
 
@@ -129,14 +130,14 @@ export function Footer() {
         <div className="grid gap-10 lg:grid-cols-[1.8fr_repeat(6,1fr)]">
           {/* Brand column */}
           <div className="max-w-sm">
-            <Link href="/" className="flex items-center gap-2.5">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-gold">
-                <Icon name="globe" className="h-5 w-5" />
-              </span>
-              <span className="text-xl font-extrabold tracking-tight">
-                Globe<span className="text-blue-light">Travel</span>
-                <span className="text-gold">Voyage</span>
-              </span>
+            <Link href="/" className="inline-block group" aria-label="Globe Travel Voyage">
+              <Image
+                src="/logo-white.svg"
+                alt="Globe Travel Voyage"
+                width={220}
+                height={52}
+                className="h-14 w-auto object-contain opacity-95 group-hover:opacity-100 transition-opacity"
+              />
             </Link>
 
             <p className="mt-5 text-sm leading-relaxed text-white/55">

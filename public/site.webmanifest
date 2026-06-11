@@ -1,0 +1,22 @@
+{
+  "name": "Globe Travel Voyage",
+  "short_name": "GlobeTV",
+  "description": "AI-powered global travel marketplace for visas, flights, hotels, tours and more.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#081C3A",
+  "theme_color": "#081C3A",
+  "icons": [
+    {
+      "src": "/logo-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
