@@ -99,7 +99,7 @@ export default function PostPropertyPage() {
           <span className="eyebrow-white mb-3">Host</span>
           <h1 className="text-3xl font-extrabold text-white sm:text-4xl">Post a property listing</h1>
           <p className="mt-2 text-white/60 text-sm max-w-xl">
-            List your property for rent, sale or as a travel stay. Reach thousands of verified travelers worldwide.
+            List your property for rent, sale or as a travel stay. Submissions are reviewed by our team before going live on the marketplace.
           </p>
         </div>
       </div>

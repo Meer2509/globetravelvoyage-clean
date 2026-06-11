@@ -53,7 +53,7 @@ export default function HostOnboarding() {
     <AuthLayout
       eyebrow="Property Host"
       headline="List your property globally"
-      subline="Reach thousands of international travelers and long-stay tenants on one platform."
+      subline="List your property on our verified host marketplace as traveler demand grows."
       showStats={false}
     >
       <div>

@@ -1,27 +1,9 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import { fetchMarketplaceStats } from "@/lib/supabase/marketplace-stats";
 import { formatStatsForHero } from "@/lib/marketplace-stats-display";
 
-export function MarketplaceStatsBar() {
-  const [items, setItems] = useState(formatStatsForHero({
-    verifiedProviders: 0,
-    visaExperts: 0,
-    agencies: 0,
-    guides: 0,
-    hosts: 0,
-    completedBookings: 0,
-    totalBookings: 0,
-    reviews: 0,
-    leads: 0,
-    payments: 0,
-    isLive: false,
-  }));
-
-  useEffect(() => {
-    fetchMarketplaceStats().then((stats) => setItems(formatStatsForHero(stats)));
-  }, []);
+export async function HeroStatsBar() {
+  const stats = await fetchMarketplaceStats();
+  const items = formatStatsForHero(stats);
 
   return (
     <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-4">

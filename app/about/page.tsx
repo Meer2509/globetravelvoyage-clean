@@ -4,7 +4,9 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { TrustBadge } from "@/components/TrustBadge";
 import { CTASection } from "@/components/CTASection";
 import { Disclaimer } from "@/components/Disclaimer";
-import { stats, trustItems } from "@/lib/data";
+import { trustItems } from "@/lib/data";
+import { fetchMarketplaceStats } from "@/lib/supabase/marketplace-stats";
+import { formatStatsForHero } from "@/lib/marketplace-stats-display";
 
 export const metadata: Metadata = {
   title: "About Globe Travel Voyage",
@@ -18,7 +20,10 @@ const values = [
   { title: "Global & inclusive", text: "Built for travelers worldwide, with a focus on Middle East, South & Southeast Asia and the West." },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const marketplaceStats = await fetchMarketplaceStats();
+  const stats = formatStatsForHero(marketplaceStats);
+
   return (
     <>
       <PageHeader

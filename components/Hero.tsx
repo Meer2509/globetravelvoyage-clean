@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Icon } from "./Icon";
 import { aiPrompts } from "@/lib/data";
-import { MarketplaceStatsBar } from "./MarketplaceStatsBar";
+import type { ReactNode } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -156,9 +156,9 @@ function getAiResponse(q: string): string {
   if (lq.includes("cruise"))
     return "Top picks: Arabian Gulf Explorer (4 nights from $420 all-inclusive), Mediterranean Jewel (7 nights from $890). Under $2,000? Gulf cruise is perfect. Private Dubai Marina yacht charters from $300.";
   if (lq.includes("umrah") || lq.includes("hajj"))
-    return "Umrah packages from Lahore: 10 nights from $1,650 including flights, 5★ near Haram and visa. Verified agencies: Voyage Pro Travels and Orient Express Travel — both rated 4.8+.";
+    return "Umrah packages from Lahore: 10 nights from $1,650 including flights, 5★ near Haram and visa. Browse verified travel agencies on our marketplace for current packages and quotes.";
   if (lq.includes("student") || lq.includes("f-1") || lq.includes("f1"))
-    return "For the US F-1 student visa: accepted I-20 form, SEVIS fee ($350), DS-160, financial proof and transcripts. Apply as soon as your I-20 arrives. Processing: 4–10 weeks. Top specialist: Sana Malik.";
+    return "For the US F-1 student visa: accepted I-20 form, SEVIS fee ($350), DS-160, financial proof and transcripts. Apply as soon as your I-20 arrives. Processing: 4–10 weeks. Connect with a verified visa expert for document review.";
   if (lq.includes("london") || lq.includes("uk") || lq.includes("england"))
     return "UK Standard Visitor Visa: £115 fee, 3–6 weeks processing. Flights from Lahore from $580. London 7-day budget: $2,800–$4,500. Book early for summer — July/August rates spike 40%.";
   if (lq.includes("hotel") || lq.includes("stay"))
@@ -902,7 +902,7 @@ const tabs: { id: TabId; label: string; emoji: string }[] = [
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
-export function Hero() {
+export function Hero({ statsBar }: { statsBar?: ReactNode }) {
   const [activeTab, setActiveTab] = useState<TabId>("ai");
 
   const FormComponents: Record<TabId, React.ReactNode> = {
@@ -1016,7 +1016,7 @@ export function Hero() {
           ))}
         </div>
 
-        <MarketplaceStatsBar />
+        {statsBar}
       </div>
     </section>
   );

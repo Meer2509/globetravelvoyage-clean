@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { Hero } from "@/components/Hero";
+import { HeroStatsBar } from "@/components/HeroStatsBar";
 import { AICommandCenter } from "@/components/AICommandCenter";
 import { SectionHeader } from "@/components/SectionHeader";
 import { FAQ } from "@/components/FAQ";
 import { Icon } from "@/components/Icon";
 import { Disclaimer } from "@/components/Disclaimer";
-import { Stars } from "@/components/Stars";
 import {
   services,
   cheapRoutes,
@@ -14,14 +14,13 @@ import {
   visas,
   roles,
   faqs,
-  trustItems,
   referralTiers,
   travelGuides,
   visaHubCards,
   ticketRoutes,
-  propertyListings,
 } from "@/lib/data";
 import { HomeMarketplaceSection } from "@/components/HomeMarketplaceSection";
+import { HomePropertiesSection } from "@/components/HomePropertiesSection";
 
 export default function Home() {
   const featuredUsa = visas.find((v) => v.slug === "usa-b1-b2")!;
@@ -29,7 +28,7 @@ export default function Home() {
   return (
     <>
       {/* ── 1. Hero + 7-Tab AI Search ── */}
-      <Hero />
+      <Hero statsBar={<HeroStatsBar />} />
 
       {/* ── Disclaimer strip ── */}
       <div className="border-b border-soft-200 bg-gold-50">
@@ -49,7 +48,7 @@ export default function Home() {
           <SectionHeader
             eyebrow="Everything travel"
             title="One platform. Every travel need."
-            subtitle="Search, plan, apply, book and compare — all powered by AI and verified experts across 190+ countries."
+            subtitle="Search, plan, apply, book and compare — powered by AI guidance and a verified provider marketplace launching now."
             center
           />
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
@@ -256,17 +255,18 @@ export default function Home() {
           {/* Route filter tabs */}
           <div className="mb-6 flex flex-wrap gap-2">
             {[
-              { label: "🇵🇰 Gulf → Pakistan", count: cheapRoutes.length },
-              { label: "🇮🇳 Gulf → India", count: 2 },
-              { label: "🇵🇭 Gulf → Philippines", count: 1 },
-              { label: "✈️ PK → USA/UK", count: 2 },
+              { label: "🇵🇰 Gulf → Pakistan", href: "/flights" },
+              { label: "🇮🇳 Gulf → India", href: "/flights" },
+              { label: "🇵🇭 Gulf → Philippines", href: "/flights" },
+              { label: "✈️ PK → USA/UK", href: "/flights" },
             ].map((f) => (
-              <button
+              <Link
                 key={f.label}
-                className="rounded-full border border-soft-200 bg-white px-4 py-2 text-xs font-semibold text-navy hover:border-blue hover:text-blue transition-colors"
+                href={f.href}
+                className="rounded-full border border-soft-200 bg-white px-4 py-2 text-xs font-semibold text-navy hover:border-gold hover:text-navy transition-colors"
               >
                 {f.label}
-              </button>
+              </Link>
             ))}
           </div>
 
@@ -459,118 +459,14 @@ export default function Home() {
 
       <HomeMarketplaceSection />
 
-      {/* ── 10. Travel Property Marketplace ── */}
-      <section className="section bg-soft">
-        <div className="container-px">
-          <SectionHeader
-            eyebrow="Property marketplace"
-            title="Travel stays, rentals & investment properties"
-            subtitle="From nightly vacation homes to monthly furnished apartments and buy/sell property listings across the Middle East, South Asia and beyond."
-            linkHref="/properties"
-            linkLabel="All properties"
-          />
-
-          {/* Type filter */}
-          <div className="mb-6 flex flex-wrap gap-2">
-            {[
-              { label: "🌙 Vacation stays",      href: "/properties" },
-              { label: "🏢 Monthly rentals",     href: "/properties" },
-              { label: "💰 For sale / invest",   href: "/properties" },
-              { label: "📋 Post a listing",      href: "/properties/post" },
-            ].map((f) => (
-              <Link
-                key={f.label}
-                href={f.href}
-                className="rounded-full border border-soft-200 bg-white px-4 py-2 text-xs font-semibold text-navy hover:border-blue hover:text-blue transition-colors"
-              >
-                {f.label}
-              </Link>
-            ))}
-          </div>
-
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {propertyListings.slice(0, 6).map((p) => (
-              <Link key={p.id} href="/properties" className="card card-hover group overflow-hidden flex flex-col">
-                {/* Thumbnail */}
-                <div className={`relative h-44 bg-gradient-to-br ${p.gradient} flex items-center justify-center`}>
-                  <span className="text-5xl opacity-70">{p.emoji}</span>
-                  {p.tag && (
-                    <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-bold text-navy">
-                      {p.tag}
-                    </span>
-                  )}
-                  <span className={`absolute right-3 top-3 rounded-full px-2 py-0.5 text-[10px] font-bold text-white ${
-                    p.type === "sale" ? "bg-gold" : p.type === "stay" ? "bg-blue" : "bg-emerald-500"
-                  }`}>
-                    {p.type === "stay" ? "Stay" : p.type === "sale" ? "For Sale" : "For Rent"}
-                  </span>
-                  {p.verified && (
-                    <div className="absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-blue/90 px-2 py-0.5 text-[10px] font-bold text-white">
-                      <Icon name="check" className="h-3 w-3" /> Verified
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-col flex-1 p-5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="font-bold text-navy leading-tight">{p.name}</h3>
-                      <p className="text-xs text-charcoal/55 mt-0.5">{p.city} {p.flag}</p>
-                    </div>
-                  </div>
-
-                  {/* Details */}
-                  <div className="mt-3 flex items-center gap-3 text-xs text-charcoal/60">
-                    {p.beds > 0 ? <span>🛏 {p.beds} BR</span> : <span>🏠 Studio</span>}
-                    {p.sqft > 0 && <span>·</span>}
-                    {p.sqft > 0 && <span>📐 {p.sqft} sqft</span>}
-                    {p.rating > 0 && (
-                      <>
-                        <span>·</span>
-                        <span className="flex items-center gap-1">
-                          <span className="text-gold">★</span>
-                          <span className="font-semibold text-navy">{p.rating}</span>
-                        </span>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Amenities */}
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {p.amenities.slice(0, 3).map((a) => (
-                      <span key={a} className="chip text-[10px] px-2">{a}</span>
-                    ))}
-                  </div>
-
-                  <div className="mt-auto flex items-end justify-between border-t border-soft-200 pt-4 mt-4">
-                    <div>
-                      <p className="text-xl font-extrabold text-navy">{p.price}</p>
-                      <p className="text-xs text-charcoal/45">per {p.per}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-charcoal/40">{p.host}</span>
-                      <span className="text-xs font-semibold text-blue opacity-0 group-hover:opacity-100 transition-opacity">
-                        View →
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          <Disclaimer className="mt-6">
-            Globe Travel Voyage is not a real estate broker or agent. Property listings are provided by independent hosts. Always conduct proper due diligence before any transaction.
-          </Disclaimer>
-        </div>
-      </section>
+      <HomePropertiesSection />
 
       {/* ── 11. Social Proof ── */}
       <section className="section">
         <div className="container-px">
           <SectionHeader
-            eyebrow="Trusted by travelers"
-            title="Verified reviews"
+            eyebrow="Platform reviews"
+            title="Reviews from completed bookings"
             subtitle="Reviews from completed bookings appear here as travelers share feedback."
             center
           />
@@ -655,8 +551,8 @@ export default function Home() {
               Your safety is our{" "}
               <span className="text-gradient-gold">top priority</span>
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-white/60">
-              Globe Travel Voyage operates with full transparency. Every provider is verified, every review is authentic, and every disclaimer is clearly stated.
+            <p className="mx-auto mt-4 max-w-2xl text-muted-dark">
+              Globe Travel Voyage operates with full transparency. We are an independent marketplace — not a government agency, embassy, or immigration authority.
             </p>
           </div>
 
@@ -664,18 +560,18 @@ export default function Home() {
             {[
               {
                 emoji: "🛡️",
-                title: "Identity Verification",
-                desc: "Every visa agent, agency, guide and host completes KYC identity verification before appearing on the platform.",
+                title: "Provider Verification",
+                desc: "Provider verification is reviewed by our admin team before profiles go live on the marketplace.",
               },
               {
-                emoji: "🔐",
-                title: "Secure Communication",
-                desc: "All messages between travelers and providers happen through our secure, encrypted messaging system.",
+                emoji: "💳",
+                title: "Secure Payments",
+                desc: "Secure payments powered by Stripe. Card data is handled by Stripe — we never store raw payment details.",
               },
               {
-                emoji: "🤖",
-                title: "AI Fraud Detection",
-                desc: "Our AI systems monitor listings, reviews and communications for fake content, scams and suspicious activity.",
+                emoji: "⭐",
+                title: "Authentic Reviews",
+                desc: "Reviews appear after completed bookings. No pay-to-rank or fabricated ratings.",
               },
               {
                 emoji: "⚖️",
@@ -683,19 +579,9 @@ export default function Home() {
                 desc: "We are NOT a government agency, embassy or immigration authority. No visa approval is ever guaranteed by this platform.",
               },
               {
-                emoji: "💳",
-                title: "Payment Protection",
-                desc: "Payments go through a secure escrow process. Funds are only released when services are confirmed and completed.",
-              },
-              {
-                emoji: "📞",
-                title: "24/7 Support Team",
-                desc: "Our human support team is available to help with any dispute, question or concern — always real people, not just bots.",
-              },
-              {
-                emoji: "⭐",
-                title: "Authentic Reviews",
-                desc: "Reviews are only accepted from verified travelers who have actually completed a booking or transaction.",
+                emoji: "🔐",
+                title: "Secure Communication",
+                desc: "Messages between travelers and providers are handled through our platform messaging system.",
               },
               {
                 emoji: "📋",
@@ -707,11 +593,21 @@ export default function Home() {
                 title: "Independent Marketplace",
                 desc: "We connect travelers with providers. We are not an airline, hotel chain, embassy or real estate broker.",
               },
+              {
+                emoji: "🤖",
+                title: "AI Guidance",
+                desc: "AI tools help with trip planning and document checklists — always paired with clear disclaimers and human experts when needed.",
+              },
+              {
+                emoji: "📞",
+                title: "Support",
+                desc: "Contact our team through the support page for questions about bookings, providers, or your account.",
+              },
             ].map((item) => (
               <div key={item.title} className="group rounded-2xl border border-white/8 bg-white/5 p-6 hover:bg-white/10 hover:border-gold/20 transition-all duration-300 backdrop-blur-sm cursor-default">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/8 text-2xl transition-transform duration-300 group-hover:scale-110">{item.emoji}</div>
                 <h3 className="mt-4 text-base font-bold text-white">{item.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/55">{item.desc}</p>
+                <p className="mt-2 text-sm leading-relaxed text-muted-dark">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -789,8 +685,8 @@ export default function Home() {
           <h2 className="mt-4 text-3xl font-extrabold text-white sm:text-4xl lg:text-5xl">
             Start your global journey today
           </h2>
-          <p className="mx-auto mt-5 max-w-xl text-base text-white/65">
-            Join thousands of travelers who use Globe Travel Voyage for AI-powered trip planning, visa guidance, and booking the best travel services worldwide.
+          <p className="mx-auto mt-5 max-w-xl text-base text-muted-dark">
+            Create your free account for AI-powered trip planning, visa guidance, and access to our verified provider marketplace as it launches.
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link href="/register" className="btn-gold w-full px-8 py-3.5 sm:w-auto">

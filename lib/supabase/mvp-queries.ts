@@ -283,6 +283,37 @@ export async function fetchMarketplaceAgencies(): Promise<MarketplaceAgencyRow[]
   }));
 }
 
+export interface MarketplacePropertyRow {
+  id: string;
+  title: string;
+  city: string;
+  country: string | null;
+  listing_type: string;
+  property_type: string;
+  price: number | null;
+  price_period: string | null;
+  beds: number | null;
+  baths: number | null;
+  area_sqft: number | null;
+  status: string;
+  created_at: string;
+}
+
+export async function fetchMarketplaceProperties(): Promise<MarketplacePropertyRow[]> {
+  const admin = createAdminClient();
+  if (!admin) return [];
+
+  const { data, error } = await admin
+    .from("property_listings")
+    .select("id, title, city, country, listing_type, property_type, price, price_period, beds, baths, area_sqft, status, created_at")
+    .in("status", ["active", "approved", "published"])
+    .order("created_at", { ascending: false })
+    .limit(12);
+
+  if (error || !data?.length) return [];
+  return data as MarketplacePropertyRow[];
+}
+
 export async function fetchMarketplaceExperts(): Promise<MarketplaceExpertRow[]> {
   const admin = createAdminClient();
   if (!admin) return [];

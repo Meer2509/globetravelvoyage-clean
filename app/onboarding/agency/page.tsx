@@ -43,7 +43,7 @@ export default function AgencyOnboarding() {
     <AuthLayout
       eyebrow="Travel Agency"
       headline="List your agency on the marketplace"
-      subline="Reach thousands of travelers looking for trusted travel agencies globally."
+      subline="Join our verified agency marketplace and connect with travelers as the platform launches."
       showStats={false}
     >
       <div>

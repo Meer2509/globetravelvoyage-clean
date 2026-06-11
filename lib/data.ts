@@ -635,12 +635,12 @@ export interface TrustItem {
 }
 
 export const trustItems: TrustItem[] = [
-  { icon: "shield", emoji: "🔒", title: "Secure Documents", text: "Your documents and data are handled with enterprise-grade security." },
-  { icon: "check", emoji: "✅", title: "Verified Experts", text: "Every agent and agency undergoes identity and business verification." },
-  { icon: "sparkles", emoji: "🤖", title: "AI Fraud Detection", text: "Our AI flags suspicious listings and agents before they reach you." },
-  { icon: "star", emoji: "⭐", title: "Transparent Reviews", text: "Real ratings from real travelers — no pay-to-rank ever." },
-  { icon: "globe", emoji: "🌐", title: "Global Coverage", text: "190+ countries, 50+ visa guides and a 24/7 AI assistant." },
-  { icon: "users", emoji: "💬", title: "Human + AI Support", text: "AI guidance plus access to real humans when you need them most." },
+  { icon: "shield", emoji: "🔒", title: "Provider Verification", text: "Provider verification is reviewed by our admin team before profiles go live." },
+  { icon: "check", emoji: "💳", title: "Secure Payments", text: "Secure payments powered by Stripe — we never store raw card details." },
+  { icon: "star", emoji: "⭐", title: "Authentic Reviews", text: "Reviews appear after completed bookings. No pay-to-rank or fabricated ratings." },
+  { icon: "globe", emoji: "🌐", title: "Visa Guides", text: "50+ detailed visa guides across 190+ countries, with clear disclaimers." },
+  { icon: "sparkles", emoji: "🤖", title: "AI Guidance", text: "AI tools for trip planning and document checklists — always disclaimer-first." },
+  { icon: "users", emoji: "💬", title: "Support", text: "Reach our team through the support page for account and booking questions." },
 ];
 
 // ─── Stats ────────────────────────────────────────────────────────────────────
@@ -652,10 +652,10 @@ export interface Stat {
 }
 
 export const stats: Stat[] = [
-  { value: "190+", label: "Countries covered", icon: "🌍" },
-  { value: "12k+", label: "Verified providers", icon: "✅" },
+  { value: "Open", label: "Verified provider onboarding open", icon: "🚀" },
+  { value: "—", label: "Reviews appear after completed bookings", icon: "⭐" },
+  { value: "Live", label: "Live marketplace launching", icon: "✨" },
   { value: "50+", label: "Visa guides", icon: "🛂" },
-  { value: "4.9★", label: "Average rating", icon: "⭐" },
 ];
 
 // ─── Roles / Account Types ────────────────────────────────────────────────────

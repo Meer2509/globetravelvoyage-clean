@@ -70,20 +70,20 @@ export async function HomeMarketplaceSection() {
         <SectionHeader
           eyebrow="Verified marketplace"
           title="Trusted visa experts, agencies & guides"
-          subtitle="Providers listed here are loaded from Supabase. Verified provider marketplace is open for onboarding."
+          subtitle="Providers listed here are loaded live from Supabase. Verified provider onboarding is open now."
           linkHref="/agents"
           linkLabel="See all providers"
         />
 
         {providers.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed border-soft-200 py-16 text-center">
-            <p className="font-bold text-navy text-lg">Verified provider marketplace launching</p>
-            <p className="mt-2 max-w-md mx-auto text-sm text-charcoal/50">
-              Live provider onboarding is open now. Register as an expert, agency, guide, or host to appear here.
+            <p className="font-bold text-navy text-lg">Verified providers are being onboarded now.</p>
+            <p className="mt-2 max-w-md mx-auto text-sm text-muted">
+              Our admin team reviews every provider profile before it goes live. Join the marketplace as a verified expert or agency.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <Link href="/register?role=agent" className="btn-primary px-5 py-2.5 text-sm">Become a visa expert</Link>
-              <Link href="/register?role=agency" className="btn-outline px-5 py-2.5 text-sm">Register agency</Link>
+              <Link href="/register?role=agent" className="btn-primary px-5 py-2.5 text-sm">Become a provider</Link>
+              <Link href="/register?role=agent" className="btn-outline px-5 py-2.5 text-sm">Join as visa expert</Link>
             </div>
           </div>
         ) : (

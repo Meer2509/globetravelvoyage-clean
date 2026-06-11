@@ -6,9 +6,9 @@ import { Icon } from "./Icon";
 // Shared left-panel visual items
 const features = [
   { emoji: "🤖", text: "AI-powered trip planning & visa guidance" },
-  { emoji: "✅", text: "12,000+ ID-verified providers worldwide" },
-  { emoji: "🌍", text: "190+ countries, 50+ detailed visa guides" },
-  { emoji: "🔐", text: "Secure, transparent & disclaimer-first" },
+  { emoji: "✅", text: "Verified provider onboarding open" },
+  { emoji: "🌍", text: "Visa guides across 190+ countries" },
+  { emoji: "🔐", text: "Secure payments powered by Stripe" },
 ];
 
 const testimonial = {
@@ -94,13 +94,13 @@ export function AuthLayout({
           {showStats && (
             <div className="mb-6 grid grid-cols-3 gap-3">
               {[
-                { value: "190+", label: "Countries" },
-                { value: "12k+", label: "Providers" },
-                { value: "4.9★", label: "Avg rating" },
+                { value: "Open", label: "Provider onboarding" },
+                { value: "—", label: "Reviews after bookings" },
+                { value: "Live", label: "Marketplace launching" },
               ].map((s) => (
                 <div key={s.label} className="rounded-xl border border-white/10 bg-white/5 p-3 text-center">
                   <p className="text-lg font-extrabold text-gold">{s.value}</p>
-                  <p className="text-[11px] text-white/50">{s.label}</p>
+                  <p className="text-[11px] text-muted-dark">{s.label}</p>
                 </div>
               ))}
             </div>

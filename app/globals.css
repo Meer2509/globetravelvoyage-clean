@@ -89,14 +89,21 @@ body {
 
   select option,
   select optgroup {
-    background-color: #FFFFFF;
-    color: #072B61;
+    background-color: #FFFFFF !important;
+    color: #072B61 !important;
   }
 
   select option:checked,
-  select option:hover {
-    background-color: rgba(212, 175, 55, 0.15);
-    color: #072B61;
+  select option:hover,
+  select option:focus {
+    background-color: rgba(212, 175, 55, 0.2) !important;
+    color: #072B61 !important;
+  }
+
+  select.input,
+  select.select {
+    color: #072B61 !important;
+    background-color: #FFFFFF !important;
   }
 
   select.input-dark,
@@ -110,8 +117,16 @@ body {
 
   select.input-dark option,
   select.select-dark option {
-    background-color: #0B224D;
-    color: #F8FAFC;
+    background-color: #0B224D !important;
+    color: #F8FAFC !important;
+  }
+
+  select.input-dark option:checked,
+  select.input-dark option:hover,
+  select.select-dark option:checked,
+  select.select-dark option:hover {
+    background-color: rgba(212, 175, 55, 0.25) !important;
+    color: #F8FAFC !important;
   }
 
   select:disabled,
