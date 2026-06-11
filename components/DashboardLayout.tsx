@@ -45,8 +45,8 @@ export function DashboardLayout({
           {/* ── Sidebar ── */}
           <aside className="h-fit space-y-3 lg:sticky lg:top-20">
             {/* Logo in sidebar */}
-            <Link href="/" className="block px-1 pb-2" aria-label="Globe Travel Voyage">
-              <Image src="/globe-logo.png" alt="Globe Travel Voyage" width={240} height={68} className="h-[64px] w-auto object-contain" />
+            <Link href="/" className="block px-1 pb-3" aria-label="Globe Travel Voyage">
+              <Image src="/globe-logo.png" alt="Globe Travel Voyage" width={300} height={88} className="h-[88px] w-auto object-contain" />
             </Link>
 
             {/* Profile card */}

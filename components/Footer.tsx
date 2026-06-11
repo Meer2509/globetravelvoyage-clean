@@ -134,9 +134,9 @@ export function Footer() {
               <Image
                 src="/globe-logo.png"
                 alt="Globe Travel Voyage"
-                width={280}
-                height={80}
-                className="h-[80px] w-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity"
+                width={420}
+                height={130}
+                className="h-[130px] w-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity"
               />
             </Link>
 

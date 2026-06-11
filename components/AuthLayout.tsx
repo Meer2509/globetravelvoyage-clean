@@ -55,9 +55,9 @@ export function AuthLayout({
             <Image
               src="/globe-logo.png"
               alt="Globe Travel Voyage"
-              width={280}
-              height={80}
-              className="h-[72px] w-auto object-contain opacity-95 group-hover:opacity-100 transition-opacity"
+              width={360}
+              height={100}
+              className="h-[100px] w-auto object-contain opacity-95 group-hover:opacity-100 transition-opacity"
               priority
             />
           </Link>
@@ -141,9 +141,9 @@ export function AuthLayout({
             <Image
               src="/globe-logo.png"
               alt="Globe Travel Voyage"
-              width={240}
-              height={60}
-              className="h-14 w-auto object-contain"
+              width={300}
+              height={80}
+              className="h-[80px] w-auto object-contain"
               priority
             />
           </Link>
