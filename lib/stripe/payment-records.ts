@@ -115,6 +115,22 @@ export async function fulfillPaymentFromCheckoutSession(
   return updatePaymentBySession(input.stripeSessionId, updates);
 }
 
+export async function markPaymentStatusBySession(
+  stripeSessionId: string,
+  status: "failed" | "expired" | "cancelled"
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const admin = createAdminClient();
+  if (!admin) return { ok: false, error: "Supabase admin client is not configured." };
+
+  const { error } = await admin
+    .from("payments")
+    .update({ status })
+    .eq("stripe_session_id", stripeSessionId);
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
 /** @deprecated Use fulfillPaymentFromCheckoutSession */
 export async function updatePaymentBySessionId(
   stripeSessionId: string,

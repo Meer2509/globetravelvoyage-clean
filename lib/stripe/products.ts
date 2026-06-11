@@ -9,7 +9,9 @@ export type CheckoutProductKey =
   | "agency_featured_listing"
   | "property_featured_listing"
   | "tour_booking_request"
-  | "cruise_booking_request";
+  | "cruise_booking_request"
+  | "provider_subscription"
+  | "verified_badge_fee";
 
 export interface CheckoutProduct {
   key: CheckoutProductKey;
@@ -84,6 +86,24 @@ export const CHECKOUT_PRODUCTS: CheckoutProduct[] = [
     currency: "usd",
     emoji: "🚢",
     category: "Travel",
+  },
+  {
+    key: "provider_subscription",
+    name: "Provider Subscription",
+    description: "Monthly marketplace subscription for agencies, guides, and hosts.",
+    amountCents: 9900,
+    currency: "usd",
+    emoji: "📦",
+    category: "Marketplace",
+  },
+  {
+    key: "verified_badge_fee",
+    name: "Verified Badge Fee",
+    description: "One-time verification badge for your provider profile.",
+    amountCents: 7900,
+    currency: "usd",
+    emoji: "✅",
+    category: "Marketplace",
   },
 ];
 

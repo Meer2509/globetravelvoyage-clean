@@ -1,340 +1,202 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/auth";
-import { fetchAgencyBookings, fetchAgencyLeads } from "@/lib/supabase/queries";
+import { fetchAgencyBookings, fetchAgencyLeads, fetchGuideTours } from "@/lib/supabase/queries";
+import { fetchCustomerPayments, type PaymentRow } from "@/lib/supabase/queries";
+import type { LeadRequestRow } from "@/lib/supabase/mvp-queries";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DashboardProfileSection } from "@/components/DashboardProfileSection";
 import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
+import { DashboardEmpty } from "@/components/DashboardEmpty";
+import { ProviderServicesPanel } from "@/components/ProviderServicesPanel";
+import { PayoutSetupPanel } from "@/components/PayoutSetupPanel";
+import { MessagesInbox } from "@/components/MessagesInbox";
 import { Disclaimer } from "@/components/Disclaimer";
 import { Icon } from "@/components/Icon";
+import { formatPaymentAmount } from "@/lib/payments-display";
 import {
   DashboardLayout,
   StatCard,
   Panel,
   TableRow,
-  ProgressBar,
   type DashboardTab,
 } from "@/components/DashboardLayout";
 
-const tabs: DashboardTab[] = [
-  { key: "overview", label: "Overview", icon: "globe" },
-  { key: "packages", label: "Packages", icon: "planner", badge: 3 },
-  { key: "tours", label: "Tours & Tickets", icon: "ticket", badge: 7 },
-  { key: "bookings", label: "Bookings", icon: "doc", badge: 9 },
-  { key: "leads", label: "Leads", icon: "users", badge: 6 },
-  { key: "revenue", label: "Revenue", icon: "star" },
-  { key: "verification", label: "Verification", icon: "shield" },
-];
-
-// ─── Mock data ─────────────────────────────────────────────────────────────────
-
-const packages = [
-  { name: "Dubai Family Escape", nights: 5, price: "$890", pax: "Family", active: true, bookings: 14 },
-  { name: "Umrah Premium Package", nights: 10, price: "$1,650", pax: "Group", active: true, bookings: 8 },
-  { name: "Turkey Discovery", nights: 7, price: "$1,150", pax: "Couple", active: true, bookings: 5 },
-  { name: "Maldives Honeymoon", nights: 6, price: "$2,400", pax: "Couple", active: false, bookings: 0 },
-];
-
-const tours = [
-  { name: "Burj Khalifa Skip-the-Line Tickets", type: "Ticket", city: "Dubai", price: "$42", sold: 210 },
-  { name: "Old Dubai Walking Tour", type: "Tour", city: "Dubai", price: "$45", sold: 88 },
-  { name: "Desert Safari — Evening with BBQ", type: "Tour", city: "Dubai", price: "$55", sold: 175 },
-  { name: "Museum of the Future Entry", type: "Ticket", city: "Dubai", price: "$40", sold: 132 },
-  { name: "Bosphorus Sunset Cruise", type: "Tour", city: "Istanbul", price: "$38", sold: 64 },
-  { name: "Hagia Sophia + Blue Mosque Tour", type: "Tour", city: "Istanbul", price: "$35", sold: 51 },
-  { name: "Cappadocia Hot Air Balloon", type: "Experience", city: "Cappadocia", price: "$185", sold: 29 },
-];
-
-const bookings = [
-  { id: "#10421", pkg: "Dubai Family Escape", customer: "B. Ahmed", pax: 4, status: "Confirmed", total: "$3,560" },
-  { id: "#10420", pkg: "Umrah Premium", customer: "I. Khan", pax: 2, status: "Confirmed", total: "$3,300" },
-  { id: "#10419", pkg: "Desert Safari x4", customer: "M. Saeed", pax: 4, status: "Pending", total: "$220" },
-  { id: "#10418", pkg: "Burj Khalifa Tickets x2", customer: "R. Iqbal", pax: 2, status: "Confirmed", total: "$84" },
-  { id: "#10417", pkg: "Turkey Discovery", customer: "F. Khan", pax: 2, status: "Pending", total: "$2,300" },
-];
-
-const leads = [
-  { id: "L-620", name: "Family of 4 → Dubai + Maldives", budget: "$6,000", from: "Riyadh, KSA", time: "30min ago", hot: true },
-  { id: "L-619", name: "Umrah group (12 pax) → Makkah", budget: "$18,000", from: "Dubai, UAE", time: "3h ago", hot: true },
-  { id: "L-618", name: "Couple → Turkey honeymoon", budget: "$3,500", from: "Lahore, PK", time: "5h ago", hot: false },
-  { id: "L-617", name: "Solo traveler → Bali", budget: "$1,800", from: "Abu Dhabi, UAE", time: "1d ago", hot: false },
-  { id: "L-615", name: "Corporate group → Istanbul", budget: "$22,000", from: "Karachi, PK", time: "2d ago", hot: false },
-  { id: "L-610", name: "Family of 6 → UK", budget: "$9,500", from: "Dubai, UAE", time: "3d ago", hot: false },
-];
-
-const monthlyRevenue = [
-  { month: "Jun 2026", bookings: 9, revenue: "$28,400", growth: "+18%" },
-  { month: "May 2026", bookings: 14, revenue: "$24,100", growth: "+12%" },
-  { month: "Apr 2026", bookings: 11, revenue: "$21,500", growth: "+8%" },
-  { month: "Mar 2026", bookings: 8, revenue: "$19,900", growth: "+5%" },
-];
-
-// ─── Page ──────────────────────────────────────────────────────────────────────
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
 export default function AgencyDashboard() {
   const user = useDashboardUser();
-  const [liveBookings, setLiveBookings] = useState<number | null>(null);
-  const [liveLeads, setLiveLeads] = useState<number | null>(null);
+  const [bookings, setBookings] = useState<Array<Record<string, unknown>>>([]);
+  const [leads, setLeads] = useState<LeadRequestRow[]>([]);
+  const [tours, setTours] = useState<Array<{ id: string; title: string; city: string | null; tour_type: string | null; price: number | null; status: string; created_at: string }>>([]);
+  const [payments, setPayments] = useState<PaymentRow[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
-    fetchAgencyBookings().then((rows) => setLiveBookings(rows.length));
-    fetchAgencyLeads().then((rows) => setLiveLeads(rows.length));
+    if (!isSupabaseConfigured) {
+      setLoaded(true);
+      return;
+    }
+    Promise.all([
+      fetchAgencyBookings(),
+      fetchAgencyLeads(),
+      fetchGuideTours(),
+      fetchCustomerPayments(),
+    ]).then(([b, l, t, p]) => {
+      setBookings(b as Array<Record<string, unknown>>);
+      setLeads(l as LeadRequestRow[]);
+      setTours(t);
+      setPayments(p);
+      setLoaded(true);
+    });
   }, []);
+
+  const paidTotal = payments.filter((p) => p.status === "paid").reduce((s, p) => s + Number(p.amount), 0);
+
+  const tabs: DashboardTab[] = useMemo(
+    () => [
+      { key: "overview", label: "Overview", icon: "globe" },
+      { key: "services", label: "Services & Pricing", icon: "visa" },
+      { key: "tours", label: "Tours & Tickets", icon: "ticket", badge: tours.length || undefined },
+      { key: "bookings", label: "Bookings", icon: "doc", badge: bookings.length || undefined },
+      { key: "leads", label: "Leads", icon: "users", badge: leads.length || undefined },
+      { key: "revenue", label: "Revenue", icon: "star" },
+      { key: "messages", label: "Messages", icon: "shield" },
+      { key: "verification", label: "Verification", icon: "shield" },
+    ],
+    [bookings.length, leads.length, tours.length]
+  );
 
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
         <DatabaseStatusBanner health={user.databaseHealth} />
         <DashboardProfileSection user={user} />
-        {liveBookings !== null && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-            ✓ Supabase live — {liveBookings} booking requests · {liveLeads ?? 0} leads in intake.
-          </div>
-        )}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Active packages" value="3" icon="planner" hint="4 total listings" color="blue" />
-          <StatCard label="New leads" value={liveLeads !== null ? String(liveLeads) : "6"} icon="users" hint={liveLeads !== null ? "Live intake" : "This week"} delta={liveLeads !== null ? undefined : "+6"} color="gold" />
-          <StatCard label="Bookings (month)" value={liveBookings !== null ? String(liveBookings) : "42"} icon="doc" delta={liveBookings !== null ? undefined : "+18%"} color="green" />
-          <StatCard label="Revenue (month)" value="$28.4k" icon="star" delta="+18%" color="navy" />
+          <StatCard label="Booking requests" value={String(bookings.length)} icon="doc" hint="Live from Supabase" color="blue" />
+          <StatCard label="Leads" value={String(leads.length)} icon="users" hint="Live intake" color="gold" />
+          <StatCard label="Tour listings" value={String(tours.length)} icon="ticket" hint="Your submissions" color="green" />
+          <StatCard label="Paid on account" value={formatPaymentAmount(paidTotal)} icon="star" hint={`${payments.length} transaction(s)`} color="navy" />
         </div>
-
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Panel title="Recent Bookings" subtitle="Latest confirmed and pending">
-            {bookings.slice(0, 4).map((b) => (
-              <TableRow
-                key={b.id}
-                cells={[b.pkg, b.customer, `${b.pax} pax`]}
-                badge={b.status}
-                badgeColor={b.status === "Confirmed" ? "green" : "gold"}
-                action={<span className="font-bold text-navy text-sm">{b.total}</span>}
-              />
+        {!loaded ? (
+          <p className="text-sm text-charcoal/50">Loading dashboard…</p>
+        ) : bookings.length === 0 && leads.length === 0 ? (
+          <DashboardEmpty
+            title="No activity yet"
+            message="Booking requests and leads appear here when travelers submit enquiries through the platform."
+            action={<Link href="/booking/request" className="btn-primary px-5 py-2.5 text-sm">View booking form</Link>}
+          />
+        ) : (
+          <Panel title="Recent intake" subtitle="Latest booking requests and leads">
+            {bookings.slice(0, 3).map((b) => (
+              <TableRow key={String(b.id)} cells={[String(b.service_name ?? b.service_type), String(b.full_name), formatDate(String(b.created_at))]} badge={String(b.status)} badgeColor="blue" />
+            ))}
+            {leads.slice(0, 3).map((l) => (
+              <TableRow key={l.id} cells={[l.title ?? l.lead_type, l.full_name, formatDate(l.created_at)]} badge={l.status} badgeColor="gold" />
             ))}
           </Panel>
-
-          <Panel title="Revenue Snapshot">
-            <div className="space-y-4">
-              <ProgressBar label="Monthly revenue target ($35k)" pct={81} color="blue" />
-              <ProgressBar label="Booking conversion rate" pct={74} color="green" />
-              <ProgressBar label="Package occupancy" pct={68} color="gold" />
-            </div>
-            <div className="mt-5 grid grid-cols-2 gap-3 text-center text-sm">
-              <div className="rounded-xl bg-soft p-3">
-                <p className="text-xs text-charcoal/50">Best seller</p>
-                <p className="font-bold text-navy">Dubai Family Escape</p>
-              </div>
-              <div className="rounded-xl bg-soft p-3">
-                <p className="text-xs text-charcoal/50">Avg booking value</p>
-                <p className="font-bold text-navy">$1,870</p>
-              </div>
-            </div>
-          </Panel>
-        </div>
-
-        <Panel title="Top Performing Tours & Tickets">
-          {tours.slice(0, 4).map((t) => (
-            <TableRow
-              key={t.name}
-              cells={[t.name, t.city, t.type]}
-              action={
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-charcoal/50">{t.sold} sold</span>
-                  <span className="font-bold text-navy text-sm">{t.price}</span>
-                </div>
-              }
-            />
-          ))}
-        </Panel>
+        )}
       </div>
     ),
 
-    packages: (
-      <div className="space-y-4">
-        {packages.map((p) => (
-          <div key={p.name} className="card p-5">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-navy">{p.name}</h3>
-                  <span className={`chip text-xs ${p.active ? "bg-emerald-50 text-emerald-700" : "bg-soft text-charcoal/50"}`}>
-                    {p.active ? "Live" : "Draft"}
-                  </span>
-                </div>
-                <p className="mt-0.5 text-sm text-charcoal/55">{p.nights} nights · {p.pax} · {p.bookings} bookings</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xl font-extrabold text-navy">{p.price}</p>
-                <p className="text-xs text-charcoal/45">per person</p>
-              </div>
-            </div>
-            <div className="mt-4 flex gap-2">
-              <button className="btn-primary px-4 py-2 text-sm">Edit</button>
-              <button className="btn-outline px-4 py-2 text-sm">View bookings</button>
-              {!p.active && <button className="btn-outline px-4 py-2 text-sm text-emerald-600 border-emerald-200">Publish</button>}
-            </div>
-          </div>
-        ))}
-        <button className="btn-outline px-5 py-2.5 text-sm">+ Create new package</button>
-      </div>
-    ),
+    services: <ProviderServicesPanel role="agency" roleLabel="Agency" />,
 
     tours: (
       <div className="space-y-4">
-        {tours.map((t) => (
-          <div key={t.name} className="card flex items-center justify-between p-5">
-            <div className="flex-1">
-              <p className="font-bold text-navy">{t.name}</p>
-              <p className="text-sm text-charcoal/55">{t.city} · {t.type} · {t.sold} sold</p>
+        {tours.length === 0 ? (
+          <DashboardEmpty
+            title="No tour listings"
+            message="Submit tour or ticket listings through intake forms. Approved listings appear here."
+            action={<Link href="/tours" className="btn-primary px-5 py-2.5 text-sm">Browse tours marketplace</Link>}
+          />
+        ) : (
+          tours.map((t) => (
+            <div key={t.id} className="card flex items-center justify-between p-5">
+              <div>
+                <p className="font-bold text-navy">{t.title}</p>
+                <p className="text-sm text-charcoal/55">{t.city ?? "—"} · {t.tour_type ?? "Tour"} · {formatDate(t.created_at)}</p>
+              </div>
+              <span className={`chip text-xs ${t.status === "approved" ? "bg-emerald-50 text-emerald-700" : "bg-gold/15 text-navy"}`}>{t.status}</span>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-lg font-extrabold text-navy">{t.price}</span>
-              <button className="btn-outline px-3 py-1.5 text-xs">Edit</button>
-            </div>
-          </div>
-        ))}
-        <div className="flex gap-3">
-          <button className="btn-outline px-5 py-2.5 text-sm">+ Add tour</button>
-          <button className="btn-outline px-5 py-2.5 text-sm">+ Add ticket</button>
-        </div>
+          ))
+        )}
+        <Link href="/booking/request" className="btn-outline inline-flex px-5 py-2.5 text-sm">+ Submit tour listing request</Link>
       </div>
     ),
 
     bookings: (
-      <div className="space-y-4">
-        <Panel title="All Bookings" subtitle="Confirmed, pending, and completed">
-          {bookings.map((b) => (
-            <div key={b.id} className="flex items-center justify-between border-b border-soft-200 py-4 last:border-0">
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-charcoal/40 font-mono">{b.id}</span>
-                <div>
-                  <p className="text-sm font-semibold text-navy">{b.pkg}</p>
-                  <p className="text-xs text-charcoal/50">{b.customer} · {b.pax} pax</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className={`chip text-xs ${b.status === "Confirmed" ? "bg-emerald-50 text-emerald-700" : "bg-gold/15 text-navy"}`}>
-                  {b.status}
-                </span>
-                <span className="font-bold text-navy">{b.total}</span>
-              </div>
-            </div>
-          ))}
-        </Panel>
-      </div>
+      <Panel title="Booking requests" subtitle="Live from Supabase booking_requests">
+        {bookings.length === 0 ? (
+          <DashboardEmpty title="No bookings yet" message="Traveler booking requests will appear here when submitted." />
+        ) : (
+          bookings.map((b) => (
+            <TableRow
+              key={String(b.id)}
+              cells={[String(b.service_name ?? b.service_type), String(b.full_name), formatDate(String(b.created_at))]}
+              badge={String(b.status)}
+              badgeColor={b.status === "confirmed" ? "green" : "blue"}
+            />
+          ))
+        )}
+      </Panel>
     ),
 
     leads: (
-      <div className="space-y-4">
-        <Panel title="Lead Inbox" subtitle="Respond within 2 hours to improve conversion" noPad>
+      <Panel title="Lead inbox" subtitle="Live from Supabase lead_requests" noPad>
+        {leads.length === 0 ? (
+          <div className="p-8"><DashboardEmpty title="No leads yet" message="Qualified leads from travelers appear here." action={<Link href="/lead/contact" className="btn-primary px-5 py-2.5 text-sm">Lead contact form</Link>} /></div>
+        ) : (
           <div className="divide-y divide-soft-200">
             {leads.map((l) => (
-              <div key={l.id} className="flex items-center justify-between p-5">
-                <div className="flex items-start gap-3">
-                  {l.hot && <span className="mt-1.5 flex h-2 w-2 shrink-0 rounded-full bg-gold" />}
-                  <div>
-                    <p className="font-bold text-navy">{l.name}</p>
-                    <p className="text-sm text-charcoal/55">
-                      {l.from} · Budget: <span className="font-semibold text-navy">{l.budget}</span> · {l.time}
-                    </p>
-                  </div>
+              <div key={l.id} className="flex items-center justify-between gap-4 p-5">
+                <div>
+                  <p className="font-bold text-navy">{l.full_name}</p>
+                  <p className="text-sm text-charcoal/55">{l.email} · {formatDate(l.created_at)}</p>
+                  {l.message && <p className="mt-1 text-xs text-charcoal/50 line-clamp-2">{l.message}</p>}
                 </div>
-                <div className="flex gap-2">
-                  <button className="btn-primary px-4 py-2 text-sm">Respond</button>
-                  <button className="btn-outline px-3 py-2 text-sm">Pass</button>
-                </div>
+                <span className={`chip text-xs ${l.status === "pending" ? "bg-gold/15 text-navy" : "bg-emerald-50 text-emerald-700"}`}>{l.status}</span>
               </div>
             ))}
           </div>
-        </Panel>
-      </div>
+        )}
+      </Panel>
     ),
 
     revenue: (
       <div className="space-y-5">
         <div className="grid gap-4 sm:grid-cols-3">
-          <StatCard label="Total lifetime" value="$142k" icon="star" color="gold" />
-          <StatCard label="This month" value="$28.4k" icon="users" delta="+18%" color="green" />
-          <StatCard label="Pending payout" value="$4,200" icon="doc" hint="Processes Monday" color="blue" />
+          <StatCard label="Total paid" value={formatPaymentAmount(paidTotal)} icon="star" color="gold" />
+          <StatCard label="Transactions" value={String(payments.length)} icon="doc" color="blue" />
+          <StatCard label="Pending" value={String(payments.filter((p) => p.status === "pending").length)} icon="users" color="navy" />
         </div>
-
-        <Panel title="Monthly Revenue Breakdown">
-          {monthlyRevenue.map((r) => (
-            <TableRow
-              key={r.month}
-              cells={[r.month, `${r.bookings} bookings`]}
-              badge={r.growth}
-              badgeColor="green"
-              action={<span className="font-bold text-navy text-sm">{r.revenue}</span>}
-            />
-          ))}
-        </Panel>
-
-        <Panel title="Top Revenue Sources">
-          <div className="space-y-4">
-            <ProgressBar label="Packages" pct={62} color="blue" />
-            <ProgressBar label="Tours & tickets" pct={24} color="gold" />
-            <ProgressBar label="Transport & extras" pct={14} color="green" />
-          </div>
-        </Panel>
-
-        <Panel title="Payout Details">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="label">Bank IBAN</label>
-              <input className="input" placeholder="AE xx xxxx xxxx xxxx xxxx x" />
-            </div>
-            <div>
-              <label className="label">Payout schedule</label>
-              <select className="input">
-                <option>Weekly (every Monday)</option>
-                <option>Bi-weekly</option>
-                <option>Monthly</option>
-              </select>
-            </div>
-          </div>
-          <button className="btn-primary mt-4 px-5 py-2.5 text-sm">Save payout info</button>
-        </Panel>
+        <PayoutSetupPanel />
+        {payments.length > 0 && (
+          <Panel title="Payment history">
+            {payments.map((p) => (
+              <TableRow key={p.id} cells={[p.description ?? p.service_type ?? "Payment", formatDate(p.paid_at ?? p.created_at), formatPaymentAmount(Number(p.amount), p.currency)]} badge={p.status} badgeColor={p.status === "paid" ? "green" : "blue"} />
+            ))}
+          </Panel>
+        )}
       </div>
     ),
 
+    messages: <MessagesInbox title="Agency messages" />,
+
     verification: (
       <div className="space-y-4">
-        <Panel
-          title="Verification Status"
-          subtitle="Verified agencies get a premium badge and rank higher in search"
-          action={
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-blue px-3 py-1.5 text-xs font-bold text-white">
-              <Icon name="check" className="h-3.5 w-3.5" />
-              Verified Agency
-            </span>
-          }
-        >
-          <div className="space-y-3">
-            {[
-              { item: "Business trade license uploaded", done: true },
-              { item: "Identity document of owner verified", done: true },
-              { item: "Business email confirmed", done: true },
-              { item: "Office address verified", done: true },
-              { item: "Bank payout details added", done: false },
-              { item: "Professional photos uploaded", done: false },
-            ].map((c) => (
-              <div key={c.item} className="flex items-center gap-3 rounded-xl p-2.5 hover:bg-soft transition-colors">
-                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${c.done ? "bg-blue text-white" : "border-2 border-soft-200 text-charcoal/30"}`}>
-                  {c.done ? "✓" : ""}
-                </span>
-                <span className={`text-sm ${c.done ? "text-charcoal/55 line-through" : "text-navy"}`}>
-                  {c.item}
-                </span>
-                {!c.done && <button className="ml-auto text-xs text-blue font-semibold hover:underline">Upload →</button>}
-              </div>
-            ))}
+        <Panel title="Verification status" subtitle="Complete your profile and upload documents to get verified">
+          <div className="space-y-3 text-sm text-charcoal/65">
+            <p>Profile completion: <strong className="text-navy">{user.completion}%</strong></p>
+            <p>Verified status: <strong className="text-navy">{user.verified ? "Verified" : "Not verified yet"}</strong></p>
           </div>
+          <Link href="/dashboard/profile" className="mt-4 inline-block btn-outline px-4 py-2 text-sm">Complete profile</Link>
         </Panel>
         <Disclaimer>
-          Verification confirms business identity and registration only. It is not a quality endorsement and does not
-          guarantee bookings, pricing, availability, or any travel outcomes.
+          Verification confirms business identity only. Globe Travel Voyage is not a government agency, embassy, immigration lawyer, airline, cruise company, travel supplier, real estate broker, or official visa authority.
         </Disclaimer>
       </div>
     ),

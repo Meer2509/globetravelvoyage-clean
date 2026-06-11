@@ -14,7 +14,9 @@ import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DashboardProfileSection } from "@/components/DashboardProfileSection";
 import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
 import { DashboardEmpty } from "@/components/DashboardEmpty";
-import { ExpertServicesPanel } from "@/components/ExpertServicesPanel";
+import { ProviderServicesPanel } from "@/components/ProviderServicesPanel";
+import { PayoutSetupPanel } from "@/components/PayoutSetupPanel";
+import { MessagesInbox } from "@/components/MessagesInbox";
 import { joinCommaList } from "@/lib/supabase/profile-utils";
 import { parseExpertServices } from "@/lib/expert-services";
 import {
@@ -62,6 +64,8 @@ const baseTabs: DashboardTab[] = [
   { key: "leads", label: "Leads Inbox", icon: "users" },
   { key: "reviews", label: "Reviews", icon: "star" },
   { key: "earnings", label: "Earnings", icon: "users" },
+  { key: "messages", label: "Messages", icon: "shield" },
+  { key: "settings", label: "Settings", icon: "agent" },
 ];
 
 function AuthorizationGenerator({ expertName }: { expertName: string }) {
@@ -341,16 +345,7 @@ export default function AgentDashboard() {
       </Panel>
     ),
 
-    services: (
-      <ExpertServicesPanel
-        initialServices={services}
-        onSaved={(next) => {
-          setServices(next);
-          user.refresh();
-          loadAgentData();
-        }}
-      />
-    ),
+    services: <ProviderServicesPanel role="visa_agent" roleLabel="Visa expert" />,
 
     clients: (
       <div className="space-y-4">
@@ -490,6 +485,16 @@ export default function AgentDashboard() {
             ))}
           </Panel>
         )}
+        <PayoutSetupPanel />
+      </div>
+    ),
+
+    messages: <MessagesInbox title="Expert messages" />,
+
+    settings: (
+      <div className="space-y-5">
+        <DashboardProfileSection user={user} />
+        <PayoutSetupPanel />
       </div>
     ),
   };

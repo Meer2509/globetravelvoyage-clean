@@ -930,7 +930,7 @@ function AdminCommissionsTab() {
 
         <div className="border-t border-soft-200 px-5 py-3 flex items-center justify-between text-xs text-charcoal/40">
           <span>Showing {filtered.length} of {commissions.length} commissions</span>
-          <span>Updates are mock — no real payments processed</span>
+          <span>Live Supabase data — payments update via Stripe webhook</span>
         </div>
       </Panel>
 
@@ -1040,10 +1040,10 @@ export default function AdminDashboard() {
         )}
         {/* Platform stats */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Total users" value={liveCounts ? String(liveCounts.users) : "1,240"} icon="users" hint={liveCounts ? "Live from Supabase" : "↑ 82 this week"} delta={liveCounts ? undefined : "+7%"} color="blue" />
-          <StatCard label="Booking requests" value={liveCounts ? String(liveCounts.bookingRequests) : "284"} icon="doc" hint={liveCounts ? "Live intake table" : "↑ 43 vs last month"} delta={liveCounts ? undefined : "+18%"} color="gold" />
-          <StatCard label="Visa requests" value={liveCounts ? String(liveCounts.visaRequests) : "14"} icon="visa" hint={liveCounts ? "Live intake table" : "Pending review"} color="green" />
-          <StatCard label="Support tickets" value={liveCounts ? String(liveCounts.supportTickets) : "12"} icon="shield" hint={liveCounts ? "Live from DB" : "Need review"} color="navy" />
+          <StatCard label="Total users" value={liveCounts ? String(liveCounts.users) : "0"} icon="users" hint="Live from Supabase" color="blue" />
+          <StatCard label="Booking requests" value={liveCounts ? String(liveCounts.bookingRequests) : "0"} icon="doc" hint="Live intake table" color="gold" />
+          <StatCard label="Visa requests" value={liveCounts ? String(liveCounts.visaRequests) : "0"} icon="visa" hint="Live intake table" color="green" />
+          <StatCard label="Support tickets" value={liveCounts ? String(liveCounts.supportTickets) : "0"} icon="shield" hint="Live from DB" color="navy" />
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe, isStripeWebhookConfigured } from "@/lib/stripe/server";
 import { fulfillStripeCheckoutSession } from "@/lib/stripe/fulfill-session";
+import { markPaymentStatusBySession } from "@/lib/stripe/payment-records";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,6 +42,13 @@ export async function POST(request: Request) {
       if (!result.ok) {
         console.error("Webhook payment fulfill failed:", result.error);
       }
+    } else if (event.type === "checkout.session.expired") {
+      const session = event.data.object as Stripe.Checkout.Session;
+      await markPaymentStatusBySession(session.id, "expired");
+    } else if (event.type === "payment_intent.payment_failed") {
+      const intent = event.data.object as Stripe.PaymentIntent;
+      const sessionId = intent.metadata?.checkout_session_id;
+      if (sessionId) await markPaymentStatusBySession(sessionId, "failed");
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Webhook handler failed.";
