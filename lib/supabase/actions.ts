@@ -123,6 +123,7 @@ export interface BookingRequestInput {
   travelers?: string;
   budget?: string;
   message?: string;
+  providerUserId?: string;
 }
 
 export async function submitBookingRequest(input: BookingRequestInput): Promise<ActionResult> {
@@ -168,6 +169,7 @@ export interface LeadRequestInput {
   subjectName?: string;
   subjectMeta?: string;
   extra?: Record<string, string>;
+  providerUserId?: string;
 }
 
 export async function submitLeadRequest(input: LeadRequestInput): Promise<ActionResult> {
@@ -180,6 +182,8 @@ export async function submitLeadRequest(input: LeadRequestInput): Promise<Action
     .from("lead_requests")
     .insert({
       user_id: userId,
+      customer_id: userId,
+      provider_user_id: input.providerUserId ?? null,
       expert_type: input.expertType ?? null,
       full_name: input.name,
       email: input.email,

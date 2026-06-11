@@ -164,7 +164,7 @@ export async function fetchProviderLeads(userId: string): Promise<LeadRequestRow
   const { data } = await admin
     .from("lead_requests")
     .select("*")
-    .or(`provider_user_id.eq.${userId},expert_type.eq.visa_agent`)
+    .eq("provider_user_id", userId)
     .order("created_at", { ascending: false })
     .limit(50);
 
@@ -369,7 +369,7 @@ export async function fetchAdminReviews() {
 
   const { data } = await admin
     .from("reviews")
-    .select("id, rating, title, body, status, created_at, reviewer_id, target_type, target_id")
+    .select("id, rating, title, body, created_at, reviewer_id, target_type, target_id, is_verified")
     .order("created_at", { ascending: false })
     .limit(50);
 

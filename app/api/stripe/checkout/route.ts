@@ -128,6 +128,8 @@ export async function POST(request: Request) {
       currency,
       description: name,
       stripeSessionId: session.id,
+      providerUserId: metadata.provider_user_id || null,
+      providerServiceId: metadata.provider_service_id || null,
     });
 
     if (!record.ok) {

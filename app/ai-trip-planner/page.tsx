@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { mockTripPlan, type TripInput, type TripResult } from "@/lib/ai-mock";
+import { type TripInput, type TripResult } from "@/lib/ai-mock";
+import { generateTripPlanWithAi } from "@/lib/ai-api";
 
 function DownloadItineraryButton({ destination, totalDays }: { destination: string; totalDays: number }) {
   const [done, setDone] = useState(false);
@@ -63,7 +64,7 @@ export default function AITripPlannerPage() {
   async function generatePlan() {
     setLoading(true);
     try {
-      const r = await mockTripPlan(form);
+      const r = await generateTripPlanWithAi(form);
       setResult(r);
       setActiveDay(0);
     } finally {

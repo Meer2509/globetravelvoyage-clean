@@ -64,9 +64,9 @@ export const services: Service[] = [
   { slug: "local-guides", title: "Tour Guides", description: "Book certified local guides for private or group tours.", href: "/tours", icon: "guide", emoji: "🧑‍🦯", accent: "from-navy/20 to-navy/5" },
   { slug: "properties", title: "Property Rentals", description: "Short and long-term rental properties for travel and relocation.", href: "/properties", icon: "property", emoji: "🏡", accent: "from-blue/20 to-blue/5" },
   { slug: "property-sales", title: "Buy / Sell Property", description: "Travel-related property listings: homes, holiday villas and more.", href: "/properties", icon: "property", emoji: "🔑", accent: "from-gold/20 to-gold/5" },
-  { slug: "insurance", title: "Travel Insurance", description: "Multi-trip and single-trip travel insurance options for global coverage.", href: "/", icon: "insurance", emoji: "🛡️", accent: "from-navy/20 to-navy/5", badge: "Coming soon" },
+  { slug: "insurance", title: "Travel Insurance", description: "Multi-trip and single-trip travel insurance options for global coverage.", href: "/lead/contact", icon: "insurance", emoji: "🛡️", accent: "from-navy/20 to-navy/5", badge: "Waitlist" },
   { slug: "student", title: "Student Travel", description: "Student visa paths, campus housing, flight discounts and more.", href: "/visa", icon: "student", emoji: "🎓", accent: "from-blue/20 to-blue/5" },
-  { slug: "medical", title: "Medical Travel", description: "Medical tourism guidance, hospital connections and travel coordination.", href: "/", icon: "medical", emoji: "🏥", accent: "from-gold/20 to-gold/5", badge: "Coming soon" },
+  { slug: "medical", title: "Medical Travel", description: "Medical tourism guidance, hospital connections and travel coordination.", href: "/lead/contact", icon: "medical", emoji: "🏥", accent: "from-gold/20 to-gold/5", badge: "Waitlist" },
   { slug: "umrah", title: "Umrah & Hajj Travel", description: "Complete Umrah and Hajj packages from verified agencies and operators.", href: "/agencies", icon: "prayer", emoji: "🕋", accent: "from-navy/20 to-navy/5", badge: "Trusted" },
 ];
 

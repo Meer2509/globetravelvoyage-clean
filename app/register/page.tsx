@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { AuthLayout, SocialLogins, AuthDivider, LegalConsent } from "@/components/AuthLayout";
@@ -390,9 +390,30 @@ function RegisterForm({
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function RegisterPage() {
+const ROLE_PARAM_MAP: Record<string, AccountType> = {
+  customer: "customer",
+  agent: "visa_agent",
+  visa_agent: "visa_agent",
+  agency: "travel_agency",
+  travel_agency: "travel_agency",
+  guide: "tour_guide",
+  tour_guide: "tour_guide",
+  host: "property_host",
+  property_host: "property_host",
+};
+
+function RegisterPageInner() {
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<"type" | "form">("type");
   const [selectedType, setSelectedType] = useState<AccountType>("customer");
+
+  useEffect(() => {
+    const role = searchParams.get("role") ?? searchParams.get("type");
+    if (role && ROLE_PARAM_MAP[role]) {
+      setSelectedType(ROLE_PARAM_MAP[role]);
+      setStep("form");
+    }
+  }, [searchParams]);
 
   return (
     <AuthLayout
@@ -416,5 +437,13 @@ export default function RegisterPage() {
         />
       )}
     </AuthLayout>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterPageInner />
+    </Suspense>
   );
 }

@@ -271,6 +271,26 @@ export interface AdminPaymentRow extends PaymentRow {
   customer_email: string | null;
 }
 
+export async function fetchProviderPayments(): Promise<PaymentRow[]> {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return [];
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("payments")
+    .select(
+      "id, user_id, email, service_type, amount, currency, status, description, stripe_session_id, stripe_payment_intent_id, stripe_payment_id, created_at, paid_at"
+    )
+    .eq("provider_user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) return [];
+  return (data ?? []) as PaymentRow[];
+}
+
 export async function fetchCustomerPayments(): Promise<PaymentRow[]> {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return [];
@@ -415,26 +435,28 @@ export async function fetchAgentIntakeQueue() {
   return data ?? [];
 }
 
-export async function fetchAgencyLeads() {
+export async function fetchAgencyLeads(userId: string) {
   const admin = createAdminClient();
   if (!admin) return [];
 
   const { data } = await admin
     .from("lead_requests")
     .select("id, full_name, email, message, lead_type, status, created_at")
+    .eq("provider_user_id", userId)
     .order("created_at", { ascending: false })
     .limit(20);
 
   return data ?? [];
 }
 
-export async function fetchAgencyBookings() {
+export async function fetchAgencyBookings(userId: string) {
   const admin = createAdminClient();
   if (!admin) return [];
 
   const { data } = await admin
     .from("booking_requests")
     .select("id, service_type, service_name, full_name, status, created_at, travelers, budget")
+    .eq("provider_user_id", userId)
     .order("created_at", { ascending: false })
     .limit(20);
 

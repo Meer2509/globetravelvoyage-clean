@@ -210,22 +210,14 @@ export function StepProgress({
 export function SocialLogins() {
   return (
     <div className="space-y-2.5">
-      <button
-        type="button"
-        className="btn-outline w-full py-3 text-sm font-medium"
-        onClick={() => alert("Social login coming soon — connect your account after launch.")}
-      >
+      <Link href="/lead/contact" className="btn-outline w-full py-3 text-sm font-medium">
         <span className="text-lg">🇬</span>
-        Continue with Google
-      </button>
-      <button
-        type="button"
-        className="btn-outline w-full py-3 text-sm font-medium"
-        onClick={() => alert("Apple sign-in coming soon.")}
-      >
+        Request Google sign-in access
+      </Link>
+      <Link href="/lead/contact" className="btn-outline w-full py-3 text-sm font-medium">
         <span className="text-lg">🍎</span>
-        Continue with Apple
-      </button>
+        Request Apple sign-in access
+      </Link>
     </div>
   );
 }

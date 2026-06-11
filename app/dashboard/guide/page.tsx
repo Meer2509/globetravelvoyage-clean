@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/auth";
 import { fetchGuideTours, fetchRoleDashboardSummary } from "@/lib/supabase/queries";
-import { fetchCustomerPayments, type PaymentRow } from "@/lib/supabase/queries";
+import { fetchProviderPayments, type PaymentRow } from "@/lib/supabase/queries";
 import { fetchProviderBookings, type BookingRequestRow } from "@/lib/supabase/mvp-queries";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DashboardProfileSection } from "@/components/DashboardProfileSection";
@@ -44,7 +44,7 @@ export default function GuideDashboard() {
     Promise.all([
       fetchGuideTours(),
       userId ? fetchProviderBookings(userId) : Promise.resolve([]),
-      fetchCustomerPayments(),
+      fetchProviderPayments(),
       fetchRoleDashboardSummary(),
     ]).then(([t, b, p, s]) => {
       setTours(t);

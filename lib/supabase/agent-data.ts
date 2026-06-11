@@ -104,7 +104,7 @@ export async function fetchAgentDashboardData(): Promise<AgentDataResult<AgentDa
     admin
       .from("lead_requests")
       .select("id, full_name, email, message, lead_type, expert_type, status, created_at")
-      .or("expert_type.eq.visa_agent,lead_type.eq.contact_expert")
+      .eq("provider_user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(50),
     expertId
@@ -119,7 +119,7 @@ export async function fetchAgentDashboardData(): Promise<AgentDataResult<AgentDa
     admin
       .from("payments")
       .select("id, email, service_type, amount, currency, status, description, stripe_session_id, created_at, paid_at")
-      .eq("user_id", user.id)
+      .eq("provider_user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(50),
   ]);

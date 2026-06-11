@@ -3,8 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/auth";
-import { fetchAgencyBookings, fetchAgencyLeads, fetchGuideTours } from "@/lib/supabase/queries";
-import { fetchCustomerPayments, type PaymentRow } from "@/lib/supabase/queries";
+import { fetchAgencyBookings, fetchAgencyLeads, fetchGuideTours, fetchProviderPayments, type PaymentRow } from "@/lib/supabase/queries";
 import type { LeadRequestRow } from "@/lib/supabase/mvp-queries";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DashboardProfileSection } from "@/components/DashboardProfileSection";
@@ -36,16 +35,19 @@ export default function AgencyDashboard() {
   const [payments, setPayments] = useState<PaymentRow[]>([]);
   const [loaded, setLoaded] = useState(false);
 
+  const userId = user.result?.ok ? user.result.profile.id : "";
+
   useEffect(() => {
     if (!isSupabaseConfigured) {
       setLoaded(true);
       return;
     }
+    if (!userId) return;
     Promise.all([
-      fetchAgencyBookings(),
-      fetchAgencyLeads(),
+      fetchAgencyBookings(userId),
+      fetchAgencyLeads(userId),
       fetchGuideTours(),
-      fetchCustomerPayments(),
+      fetchProviderPayments(),
     ]).then(([b, l, t, p]) => {
       setBookings(b as Array<Record<string, unknown>>);
       setLeads(l as LeadRequestRow[]);
@@ -53,7 +55,7 @@ export default function AgencyDashboard() {
       setPayments(p);
       setLoaded(true);
     });
-  }, []);
+  }, [userId]);
 
   const paidTotal = payments.filter((p) => p.status === "paid").reduce((s, p) => s + Number(p.amount), 0);
 

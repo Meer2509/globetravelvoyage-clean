@@ -62,6 +62,32 @@ export async function toggleSavedItem(input: {
   return { ok: true };
 }
 
+export interface SavedItemRow {
+  id: string;
+  item_type: string;
+  item_id: string;
+  title: string | null;
+  created_at: string;
+}
+
+export async function fetchUserSavedItems(): Promise<SavedItemRow[]> {
+  const userId = await getUserId();
+  if (!userId) return [];
+
+  const admin = createAdminClient();
+  if (!admin) return [];
+
+  const { data, error } = await admin
+    .from("saved_items")
+    .select("id, item_type, item_id, title, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error || !data) return [];
+  return data as SavedItemRow[];
+}
+
 export async function fetchUserSavedIds(itemType: string): Promise<string[]> {
   const userId = await getUserId();
   if (!userId) return [];

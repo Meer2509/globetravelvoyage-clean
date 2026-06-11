@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/profile-utils";
+import { splitPaymentAmount } from "@/lib/stripe/commission";
 
 export interface CreatePaymentInput {
   userId: string | null;
@@ -11,6 +12,8 @@ export interface CreatePaymentInput {
   currency: string;
   description: string;
   stripeSessionId: string;
+  providerUserId?: string | null;
+  providerServiceId?: string | null;
 }
 
 export interface FulfillPaymentInput {
@@ -31,6 +34,10 @@ type PaymentInsert = {
   stripe_session_id: string;
   stripe_payment_id: string;
   description: string;
+  provider_user_id?: string | null;
+  provider_service_id?: string | null;
+  platform_fee?: number | null;
+  provider_amount?: number | null;
 };
 
 type PaymentUpdate = {
@@ -50,6 +57,8 @@ export async function createPaymentRecord(
     return { ok: false, error: "Supabase admin client is not configured." };
   }
 
+  const split = input.providerUserId ? splitPaymentAmount(input.amount) : null;
+
   const row: PaymentInsert = {
     user_id: input.userId,
     email: input.email,
@@ -60,6 +69,10 @@ export async function createPaymentRecord(
     stripe_session_id: input.stripeSessionId,
     stripe_payment_id: input.stripeSessionId,
     description: input.description,
+    provider_user_id: input.providerUserId ?? null,
+    provider_service_id: input.providerServiceId ?? null,
+    platform_fee: split?.platformFee ?? null,
+    provider_amount: split?.providerAmount ?? null,
   };
 
   const { data, error } = await admin.from("payments").insert(row).select("id").single();

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AuthLayout, StepProgress } from "@/components/AuthLayout";
+import { completeAgentOnboarding } from "@/lib/supabase/onboarding-actions";
 
 const STEPS = ["Profile", "Services", "Documents", "Done"];
 
@@ -15,6 +16,8 @@ const languages = ["English", "Urdu", "Arabic", "Hindi", "Tagalog", "Bengali", "
 
 export default function AgentOnboarding() {
   const [step, setStep] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [data, setData] = useState({
     fullName: "",
     email: "",
@@ -269,6 +272,9 @@ export default function AgentOnboarding() {
               </p>
             </div>
 
+            {saveError && (
+              <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{saveError}</p>
+            )}
             <div className="flex gap-3">
               <button onClick={() => setStep(1)} className="btn-outline flex-1 py-3">← Back</button>
               <button onClick={() => setStep(3)} className="btn-primary flex-1 py-3">Submit profile →</button>

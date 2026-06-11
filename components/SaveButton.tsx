@@ -1,23 +1,57 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toggleSavedItem } from "@/lib/supabase/saved-actions";
 
 interface SaveButtonProps {
   id?: string;
+  itemType?: string;
+  title?: string;
   className?: string;
   onToggle?: (saved: boolean, id?: string) => void;
   defaultSaved?: boolean;
   label?: boolean;
 }
 
-export function SaveButton({ id, className = "", onToggle, defaultSaved = false, label = false }: SaveButtonProps) {
+export function SaveButton({
+  id,
+  itemType = "listing",
+  title,
+  className = "",
+  onToggle,
+  defaultSaved = false,
+  label = false,
+}: SaveButtonProps) {
+  const router = useRouter();
   const [saved, setSaved] = useState(defaultSaved);
   const [flash, setFlash] = useState(false);
+  const [error, setError] = useState("");
 
-  function toggle(e: React.MouseEvent) {
+  async function toggle(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
+    if (!id) return;
+
     const next = !saved;
+    setError("");
+
+    const result = await toggleSavedItem({
+      itemType,
+      itemId: id,
+      title,
+      saved: next,
+    });
+
+    if (!result.ok) {
+      if (result.error.includes("Sign in")) {
+        router.push(`/login?next=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "/saved")}`);
+        return;
+      }
+      setError(result.error);
+      return;
+    }
+
     setSaved(next);
     setFlash(true);
     setTimeout(() => setFlash(false), 600);
@@ -27,11 +61,9 @@ export function SaveButton({ id, className = "", onToggle, defaultSaved = false,
   return (
     <button
       onClick={toggle}
-      title={saved ? "Remove from saved" : "Save"}
+      title={error || (saved ? "Remove from saved" : "Save")}
       className={`flex items-center gap-1 rounded-lg p-1.5 transition-all ${
-        saved
-          ? "text-red-500 hover:text-red-400"
-          : "text-charcoal/30 hover:text-red-400"
+        saved ? "text-red-500 hover:text-red-400" : "text-charcoal/40 hover:text-red-400"
       } ${flash ? "scale-125" : "scale-100"} ${className}`}
       aria-label={saved ? "Unsave" : "Save"}
     >
