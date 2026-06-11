@@ -12,17 +12,32 @@ type TabId = "flights" | "hotels" | "visa" | "cruises" | "tours" | "rentals" | "
 // ─── Shared select option lists ───────────────────────────────────────────────
 
 const FLIGHT_CITIES = [
-  "Dubai (DXB)", "Abu Dhabi (AUH)", "Riyadh (RUH)", "Jeddah (JED)",
+  // Gulf / Middle East
+  "Dubai (DXB)", "Abu Dhabi (AUH)", "Sharjah (SHJ)",
+  "Riyadh (RUH)", "Jeddah (JED)", "Dammam (DMM)",
   "Doha (DOH)", "Kuwait City (KWI)", "Bahrain (BAH)", "Muscat (MCT)",
-  "Lahore (LHE)", "Karachi (KHI)", "Islamabad (ISB)",
-  "Delhi (DEL)", "Mumbai (BOM)", "Manila (MNL)", "Dhaka (DAC)",
-  "New York (JFK)", "London (LHR)", "Toronto (YYZ)", "Other",
+  // Pakistan
+  "Lahore (LHE)", "Karachi (KHI)", "Islamabad (ISB)", "Peshawar (PEW)",
+  // India
+  "Delhi (DEL)", "Mumbai (BOM)", "Chennai (MAA)", "Hyderabad (HYD)",
+  // Bangladesh & Philippines
+  "Dhaka (DAC)", "Chittagong (CGP)", "Manila (MNL)", "Cebu (CEB)",
+  // Western
+  "New York (JFK)", "Washington DC (IAD)", "London (LHR)", "Toronto (YYZ)",
+  "Istanbul (IST)", "Kuala Lumpur (KUL)", "Other",
 ];
 
 const HOTEL_DESTINATIONS = [
-  "Dubai", "Makkah", "Madinah", "Doha", "Istanbul",
-  "Lahore", "Karachi", "Islamabad", "Manila", "Bangkok",
-  "London", "New York", "Toronto", "Other",
+  "Dubai", "Abu Dhabi", "Makkah", "Madinah", "Riyadh",
+  "Doha", "Istanbul", "Cairo", "Kuala Lumpur", "Bangkok",
+  "Lahore", "Karachi", "Islamabad", "Manila", "Dhaka",
+  "London", "New York", "Toronto", "Paris", "Other",
+];
+
+const HOTEL_TYPES = [
+  "All types", "Luxury 5★ resort", "Luxury 5★ hotel", "4★ hotel",
+  "Budget / economy", "Furnished apartment", "Vacation rental",
+  "Serviced apartment (monthly)", "Hostel / backpacker", "Boutique hotel",
 ];
 
 const NATIONALITIES = [
@@ -34,28 +49,39 @@ const NATIONALITIES = [
 
 const VISA_DESTINATIONS = [
   "🇺🇸 United States (USA)", "🇨🇦 Canada", "🇬🇧 United Kingdom",
-  "🇪🇺 Schengen Zone (Europe)", "🇦🇪 UAE", "🇸🇦 Saudi Arabia",
-  "🇹🇷 Turkey", "🇦🇺 Australia", "🇵🇰 Pakistan", "🇮🇳 India",
-  "🇵🇭 Philippines", "🇯🇵 Japan", "🇲🇾 Malaysia", "Other",
+  "🇪🇺 Schengen (Europe)", "🇦🇪 UAE / Dubai", "🇸🇦 Saudi Arabia",
+  "🇦🇺 Australia", "🇩🇪 Germany", "🇫🇷 France", "🇮🇹 Italy",
+  "🇵🇰 Pakistan", "🇮🇳 India", "🇵🇭 Philippines",
+  "🇧🇩 Bangladesh", "🇱🇰 Sri Lanka", "🇳🇬 Nigeria",
+  "🇯🇵 Japan", "🇲🇾 Malaysia", "🇹🇷 Turkey", "Other",
 ];
 
 const VISA_PURPOSES = [
-  "Tourism / Holiday", "Business meeting", "Family visit",
-  "Study / University", "Work / Employment", "Medical treatment",
-  "Religious / Umrah / Hajj", "Transit", "Other",
+  "Tourism / Holiday", "Business meeting / Conference", "Family visit / Reunion",
+  "Study / University enrolment", "Work / Employment permit", "Medical treatment",
+  "Religious / Umrah / Hajj", "Transit (stopover)", "Permanent Residency (PR)",
+  "Spousal / Dependent visa", "Other",
 ];
 
 const CRUISE_REGIONS = [
-  "Arabian Gulf", "Mediterranean", "Caribbean",
-  "Europe rivers (Rhine / Danube)", "Maldives & Indian Ocean",
-  "Turkey coast (Aegean)", "Dubai Marina", "Southeast Asia",
-  "Nile River (Egypt)", "Other",
+  "Dubai / Arabian Gulf", "Dubai Marina (yacht charter)",
+  "Mediterranean (Italy, Greece, Spain)", "Caribbean islands",
+  "Luxury yacht — private charter", "Maldives & Indian Ocean",
+  "Aegean / Turkey coast", "Southeast Asia (Philippines, Bali)",
+  "Nile River, Egypt", "European rivers (Rhine / Danube)", "Other",
+];
+
+const TOUR_TYPES = [
+  "All tour types", "City sightseeing", "Heritage & culture", "Adventure & hiking",
+  "Desert safari", "Boat / water tours", "Guided historical", "Local food experience",
+  "Religious / pilgrimage", "Private guided tour",
 ];
 
 const TOUR_DESTINATIONS = [
-  "Dubai", "Istanbul", "Makkah / Madinah", "Lahore",
-  "Islamabad", "Hunza Valley", "Bangkok", "Manila",
-  "London", "New York", "Paris", "Tokyo", "Bali", "Other",
+  "Dubai", "Abu Dhabi", "Istanbul", "Makkah / Madinah", "Cairo",
+  "Lahore", "Islamabad", "Hunza Valley", "Karachi",
+  "Bangkok", "Manila", "Bali", "Kuala Lumpur",
+  "London", "Paris", "New York", "Tokyo", "Other",
 ];
 
 const RENTAL_LOCATIONS = [
@@ -300,14 +326,10 @@ function HotelsForm() {
           </select>
         </div>
         <div>
-          <label className="label">Stay type</label>
+          <label className="label">Property type</label>
           <select className="input" value={stayType} onChange={(e) => setStayType(e.target.value)}>
             <option value="">Any type</option>
-            <option>Hotel</option>
-            <option>Apartment</option>
-            <option>Villa / Vacation home</option>
-            <option>Resort</option>
-            <option>Monthly rental</option>
+            {HOTEL_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
         <div>
@@ -578,16 +600,7 @@ function ToursForm() {
           <label className="label">Tour type</label>
           <select className="input" value={tourType} onChange={(e) => setType(e.target.value)}>
             <option value="">Any type</option>
-            <option>City tour</option>
-            <option>Adventure / Nature</option>
-            <option>Family friendly</option>
-            <option>Luxury / Private</option>
-            <option>Religious / Heritage</option>
-            <option>Historical sites</option>
-            <option>Food & culture</option>
-            <option>Desert safari</option>
-            <option>Water sports</option>
-            <option>Private guide</option>
+            {TOUR_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
         <div>

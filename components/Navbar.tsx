@@ -84,7 +84,7 @@ export function Navbar() {
       onMouseLeave={() => setMegaOpen(null)}
     >
       {/* ── Main bar ── */}
-      <div className="container-px flex items-center justify-between gap-4 py-3 lg:py-0 lg:h-[120px]">
+      <div className="container-px flex items-center justify-between gap-4 py-2 lg:py-0 lg:h-[95px]">
 
         {/* ── Logo ── */}
         <Link
@@ -94,23 +94,23 @@ export function Navbar() {
         >
           {/* Desktop */}
           <Image
-            src="/globe-logo.png"
+            src="/logo.png"
             alt="Globe Travel Voyage"
-            width={400}
-            height={110}
-            className="hidden lg:block h-[110px] w-auto object-contain transition-opacity duration-200 group-hover:opacity-85"
+            width={380}
+            height={88}
+            className="hidden lg:block h-[88px] w-auto object-contain transition-opacity duration-200 group-hover:opacity-85"
             priority
-            quality={95}
+            quality={100}
           />
           {/* Mobile / tablet */}
           <Image
-            src="/globe-logo.png"
+            src="/logo.png"
             alt="Globe Travel Voyage"
-            width={260}
-            height={70}
-            className="block lg:hidden h-[70px] w-auto object-contain transition-opacity duration-200 group-hover:opacity-85"
+            width={220}
+            height={60}
+            className="block lg:hidden h-[60px] w-auto object-contain transition-opacity duration-200 group-hover:opacity-85"
             priority
-            quality={95}
+            quality={100}
           />
         </Link>
 
@@ -223,12 +223,13 @@ export function Navbar() {
           <div className="flex items-center justify-between border-b border-soft-200 px-5 py-4">
             <Link href="/" onClick={() => setOpen(false)}>
               <Image
-                src="/globe-logo.png"
+                src="/logo.png"
                 alt="Globe Travel Voyage"
                 width={220}
                 height={60}
                 className="h-[60px] w-auto object-contain"
                 priority
+                quality={100}
               />
             </Link>
             <button

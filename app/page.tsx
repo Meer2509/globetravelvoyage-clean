@@ -32,6 +32,18 @@ export default function Home() {
       {/* ── 1. Hero + 7-Tab AI Search ── */}
       <Hero />
 
+      {/* ── Disclaimer strip ── */}
+      <div className="border-b border-soft-200 bg-gold-50">
+        <div className="container-px py-3">
+          <p className="text-center text-[11px] text-charcoal/60 leading-relaxed">
+            <span className="font-bold text-charcoal/80">⚠ Disclaimer:</span>{" "}
+            Globe Travel Voyage is an independent marketplace — not a government agency, embassy, immigration authority, airline, hotel chain or real estate broker.
+            {" "}Visa approvals, prices and availability are never guaranteed. All information is for guidance only.{" "}
+            <Link href="/legal/disclaimer" className="font-semibold text-navy/70 underline hover:text-navy">Full disclaimer →</Link>
+          </p>
+        </div>
+      </div>
+
       {/* ── 2. Service Ecosystem ── */}
       <section className="section bg-soft">
         <div className="container-px">
@@ -41,12 +53,12 @@ export default function Home() {
             subtitle="Search, plan, apply, book and compare — all powered by AI and verified experts across 190+ countries."
             center
           />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {services.map((s) => (
               <Link
                 key={s.slug}
                 href={s.href}
-                className="card card-hover group relative flex flex-col items-start p-5"
+                className="card card-hover group relative flex flex-col items-start p-5 sm:p-6"
               >
                 {s.badge && (
                   <span className="absolute right-3 top-3 rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gold">
@@ -54,16 +66,16 @@ export default function Home() {
                   </span>
                 )}
                 <span
-                  className={`mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${s.accent} text-navy transition-transform duration-300 group-hover:scale-110`}
+                  className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${s.accent} shadow-[0_4px_16px_-4px_rgba(8,28,58,0.15)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_8px_24px_-4px_rgba(8,28,58,0.22)]`}
                 >
-                  <span className="text-xl">{s.emoji}</span>
+                  <span className="text-2xl">{s.emoji}</span>
                 </span>
                 <h3 className="text-sm font-bold text-navy leading-snug">{s.title}</h3>
-                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-charcoal/60">
+                <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-charcoal/55">
                   {s.description}
                 </p>
-                <span className="mt-3 text-xs font-semibold text-blue opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-1">
-                  Explore →
+                <span className="mt-3 flex items-center gap-1 text-xs font-semibold text-blue opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:gap-2">
+                  Explore <span>→</span>
                 </span>
               </Link>
             ))}
@@ -815,16 +827,27 @@ export default function Home() {
                 desc: "We connect travelers with providers. We are not an airline, hotel chain, embassy or real estate broker.",
               },
             ].map((item) => (
-              <div key={item.title} className="card-dark group rounded-2xl border border-white/8 bg-white/5 p-5 hover:bg-white/8 transition-colors backdrop-blur-sm">
-                <span className="text-3xl">{item.emoji}</span>
-                <h3 className="mt-3 text-base font-bold text-white">{item.title}</h3>
+              <div key={item.title} className="group rounded-2xl border border-white/8 bg-white/5 p-6 hover:bg-white/10 hover:border-gold/20 transition-all duration-300 backdrop-blur-sm cursor-default">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/8 text-2xl transition-transform duration-300 group-hover:scale-110">{item.emoji}</div>
+                <h3 className="mt-4 text-base font-bold text-white">{item.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-white/55">{item.desc}</p>
               </div>
             ))}
           </div>
 
-          <div className="mt-10">
-            <Disclaimer className="text-white/50 text-center text-sm leading-relaxed max-w-4xl mx-auto" />
+          <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+            <div className="mb-3 flex items-center justify-center gap-2">
+              <span className="text-xl">⚠️</span>
+              <h3 className="text-sm font-bold uppercase tracking-widest text-gold">Legal Disclaimer</h3>
+            </div>
+            <Disclaimer className="text-white/55 text-center text-sm leading-relaxed max-w-4xl mx-auto" />
+            <div className="mt-4 flex flex-wrap justify-center gap-4 text-xs text-white/35">
+              <Link href="/legal/disclaimer" className="hover:text-gold transition-colors">Full Disclaimer</Link>
+              <span>·</span>
+              <Link href="/legal/privacy" className="hover:text-gold transition-colors">Privacy Policy</Link>
+              <span>·</span>
+              <Link href="/legal/terms" className="hover:text-gold transition-colors">Terms of Service</Link>
+            </div>
           </div>
         </div>
       </section>

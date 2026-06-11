@@ -58,7 +58,7 @@ export const metadata: Metadata = {
       "Your AI Travel Command Center for Visas, Flights, Hotels, Tours & Global Journeys. Compare prices, apply for visas, and connect with verified travel experts — all powered by AI.",
     images: [
       {
-        url: "/globe-logo.png",
+        url: "/logo.png",
         width: 1200,
         height: 630,
         alt: "Globe Travel Voyage — AI Powered Global Travel",
@@ -72,14 +72,14 @@ export const metadata: Metadata = {
     title: "Globe Travel Voyage — AI Powered Global Travel",
     description:
       "AI-powered global travel marketplace. Visas, flights, hotels, tours, rentals and more. Verified experts. 190+ countries.",
-    images: ["/globe-logo.png"],
+    images: ["/logo.png"],
   },
   icons: {
     icon: [
-      { url: "/globe-logo.png", type: "image/png" },
+      { url: "/favicon.png", type: "image/png" },
     ],
     apple: [
-      { url: "/globe-logo.png", sizes: "180x180", type: "image/png" },
+      { url: "/logo.png", sizes: "180x180", type: "image/png" },
     ],
   },
   manifest: "/site.webmanifest",
@@ -93,8 +93,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${jakarta.variable} h-full antialiased`}>
       <head>
-        <link rel="icon" href="/globe-logo.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/globe-logo.png" />
+        <link rel="icon" href="/favicon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/logo.png" />
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="theme-color" content="#081C3A" />
       </head>

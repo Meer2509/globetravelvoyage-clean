@@ -131,13 +131,16 @@ export function Footer() {
           {/* Brand column */}
           <div className="max-w-sm">
             <Link href="/" className="inline-block group" aria-label="Globe Travel Voyage">
-              <Image
-                src="/globe-logo.png"
-                alt="Globe Travel Voyage"
-                width={420}
-                height={130}
-                className="h-[130px] w-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity"
-              />
+              <div className="inline-block rounded-2xl bg-white/95 px-4 py-2 shadow-lg group-hover:bg-white transition-colors">
+                <Image
+                  src="/logo.png"
+                  alt="Globe Travel Voyage"
+                  width={380}
+                  height={100}
+                  className="h-[100px] w-auto object-contain"
+                  quality={100}
+                />
+              </div>
             </Link>
 
             <p className="mt-5 text-sm leading-relaxed text-white/55">
