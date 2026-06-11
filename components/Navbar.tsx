@@ -79,15 +79,19 @@ export function Navbar() {
       }`}
       onMouseLeave={() => setMegaOpen(null)}
     >
-      <div className="container-px flex h-[72px] items-center justify-between gap-6">
+      <div className="container-px flex h-[88px] items-center justify-between gap-6 lg:h-[100px]">
         {/* Logo */}
         <Link href="/" className="flex items-center shrink-0 group" aria-label="Globe Travel Voyage — Home">
           <Image
             src="/globe-logo.png"
             alt="Globe Travel Voyage"
-            width={180}
-            height={52}
-            className="h-11 w-auto object-contain transition-opacity duration-200 group-hover:opacity-90 sm:h-12"
+            width={320}
+            height={90}
+            className={`w-auto object-contain transition-all duration-300 group-hover:opacity-90 ${
+              scrolled
+                ? "h-[60px] lg:h-[72px]"
+                : "h-[64px] lg:h-[84px]"
+            }`}
             priority
           />
         </Link>
@@ -180,11 +184,11 @@ export function Navbar() {
           type="button"
           aria-label="Toggle menu"
           onClick={() => setOpen((v) => !v)}
-          className={`flex h-10 w-10 items-center justify-center rounded-xl lg:hidden transition-colors ${
+          className={`flex h-11 w-11 items-center justify-center rounded-xl lg:hidden transition-colors ${
             scrolled ? "border border-soft-200 text-navy" : "border border-white/20 text-white"
           }`}
         >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2}>
+          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2}>
             {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
           </svg>
         </button>
