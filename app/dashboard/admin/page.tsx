@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { isSupabaseConfigured } from "@/lib/auth";
-import { fetchAdminCounts, fetchAdminVisaRequests, type AdminDashboardCounts } from "@/lib/supabase/queries";
+import { fetchAdminCounts, fetchAdminVisaRequests, fetchAdminProfiles, type AdminDashboardCounts, type AdminProfileRow } from "@/lib/supabase/queries";
+import { useDashboardUser } from "@/hooks/useDashboardUser";
+import { DatabaseSetupBanner } from "@/components/DatabaseSetupBanner";
+import { ROLE_LABELS } from "@/lib/auth";
+import type { UserRole } from "@/lib/supabase/types";
 import Link from "next/link";
 import { Stars } from "@/components/Stars";
 import { Icon } from "@/components/Icon";
@@ -953,14 +957,33 @@ function AdminCommissionsTab() {
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
+function formatRoleLabel(role: string | null): string {
+  if (!role) return "Traveler";
+  return ROLE_LABELS[role as UserRole] ?? role;
+}
+
+function formatJoinedDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 export default function AdminDashboard() {
+  const dashUser = useDashboardUser();
   const [userSearch, setUserSearch] = useState("");
   const [liveCounts, setLiveCounts] = useState<AdminDashboardCounts | null>(null);
   const [adminToast, setAdminToast] = useState<string | null>(null);
+  const [liveProfiles, setLiveProfiles] = useState<AdminProfileRow[]>([]);
+  const [profilesSetupMessage, setProfilesSetupMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     fetchAdminCounts().then(setLiveCounts);
+    fetchAdminProfiles().then((res) => {
+      if (res.tableMissing) {
+        setProfilesSetupMessage("Profiles table not found. Run supabase/schema.sql in your Supabase SQL Editor.");
+        return;
+      }
+      if (res.profiles.length > 0) setLiveProfiles(res.profiles);
+    });
   }, []);
   const [usersData, setUsersData]   = useState(allUsers.map((u) => ({ ...u })));
   const [featureToggles, setFeatureToggles] = useState([
@@ -1007,6 +1030,7 @@ export default function AdminDashboard() {
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
+        {dashUser.setupMessage && <DatabaseSetupBanner message={dashUser.setupMessage} />}
         {liveCounts && (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
             ✓ Supabase live — {liveCounts.users} profiles · {liveCounts.visaRequests} visa requests · {liveCounts.bookingRequests} booking requests · {liveCounts.supportTickets} support tickets
@@ -1087,14 +1111,16 @@ export default function AdminDashboard() {
 
     users: (
       <div className="space-y-5">
+        {profilesSetupMessage && <DatabaseSetupBanner message={profilesSetupMessage} />}
+
         <div className="grid gap-4 sm:grid-cols-4">
-          <StatCard label="Total users" value="1,240" icon="users" color="blue" />
-          <StatCard label="New (7 days)" value="82" icon="globe" delta="+7%" color="green" />
-          <StatCard label="Suspended" value="3" icon="shield" color="gold" />
-          <StatCard label="Pending verify" value="7" icon="check" color="navy" />
+          <StatCard label="Total users" value={liveProfiles.length > 0 ? String(liveProfiles.length) : liveCounts ? String(liveCounts.users) : "—"} icon="users" color="blue" />
+          <StatCard label="Active" value={liveProfiles.length > 0 ? String(liveProfiles.filter((p) => p.is_active).length) : "—"} icon="globe" color="green" />
+          <StatCard label="With company" value={liveProfiles.length > 0 ? String(liveProfiles.filter((p) => p.company_name).length) : "—"} icon="shield" color="gold" />
+          <StatCard label="Countries" value={liveProfiles.length > 0 ? String(new Set(liveProfiles.map((p) => p.country).filter(Boolean)).size) : "—"} icon="check" color="navy" />
         </div>
 
-        <Panel title="User Management" subtitle="Search, filter, and manage all platform users">
+        <Panel title="Registered users" subtitle={liveProfiles.length > 0 ? "Live profiles from Supabase" : "Sample data — connect Supabase to see real users"}>
           <div className="mb-4 flex gap-3">
             <input
               className="input flex-1 text-sm"
@@ -1102,19 +1128,42 @@ export default function AdminDashboard() {
               value={userSearch}
               onChange={(e) => setUserSearch(e.target.value)}
             />
-            <select className="input w-36 text-sm">
-              <option>All roles</option>
-              <option>Customer</option>
-              <option>Visa Expert</option>
-              <option>Agency</option>
-              <option>Tour Guide</option>
-              <option>Host</option>
-            </select>
           </div>
           <div className="divide-y divide-soft-200">
-            {usersData
-              .filter((u) => !userSearch || u.name.toLowerCase().includes(userSearch.toLowerCase()))
-              .map((u) => (
+            {(liveProfiles.length > 0 ? liveProfiles : []).length > 0 ? (
+              liveProfiles
+                .filter((p) => {
+                  const q = userSearch.toLowerCase();
+                  if (!q) return true;
+                  return (
+                    (p.full_name ?? "").toLowerCase().includes(q) ||
+                    p.email.toLowerCase().includes(q) ||
+                    (p.role ?? "").toLowerCase().includes(q)
+                  );
+                })
+                .map((p) => (
+                  <div key={p.id} className="flex items-center justify-between py-3">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy/8 text-xs font-bold text-navy">
+                        {(p.full_name ?? p.email).slice(0, 2).toUpperCase()}
+                      </span>
+                      <div>
+                        <p className="font-semibold text-navy">{p.full_name ?? "Unnamed user"}</p>
+                        <p className="text-xs text-charcoal/45">{p.email} · {formatRoleLabel(p.role)} · {p.country ?? "—"}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-xs text-charcoal/45">{formatJoinedDate(p.created_at)}</span>
+                      <span className={`chip text-xs ${p.is_active ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"}`}>
+                        {p.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+                  </div>
+                ))
+            ) : (
+              usersData
+                .filter((u) => !userSearch || u.name.toLowerCase().includes(userSearch.toLowerCase()))
+                .map((u) => (
                 <div key={u.name} className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3">
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-navy text-xs font-bold text-white">
@@ -1135,7 +1184,8 @@ export default function AdminDashboard() {
                     {u.status === "Active" && <button onClick={() => toggleUserStatus(u.name)} className="text-xs text-red-500 font-semibold hover:underline">Suspend</button>}
                   </div>
                 </div>
-              ))}
+              ))
+            )}
           </div>
         </Panel>
 
@@ -1536,9 +1586,11 @@ export default function AdminDashboard() {
         </div>
       )}
       <DashboardLayout
-        role="Admin"
-        name="Platform Admin"
-        initials="PA"
+        role={dashUser.roleLabel}
+        name={dashUser.displayName}
+        initials={dashUser.initials}
+        email={dashUser.email}
+        profileCompletion={dashUser.completion}
         tabs={tabs}
         sections={sections}
         verified

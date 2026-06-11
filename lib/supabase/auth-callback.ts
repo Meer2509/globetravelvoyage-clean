@@ -7,6 +7,8 @@
 import { createServerSupabaseClient } from "./server";
 import { createAdminClient } from "./admin";
 import { syncUserRole } from "./actions";
+import { saveProfileOnSignup } from "./profile-actions";
+import { parseCommaList } from "./profile-utils";
 import type { UserRole } from "./types";
 
 const VALID_ROLES: UserRole[] = [
@@ -73,12 +75,22 @@ async function ensureUserProfile(user: {
 
   if (existing) return;
 
-  await admin.from("profiles").insert({
-    id: user.id,
+  const meta = user.user_metadata ?? {};
+  const role = (meta.role as UserRole | undefined) ?? "customer";
+  const specs = meta.specializations as string | undefined;
+
+  await saveProfileOnSignup({
+    userId: user.id,
     email: user.email ?? "",
-    full_name: (user.user_metadata?.full_name as string | undefined) ?? null,
-    phone: (user.user_metadata?.phone as string | undefined) ?? null,
-    country: (user.user_metadata?.country as string | undefined) ?? null,
+    fullName: (meta.full_name as string | undefined) ?? "",
+    phone: meta.phone as string | undefined,
+    country: meta.country as string | undefined,
+    city: meta.city as string | undefined,
+    role,
+    companyName: meta.company_name as string | undefined,
+    businessType: (meta.business_type as string | undefined) ?? role,
+    specializations: specs ? parseCommaList(specs) : undefined,
+    bio: meta.bio as string | undefined,
   });
 }
 

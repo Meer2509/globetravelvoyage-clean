@@ -6,6 +6,143 @@
 
 import { createServerSupabaseClient } from "./server";
 import { createAdminClient } from "./admin";
+import { computeProfileCompletion, isDatabaseSetupError } from "./profile-utils";
+import type { Profile, UserRole, VisaExpert } from "./types";
+
+export type DashboardUserResult =
+  | {
+      ok: true;
+      profile: Profile;
+      role: UserRole;
+      visaExpert: VisaExpert | null;
+      completion: number;
+      missingFields: string[];
+    }
+  | {
+      ok: false;
+      reason: "not_configured" | "not_authenticated" | "table_missing" | "error";
+      message: string;
+    };
+
+export interface AdminProfileRow {
+  id: string;
+  full_name: string | null;
+  email: string;
+  phone: string | null;
+  country: string | null;
+  city: string | null;
+  role: string | null;
+  company_name: string | null;
+  created_at: string;
+  is_active: boolean;
+}
+
+export async function fetchDashboardUser(): Promise<DashboardUserResult> {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) {
+    return { ok: false, reason: "not_configured", message: "Supabase is not configured. Dashboards are in demo mode." };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, reason: "not_authenticated", message: "Please sign in to view your dashboard." };
+  }
+
+  const profileRes = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+
+  if (profileRes.error) {
+    if (isDatabaseSetupError(profileRes.error)) {
+      return {
+        ok: false,
+        reason: "table_missing",
+        message: "Database tables are not set up yet. Run supabase/schema.sql and migrations in your Supabase SQL Editor.",
+      };
+    }
+    return { ok: false, reason: "error", message: profileRes.error.message };
+  }
+
+  const roleRes = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user.id)
+    .eq("is_primary", true)
+    .maybeSingle();
+
+  const role =
+    (roleRes.data as { role: UserRole } | null)?.role ??
+    (profileRes.data as Profile | null)?.role as UserRole | undefined ??
+    (user.user_metadata?.role as UserRole | undefined) ??
+    "customer";
+
+  let visaExpert: VisaExpert | null = null;
+  if (role === "visa_agent") {
+    const expertRes = await supabase
+      .from("visa_experts")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!expertRes.error) {
+      visaExpert = expertRes.data as VisaExpert | null;
+    }
+  }
+
+  const profile: Profile = profileRes.data ?? {
+    id: user.id,
+    email: user.email ?? "",
+    full_name: (user.user_metadata?.full_name as string) ?? null,
+    avatar_url: null,
+    phone: (user.user_metadata?.phone as string) ?? null,
+    country: (user.user_metadata?.country as string) ?? null,
+    city: (user.user_metadata?.city as string) ?? null,
+    nationality: null,
+    passport_country: null,
+    preferred_currency: "USD",
+    preferred_language: "en",
+    bio: null,
+    role: role,
+    company_name: null,
+    business_type: null,
+    travel_interests: null,
+    is_active: true,
+    created_at: user.created_at,
+    updated_at: user.updated_at ?? user.created_at,
+  };
+
+  const { percent, missing } = computeProfileCompletion(profile, role, visaExpert);
+
+  return {
+    ok: true,
+    profile,
+    role,
+    visaExpert,
+    completion: percent,
+    missingFields: missing,
+  };
+}
+
+export async function fetchAdminProfiles(): Promise<{
+  profiles: AdminProfileRow[];
+  error?: string;
+  tableMissing?: boolean;
+}> {
+  const admin = createAdminClient();
+  if (!admin) return { profiles: [] };
+
+  const { data, error } = await admin
+    .from("profiles")
+    .select("id, full_name, email, phone, country, city, role, company_name, created_at, is_active")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) {
+    if (isDatabaseSetupError(error)) {
+      return { profiles: [], tableMissing: true, error: error.message };
+    }
+    return { profiles: [], error: error.message };
+  }
+
+  return { profiles: (data as AdminProfileRow[]) ?? [] };
+}
 
 export interface CustomerDashboardData {
   profile: { full_name: string | null; email: string } | null;

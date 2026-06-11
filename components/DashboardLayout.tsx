@@ -20,6 +20,8 @@ export function DashboardLayout({
   role,
   name,
   initials,
+  email,
+  profileCompletion,
   tabs,
   sections,
   verified,
@@ -29,6 +31,8 @@ export function DashboardLayout({
   role: string;
   name: string;
   initials: string;
+  email?: string;
+  profileCompletion?: number;
   tabs: DashboardTab[];
   sections: Record<string, React.ReactNode>;
   verified?: boolean;
@@ -59,6 +63,14 @@ export function DashboardLayout({
                   </span>
                   <div className="min-w-0">
                     <p className="truncate font-bold text-navy">{name}</p>
+                    {email && (
+                      <p className="truncate text-xs text-charcoal/45">{email}</p>
+                    )}
+                    {profileCompletion !== undefined && (
+                      <p className="mt-1 text-[11px] font-semibold text-blue">
+                        Profile {profileCompletion}% complete
+                      </p>
+                    )}
                     <div className="mt-0.5 flex items-center gap-1.5">
                       <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${roleColor}`}>
                         {role}
@@ -108,6 +120,13 @@ export function DashboardLayout({
 
             {/* Back to site + logout */}
             <div className="card overflow-hidden p-1.5 space-y-0.5">
+              <Link
+                href="/dashboard/profile"
+                className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium text-charcoal/50 hover:bg-soft hover:text-navy transition-colors"
+              >
+                <Icon name="agent" className="h-4 w-4" />
+                Edit profile
+              </Link>
               <Link
                 href="/"
                 className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium text-charcoal/50 hover:bg-soft hover:text-navy transition-colors"

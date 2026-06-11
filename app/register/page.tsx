@@ -12,6 +12,8 @@ import {
   formatAuthError,
 } from "@/lib/auth";
 import { syncUserRole } from "@/lib/supabase/actions";
+import { saveProfileOnSignup } from "@/lib/supabase/profile-actions";
+import { parseCommaList } from "@/lib/supabase/profile-utils";
 import { getAuthCallbackUrl } from "@/lib/site-url";
 
 type AccountType = "customer" | "visa_agent" | "travel_agency" | "tour_guide" | "property_host";
@@ -155,15 +157,25 @@ function RegisterForm({
     const supabase = createClient();
     if (!supabase) { setLoading(false); return; }
 
+    const fullName = `${firstName} ${lastName}`.trim();
+    const isAgency = selectedType === "travel_agency";
+    const isGuide = selectedType === "tour_guide";
+    const isHost = selectedType === "property_host";
+    const isAgent = selectedType === "visa_agent";
+
     const { data, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          full_name: `${firstName} ${lastName}`.trim(),
+          full_name: fullName,
           role: selectedType,
           phone,
           country,
+          city: isGuide || isHost ? extra : undefined,
+          company_name: isAgency ? extra : undefined,
+          business_type: selectedType,
+          specializations: isAgent ? extra : undefined,
           extra_info: extra,
         },
         emailRedirectTo: getAuthCallbackUrl(),
@@ -177,18 +189,32 @@ function RegisterForm({
       return;
     }
 
-    if (data.user && !data.session) {
-      // Email confirmation required
+    if (!data.user) return;
+
+    const profilePayload = {
+      userId: data.user.id,
+      email,
+      fullName,
+      phone,
+      country,
+      city: isGuide || isHost ? extra : undefined,
+      role: selectedType,
+      companyName: isAgency ? extra : undefined,
+      businessType: selectedType,
+      specializations: isAgent && extra ? parseCommaList(extra) : undefined,
+    };
+
+    if (!data.session) {
+      await saveProfileOnSignup(profilePayload);
       setEmailSent(true);
       return;
     }
 
-    if (data.session && data.user) {
-      await syncUserRole(data.user.id, selectedType);
-      onSuccess(getOnboardingUrl(selectedType));
-      router.push(getOnboardingUrl(selectedType));
-      router.refresh();
-    }
+    await syncUserRole(data.user.id, selectedType);
+    await saveProfileOnSignup(profilePayload);
+    onSuccess(getOnboardingUrl(selectedType));
+    router.push(getOnboardingUrl(selectedType));
+    router.refresh();
   }
 
   if (emailSent) {

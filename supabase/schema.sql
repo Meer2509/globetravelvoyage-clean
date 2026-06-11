@@ -63,6 +63,9 @@ create table if not exists profiles (
   preferred_currency text default 'USD',
   preferred_language text default 'en',
   bio             text,
+  role            text,
+  company_name    text,
+  business_type   text,
   travel_interests text[],   -- e.g. ['beach', 'hiking', 'food']
   is_active       boolean default true,
   created_at      timestamptz default now(),
@@ -88,8 +91,15 @@ create table if not exists user_roles (
 create table if not exists visa_experts (
   id                uuid primary key default uuid_generate_v4(),
   user_id           uuid not null references profiles(id) on delete cascade,
+  full_name         text,
+  email             text,
+  phone             text,
+  country           text,
+  city              text,
   specializations   text[],    -- e.g. ['usa_b1b2', 'uk_visitor', 'schengen']
   languages         text[],
+  services          text[],
+  bio               text,
   years_experience  int,
   price_from        numeric(10,2),
   price_to          numeric(10,2),

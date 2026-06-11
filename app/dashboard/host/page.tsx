@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { isSupabaseConfigured } from "@/lib/auth";
 import { fetchHostListings, fetchRoleDashboardSummary } from "@/lib/supabase/queries";
+import { useDashboardUser } from "@/hooks/useDashboardUser";
+import { DashboardProfileSection } from "@/components/DashboardProfileSection";
+import { DatabaseSetupBanner } from "@/components/DatabaseSetupBanner";
 import { Disclaimer } from "@/components/Disclaimer";
 import {
   DashboardLayout,
@@ -98,6 +101,7 @@ const inquiries = [
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function HostDashboard() {
+  const user = useDashboardUser();
   const [listingCount, setListingCount] = useState<number | null>(null);
   const [leadCount, setLeadCount] = useState<number | null>(null);
   const [bookingCount, setBookingCount] = useState<number | null>(null);
@@ -116,6 +120,8 @@ export default function HostDashboard() {
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
+        {user.setupMessage && <DatabaseSetupBanner message={user.setupMessage} />}
+        <DashboardProfileSection user={user} />
         {listingCount !== null && (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
             ✓ Supabase live — {listingCount} property listings · {leadCount ?? 0} leads · {bookingCount ?? 0} bookings.
@@ -319,12 +325,14 @@ export default function HostDashboard() {
 
   return (
     <DashboardLayout
-      role="Property Host"
-      name="Omar Al-Farsi"
-      initials="OF"
+      role={user.roleLabel}
+      name={user.displayName}
+      initials={user.initials}
+      email={user.email}
+      profileCompletion={user.completion}
       tabs={tabs}
       sections={sections}
-      verified
+      verified={user.verified}
       roleColor="bg-amber-50 text-amber-700"
       avatarColor="bg-amber-600 text-white"
     />

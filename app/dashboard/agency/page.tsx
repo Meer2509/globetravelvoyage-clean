@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/auth";
 import { fetchAgencyBookings, fetchAgencyLeads } from "@/lib/supabase/queries";
+import { useDashboardUser } from "@/hooks/useDashboardUser";
+import { DashboardProfileSection } from "@/components/DashboardProfileSection";
+import { DatabaseSetupBanner } from "@/components/DatabaseSetupBanner";
 import { Disclaimer } from "@/components/Disclaimer";
 import { Icon } from "@/components/Icon";
 import {
@@ -71,6 +74,7 @@ const monthlyRevenue = [
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function AgencyDashboard() {
+  const user = useDashboardUser();
   const [liveBookings, setLiveBookings] = useState<number | null>(null);
   const [liveLeads, setLiveLeads] = useState<number | null>(null);
 
@@ -83,6 +87,8 @@ export default function AgencyDashboard() {
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
+        {user.setupMessage && <DatabaseSetupBanner message={user.setupMessage} />}
+        <DashboardProfileSection user={user} />
         {liveBookings !== null && (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
             ✓ Supabase live — {liveBookings} booking requests · {liveLeads ?? 0} leads in intake.
@@ -336,12 +342,14 @@ export default function AgencyDashboard() {
 
   return (
     <DashboardLayout
-      role="Travel Agency"
-      name="Voyage Pro Travels"
-      initials="VP"
+      role={user.roleLabel}
+      name={user.result?.ok && user.result.profile.company_name ? user.result.profile.company_name : user.displayName}
+      initials={user.initials}
+      email={user.email}
+      profileCompletion={user.completion}
       tabs={tabs}
       sections={sections}
-      verified
+      verified={user.verified}
       roleColor="bg-emerald-50 text-emerald-700"
       avatarColor="bg-emerald-700 text-white"
     />

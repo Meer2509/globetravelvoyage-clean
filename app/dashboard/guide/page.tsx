@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { isSupabaseConfigured } from "@/lib/auth";
 import { fetchGuideTours, fetchRoleDashboardSummary } from "@/lib/supabase/queries";
+import { useDashboardUser } from "@/hooks/useDashboardUser";
+import { DashboardProfileSection } from "@/components/DashboardProfileSection";
+import { DatabaseSetupBanner } from "@/components/DatabaseSetupBanner";
 import { Stars } from "@/components/Stars";
 import {
   DashboardLayout,
@@ -114,6 +117,7 @@ function AvailabilityCalendar() {
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function GuideDashboard() {
+  const user = useDashboardUser();
   const [tourCount, setTourCount] = useState<number | null>(null);
   const [bookingCount, setBookingCount] = useState<number | null>(null);
 
@@ -128,6 +132,8 @@ export default function GuideDashboard() {
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
+        {user.setupMessage && <DatabaseSetupBanner message={user.setupMessage} />}
+        <DashboardProfileSection user={user} />
         {tourCount !== null && (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
             ✓ Supabase live — {tourCount} tour listings · {bookingCount ?? 0} booking requests.
@@ -299,12 +305,14 @@ export default function GuideDashboard() {
 
   return (
     <DashboardLayout
-      role="Tour Guide"
-      name="Khalid Al-Rashidi"
-      initials="KR"
+      role={user.roleLabel}
+      name={user.displayName}
+      initials={user.initials}
+      email={user.email}
+      profileCompletion={user.completion}
       tabs={tabs}
       sections={sections}
-      verified
+      verified={user.verified}
       roleColor="bg-purple-50 text-purple-700"
       avatarColor="bg-purple-700 text-white"
     />

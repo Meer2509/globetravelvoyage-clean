@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/auth";
 import { fetchCustomerDashboard, type CustomerDashboardData } from "@/lib/supabase/queries";
+import { useDashboardUser } from "@/hooks/useDashboardUser";
+import { DashboardProfileSection } from "@/components/DashboardProfileSection";
+import { DatabaseSetupBanner } from "@/components/DatabaseSetupBanner";
 import { Disclaimer } from "@/components/Disclaimer";
 import { Stars } from "@/components/Stars";
 import { Icon } from "@/components/Icon";
@@ -199,16 +202,13 @@ function AiPanel() {
 // ─── Page Component ───────────────────────────────────────────────────────────
 
 export default function CustomerDashboard() {
+  const user = useDashboardUser();
   const [live, setLive] = useState<CustomerDashboardData | null>(null);
-  const [displayName, setDisplayName] = useState("Ahmed K.");
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     fetchCustomerDashboard().then((data) => {
-      if (data) {
-        setLive(data);
-        if (data.profile?.full_name) setDisplayName(data.profile.full_name);
-      }
+      if (data) setLive(data);
     });
   }, []);
 
@@ -218,6 +218,8 @@ export default function CustomerDashboard() {
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
+        {user.setupMessage && <DatabaseSetupBanner message={user.setupMessage} />}
+        <DashboardProfileSection user={user} />
         {live && (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
             ✓ Connected to Supabase — showing your live requests below mock samples.
@@ -520,13 +522,13 @@ export default function CustomerDashboard() {
     ai: <AiPanel />,
   };
 
-  const initials = displayName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() || "TR";
-
   return (
     <DashboardLayout
-      role="Traveler"
-      name={displayName}
-      initials={initials}
+      role={user.roleLabel}
+      name={user.displayName}
+      initials={user.initials}
+      email={user.email}
+      profileCompletion={user.completion}
       tabs={tabs}
       sections={sections}
       roleColor="bg-blue/10 text-blue"

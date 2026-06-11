@@ -4,6 +4,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/auth";
 import { fetchAgentIntakeQueue, fetchRoleDashboardSummary } from "@/lib/supabase/queries";
+import { useDashboardUser } from "@/hooks/useDashboardUser";
+import { DashboardProfileSection } from "@/components/DashboardProfileSection";
+import { DatabaseSetupBanner } from "@/components/DatabaseSetupBanner";
+import { joinCommaList } from "@/lib/supabase/profile-utils";
 import { Disclaimer } from "@/components/Disclaimer";
 import { Stars } from "@/components/Stars";
 import { Icon } from "@/components/Icon";
@@ -148,6 +152,7 @@ function AuthorizationGenerator() {
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function AgentDashboard() {
+  const user = useDashboardUser();
   const [queueCount, setQueueCount] = useState<number | null>(null);
   const [liveLeads, setLiveLeads] = useState<number | null>(null);
 
@@ -162,6 +167,8 @@ export default function AgentDashboard() {
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
+        {user.setupMessage && <DatabaseSetupBanner message={user.setupMessage} />}
+        <DashboardProfileSection user={user} />
         {queueCount !== null && (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
             ✓ Supabase live — {queueCount} visa requests in intake queue.
@@ -210,53 +217,26 @@ export default function AgentDashboard() {
     ),
 
     profile: (
-      <Panel title="Public Visa Expert Profile" subtitle="This is how clients see you on the marketplace">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="label">Display name</label>
-            <input className="input" defaultValue="Sana Malik" />
-          </div>
-          <div>
-            <label className="label">Title</label>
-            <input className="input" defaultValue="Senior Visa Consultant" />
-          </div>
-          <div>
-            <label className="label">Location / City</label>
-            <input className="input" defaultValue="Dubai, UAE" />
-          </div>
-          <div>
-            <label className="label">Years of experience</label>
-            <input className="input" type="number" defaultValue="10" />
-          </div>
-          <div className="sm:col-span-2">
-            <label className="label">Specialties (comma-separated)</label>
-            <input className="input" defaultValue="USA B1/B2, UK Visitor, Schengen, Canada TRV" />
-          </div>
-          <div className="sm:col-span-2">
-            <label className="label">Languages spoken</label>
-            <input className="input" defaultValue="English, Urdu, Arabic" />
-          </div>
-          <div className="sm:col-span-2">
-            <label className="label">About (shown on public profile)</label>
-            <textarea className="input min-h-28" defaultValue="10+ years helping travelers prepare strong, honest visa applications. Specialized in USA, UK, Schengen, and Canada. Every case is handled with care, accuracy, and full transparency." />
-          </div>
-          <div>
-            <label className="label">WhatsApp (optional)</label>
-            <input className="input" placeholder="+971 50 xxx xxxx" />
-          </div>
-          <div>
-            <label className="label">Response time</label>
-            <select className="input">
-              <option>Within 1 hour</option>
-              <option>Within 2 hours</option>
-              <option>Within 24 hours</option>
-            </select>
-          </div>
-        </div>
-        <div className="mt-5 flex gap-3">
-          <button className="btn-primary px-5 py-2.5">Save profile</button>
-          <Link href="/agents" className="btn-outline px-5 py-2.5 text-sm">View public profile</Link>
-        </div>
+      <Panel title="Your visa expert profile" subtitle="Live data from your Supabase account">
+        {user.result?.ok ? (
+          <>
+            <div className="grid gap-3 sm:grid-cols-2 text-sm">
+              <p><span className="text-charcoal/50">Name:</span> <strong className="text-navy">{user.result.profile.full_name ?? "—"}</strong></p>
+              <p><span className="text-charcoal/50">Email:</span> <strong className="text-navy">{user.result.profile.email}</strong></p>
+              <p><span className="text-charcoal/50">Location:</span> <strong className="text-navy">{[user.result.profile.city, user.result.profile.country].filter(Boolean).join(", ") || "—"}</strong></p>
+              <p><span className="text-charcoal/50">Experience:</span> <strong className="text-navy">{user.result.visaExpert?.years_experience ?? "—"} years</strong></p>
+              <p className="sm:col-span-2"><span className="text-charcoal/50">Specializations:</span> <strong className="text-navy">{joinCommaList(user.result.visaExpert?.specializations) || "—"}</strong></p>
+              <p className="sm:col-span-2"><span className="text-charcoal/50">Languages:</span> <strong className="text-navy">{joinCommaList(user.result.visaExpert?.languages) || "—"}</strong></p>
+              <p className="sm:col-span-2"><span className="text-charcoal/50">Services:</span> <strong className="text-navy">{joinCommaList(user.result.visaExpert?.services) || "—"}</strong></p>
+            </div>
+            <div className="mt-5 flex gap-3">
+              <Link href="/dashboard/profile" className="btn-primary px-5 py-2.5 text-sm">Edit profile</Link>
+              <Link href="/agents" className="btn-outline px-5 py-2.5 text-sm">View public marketplace</Link>
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-charcoal/55">Sign in with Supabase to manage your expert profile.</p>
+        )}
       </Panel>
     ),
 
@@ -404,12 +384,14 @@ export default function AgentDashboard() {
 
   return (
     <DashboardLayout
-      role="Visa Expert"
-      name="Sana Malik"
-      initials="SM"
+      role={user.roleLabel}
+      name={user.displayName}
+      initials={user.initials}
+      email={user.email}
+      profileCompletion={user.completion}
       tabs={tabs}
       sections={sections}
-      verified
+      verified={user.verified}
       roleColor="bg-gold/15 text-navy"
       avatarColor="bg-gold text-navy"
     />

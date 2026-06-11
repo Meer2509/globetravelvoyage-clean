@@ -74,6 +74,9 @@ export interface Profile {
   preferred_currency: string;
   preferred_language: string;
   bio: string | null;
+  role: string | null;
+  company_name: string | null;
+  business_type: string | null;
   travel_interests: string[] | null;
   is_active: boolean;
   created_at: string;
@@ -91,8 +94,15 @@ export interface UserRoleRow {
 export interface VisaExpert {
   id: string;
   user_id: string;
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  country: string | null;
+  city: string | null;
   specializations: string[] | null;
   languages: string[] | null;
+  services: string[] | null;
+  bio: string | null;
   years_experience: number | null;
   price_from: number | null;
   price_to: number | null;
