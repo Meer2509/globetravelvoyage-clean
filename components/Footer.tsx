@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Icon } from "./Icon";
@@ -96,34 +99,76 @@ const popularRoutes = [
   { from: "🇵🇰 Karachi", to: "🇺🇸 New York", price: "from $720" },
 ];
 
+function NewsletterBar() {
+  const [email, setEmail]       = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.includes("@")) { setError("Please enter a valid email address."); return; }
+    setError("");
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setSubmitted(true);
+    }, 1200);
+  }
+
+  return (
+    <div className="border-b border-white/8">
+      <div className="container-px py-8">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-base font-bold text-white">
+              ✈️ Travel smarter with free weekly tips
+            </h3>
+            <p className="mt-1 text-sm text-white/50">
+              Visa updates, price drops, new guides and AI travel insights — no spam.
+            </p>
+          </div>
+          {submitted ? (
+            <div className="flex items-center gap-3 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-5 py-3 text-sm text-emerald-300">
+              <span className="text-lg">✅</span>
+              <div>
+                <p className="font-bold">You&apos;re subscribed!</p>
+                <p className="text-xs text-emerald-400/80">Weekly travel tips will arrive at {email}</p>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="flex flex-col gap-1.5 shrink-0">
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setError(""); }}
+                  placeholder="your@email.com"
+                  className="input-dark w-60 text-sm py-2.5"
+                  required
+                />
+                <button type="submit" disabled={loading} className="btn-gold shrink-0 px-5 py-2.5 text-sm disabled:opacity-70">
+                  {loading ? (
+                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z" />
+                    </svg>
+                  ) : "Subscribe"}
+                </button>
+              </div>
+              {error && <p className="text-xs text-red-400">{error}</p>}
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Footer() {
   return (
     <footer className="mt-auto bg-navy text-white">
-      {/* ── Newsletter bar ── */}
-      <div className="border-b border-white/8">
-        <div className="container-px py-8">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 className="text-base font-bold text-white">
-                ✈️ Travel smarter with free weekly tips
-              </h3>
-              <p className="mt-1 text-sm text-white/50">
-                Visa updates, price drops, new guides and AI travel insights — no spam.
-              </p>
-            </div>
-            <form className="flex gap-2 shrink-0">
-              <input
-                type="email"
-                placeholder="your@email.com"
-                className="input-dark w-60 text-sm py-2.5"
-              />
-              <button type="submit" className="btn-gold shrink-0 px-5 py-2.5 text-sm">
-                Subscribe
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
+      <NewsletterBar />
 
       {/* ── Main footer content ── */}
       <div className="container-px py-16">

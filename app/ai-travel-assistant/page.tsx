@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { AIChatUI } from "@/components/AIChatUI";
 import { mockTravelReply } from "@/lib/ai-mock";
@@ -23,6 +24,25 @@ const AI_SERVICES = [
 ];
 
 export default function AITravelAssistantPage() {
+  const [saved, setSaved]           = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
+
+  function handleSave() {
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  }
+
+  function handleDownload() {
+    const text = "Globe Travel Voyage — AI Travel Checklist\n\nThis is a placeholder checklist.\n1. Check visa requirements for your destination\n2. Book flights and accommodation\n3. Purchase travel insurance\n4. Check passport validity (6+ months)\n5. Get required vaccinations\n6. Notify your bank of travel plans\n7. Make copies of important documents\n\nDisclaimer: For guidance only. Verify all requirements with official sources.";
+    const blob = new Blob([text], { type: "text/plain" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href = url; a.download = "globe-travel-checklist.txt"; a.click();
+    URL.revokeObjectURL(url);
+    setDownloaded(true);
+    setTimeout(() => setDownloaded(false), 3000);
+  }
+
   return (
     <div className="min-h-screen bg-soft">
       {/* ── Header ── */}
@@ -78,6 +98,28 @@ export default function AITravelAssistantPage() {
               maxHeight="520px"
               disclaimer="AI responses are informational and use mock data only. Not legal, immigration or financial advice. No guarantees on visa approvals, prices or availability."
             />
+
+            {/* ── Action bar ── */}
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                onClick={handleSave}
+                className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-semibold transition-all ${saved ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-soft-200 bg-white text-charcoal/60 hover:border-blue/30 hover:text-navy"}`}
+              >
+                {saved ? "✓ Saved to dashboard" : "🔖 Save this conversation"}
+              </button>
+              <button
+                onClick={handleDownload}
+                className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-semibold transition-all ${downloaded ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-soft-200 bg-white text-charcoal/60 hover:border-blue/30 hover:text-navy"}`}
+              >
+                {downloaded ? "✓ Downloaded!" : "📥 Download checklist"}
+              </button>
+              <Link
+                href="/lead/contact"
+                className="flex items-center gap-2 rounded-xl border border-gold/30 bg-gold/5 px-4 py-2 text-xs font-semibold text-navy hover:bg-gold/10 transition-colors"
+              >
+                👔 Contact a verified expert
+              </Link>
+            </div>
           </div>
 
           {/* ── Sidebar ── */}

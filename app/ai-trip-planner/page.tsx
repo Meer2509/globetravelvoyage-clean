@@ -4,6 +4,32 @@ import { useState } from "react";
 import Link from "next/link";
 import { mockTripPlan, type TripInput, type TripResult } from "@/lib/ai-mock";
 
+function DownloadItineraryButton({ destination, totalDays }: { destination: string; totalDays: number }) {
+  const [done, setDone] = useState(false);
+  function download() {
+    const lines = [`Globe Travel Voyage — ${totalDays}-Day ${destination} Itinerary`, "", `This is a placeholder itinerary for ${destination} (${totalDays} days).`, "", "Day 1: Arrival & city exploration", "Day 2: Main attractions", "Day 3: Cultural immersion", "...", "", "Disclaimer: Sample itinerary. Prices and availability are not guaranteed."];
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a"); a.href = url; a.download = `${destination.toLowerCase().replace(/\s/g, "-")}-itinerary.txt`; a.click();
+    URL.revokeObjectURL(url);
+    setDone(true); setTimeout(() => setDone(false), 3000);
+  }
+  return (
+    <button onClick={download} className={`flex items-center gap-2 rounded-2xl border px-5 py-3 text-sm font-semibold transition-all ${done ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-soft-200 bg-white text-charcoal/60 hover:border-blue/30 hover:text-navy"}`}>
+      {done ? "✓ Downloaded!" : "📥 Download itinerary"}
+    </button>
+  );
+}
+
+function SaveTripButton() {
+  const [saved, setSaved] = useState(false);
+  return (
+    <button onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 3000); }} className={`flex items-center gap-2 rounded-2xl border px-5 py-3 text-sm font-semibold transition-all ${saved ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-soft-200 bg-white text-charcoal/60 hover:border-blue/30 hover:text-navy"}`}>
+      {saved ? "✓ Trip saved!" : "🔖 Save this trip"}
+    </button>
+  );
+}
+
 const INTERESTS = ["History & Culture", "Adventure", "Food & Cuisine", "Nightlife", "Shopping", "Nature & Hiking", "Beaches", "Art & Museums", "Family Activities", "Wellness & Spa"];
 
 const DESTINATIONS = ["Dubai, UAE", "Istanbul, Turkey", "Bangkok, Thailand", "Maldives", "Tokyo, Japan", "Paris, France", "London, UK", "New York, USA", "Bali, Indonesia", "Rome, Italy"];
@@ -423,6 +449,8 @@ export default function AITripPlannerPage() {
               <Link href="/agents" className="btn-primary py-3 px-6 text-sm">Book a tour guide</Link>
               <Link href="/ai-visa-assistant" className="btn-outline py-3 px-6 text-sm">Check visa requirements</Link>
               <Link href="/ai-flight-finder" className="btn-outline py-3 px-6 text-sm">Find flights</Link>
+              <DownloadItineraryButton destination={result.destination} totalDays={result.totalDays} />
+              <SaveTripButton />
               <button onClick={reset} className="btn-ghost py-3 px-6 text-sm text-charcoal/50">← Plan another trip</button>
             </div>
 

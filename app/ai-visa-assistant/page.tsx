@@ -4,6 +4,35 @@ import { useState } from "react";
 import Link from "next/link";
 import { mockVisaAnalysis, type VisaInput, type VisaResult } from "@/lib/ai-mock";
 
+// ── Action helpers ─────────────────────────────────────────────────────────────
+
+function DownloadChecklistButton({ docs, visaType }: { docs: string[]; visaType: string }) {
+  const [done, setDone] = useState(false);
+  function download() {
+    const lines = [`Globe Travel Voyage — ${visaType} Document Checklist`, "", ...docs.map((d, i) => `${i + 1}. ${d}`), "", "Disclaimer: For guidance only. Verify with official sources."];
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href = url; a.download = "visa-checklist.txt"; a.click();
+    URL.revokeObjectURL(url);
+    setDone(true); setTimeout(() => setDone(false), 3000);
+  }
+  return (
+    <button onClick={download} className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all ${done ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-soft-200 bg-white text-charcoal/60 hover:border-blue/30 hover:text-navy"}`}>
+      {done ? "✓ Downloaded!" : "📥 Download checklist"}
+    </button>
+  );
+}
+
+function SavePlanButton() {
+  const [saved, setSaved] = useState(false);
+  return (
+    <button onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 3000); }} className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all ${saved ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-soft-200 bg-white text-charcoal/60 hover:border-blue/30 hover:text-navy"}`}>
+      {saved ? "✓ Saved to dashboard" : "🔖 Save this analysis"}
+    </button>
+  );
+}
+
 // ── Step progress ─────────────────────────────────────────────────────────────
 
 const STEPS = ["Your profile", "Destination", "Travel history", "AI analysis"];
@@ -438,6 +467,15 @@ export default function AIVisaAssistantPage() {
               <div className="rounded-xl border border-gold/20 bg-gold/5 p-4 text-xs text-charcoal/50 leading-relaxed">
                 <p className="font-semibold text-gold mb-1">⚠ Important disclaimer</p>
                 {result.disclaimer}
+              </div>
+
+              {/* Action bar */}
+              <div className="flex flex-wrap gap-2">
+                <DownloadChecklistButton docs={result.requiredDocs} visaType={result.visaType} />
+                <SavePlanButton />
+                <Link href="/lead/contact" className="flex items-center gap-2 rounded-xl border border-gold/30 bg-gold/5 px-4 py-2.5 text-sm font-semibold text-navy hover:bg-gold/10 transition-colors">
+                  👔 Contact a verified expert
+                </Link>
               </div>
 
               <button onClick={reset} className="btn-outline py-3 px-6 text-sm">

@@ -188,10 +188,35 @@ function ResultPanel({ result, onReset }: { result: DocumentCheckResult; onReset
         {result.disclaimer}
       </div>
 
+      {/* Action bar */}
+      <div className="flex flex-wrap gap-2">
+        <DownloadReportButton />
+        <Link href="/lead/contact" className="flex items-center gap-2 rounded-xl border border-gold/30 bg-gold/5 px-4 py-2.5 text-sm font-semibold text-navy hover:bg-gold/10 transition-colors">
+          👔 Get expert review
+        </Link>
+      </div>
+
       <button onClick={onReset} className="btn-outline py-3 px-6 text-sm">
         ← Check another document set
       </button>
     </div>
+  );
+}
+
+function DownloadReportButton() {
+  const [done, setDone] = useState(false);
+  function download() {
+    const text = "Globe Travel Voyage — Document Check Report\n\nThis is a placeholder report.\n\nDisclaimer: For guidance only. Verify with official sources.";
+    const blob = new Blob([text], { type: "text/plain" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a"); a.href = url; a.download = "document-check-report.txt"; a.click();
+    URL.revokeObjectURL(url);
+    setDone(true); setTimeout(() => setDone(false), 3000);
+  }
+  return (
+    <button onClick={download} className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all ${done ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-soft-200 bg-white text-charcoal/60 hover:border-blue/30 hover:text-navy"}`}>
+      {done ? "✓ Downloaded!" : "📥 Download report"}
+    </button>
   );
 }
 

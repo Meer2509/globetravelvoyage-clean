@@ -4,6 +4,24 @@ import { useState } from "react";
 import Link from "next/link";
 import { mockFlightSearch, type FlightInput, type FlightResult, type FlightOption } from "@/lib/ai-mock";
 
+function SaveFlightButton() {
+  const [saved, setSaved] = useState(false);
+  return (
+    <button onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 3000); }} className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-semibold transition-all ${saved ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-soft-200 bg-white text-charcoal/60 hover:border-blue/30 hover:text-navy"}`}>
+      {saved ? "✓ Search saved!" : "🔖 Save search"}
+    </button>
+  );
+}
+
+function SetPriceAlertButton() {
+  const [set, setSetAlert] = useState(false);
+  return (
+    <button onClick={() => { setSetAlert(true); setTimeout(() => setSetAlert(false), 3000); }} className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-semibold transition-all ${set ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-blue/30 bg-blue/5 text-blue hover:bg-blue/10"}`}>
+      {set ? "✓ Alert set!" : "🔔 Set price alert"}
+    </button>
+  );
+}
+
 const AIRPORTS = [
   "Dubai (DXB)", "Abu Dhabi (AUH)", "Karachi (KHI)", "Lahore (LHE)", "Islamabad (ISB)",
   "Riyadh (RUH)", "Doha (DOH)", "Muscat (MCT)", "London (LHR)", "New York (JFK)",
@@ -349,6 +367,18 @@ export default function AIFlightFinderPage() {
               {sortedOptions.map((opt, i) => (
                 <FlightCard key={i} opt={opt} isReturn={isReturn} />
               ))}
+            </div>
+
+            {/* Action bar */}
+            <div className="flex flex-wrap gap-2">
+              <SaveFlightButton />
+              <SetPriceAlertButton />
+              <Link href="/booking/request" className="flex items-center gap-2 rounded-xl border border-gold/30 bg-gold/5 px-4 py-2 text-xs font-semibold text-navy hover:bg-gold/10 transition-colors">
+                ✈️ Request flight booking
+              </Link>
+              <Link href="/lead/contact" className="flex items-center gap-2 rounded-xl border border-soft-200 bg-white px-4 py-2 text-xs font-semibold text-charcoal/60 hover:border-blue/30 hover:text-navy transition-colors">
+                👔 Contact travel expert
+              </Link>
             </div>
 
             <p className="text-[11px] text-charcoal/35 text-center leading-relaxed">

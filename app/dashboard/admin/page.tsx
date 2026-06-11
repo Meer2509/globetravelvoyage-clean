@@ -14,20 +14,22 @@ import {
 } from "@/components/DashboardLayout";
 
 const tabs: DashboardTab[] = [
-  { key: "overview", label: "Overview", icon: "globe" },
-  { key: "users", label: "Users & Roles", icon: "users", badge: 1240 },
-  { key: "verification", label: "Verification Queue", icon: "shield", badge: 7 },
-  { key: "agencies", label: "Agencies", icon: "agent", badge: 38 },
-  { key: "visaexperts", label: "Visa Experts", icon: "visa", badge: 94 },
-  { key: "tours", label: "Tours & Tickets", icon: "ticket" },
-  { key: "properties", label: "Properties", icon: "property" },
-  { key: "bookings", label: "Bookings", icon: "doc" },
-  { key: "payments", label: "Payments", icon: "star" },
-  { key: "referrals", label: "Referrals", icon: "users" },
-  { key: "reviews", label: "Reviews", icon: "star", badge: 3 },
-  { key: "support", label: "Support Tickets", icon: "shield", badge: 12 },
-  { key: "seo", label: "SEO Pages", icon: "globe" },
-  { key: "settings", label: "Settings", icon: "agent" },
+  { key: "overview",      label: "Overview",          icon: "globe" },
+  { key: "users",         label: "Users & Roles",     icon: "users",    badge: 1240 },
+  { key: "verification",  label: "Verification Queue",icon: "shield",   badge: 7 },
+  { key: "visarequests",  label: "Visa Requests",     icon: "visa",     badge: 14 },
+  { key: "agencies",      label: "Agencies",          icon: "agent",    badge: 38 },
+  { key: "visaexperts",   label: "Visa Experts",      icon: "visa",     badge: 94 },
+  { key: "guides",        label: "Tour Guides",       icon: "planner",  badge: 21 },
+  { key: "tours",         label: "Tours & Tickets",   icon: "ticket" },
+  { key: "properties",    label: "Properties",        icon: "property" },
+  { key: "bookings",      label: "Bookings",          icon: "doc" },
+  { key: "payments",      label: "Payments",          icon: "star" },
+  { key: "referrals",     label: "Referrals",         icon: "users" },
+  { key: "reviews",       label: "Reviews",           icon: "star",     badge: 3 },
+  { key: "support",       label: "Support Tickets",   icon: "shield",   badge: 12 },
+  { key: "seo",           label: "SEO Pages",         icon: "globe" },
+  { key: "settings",      label: "Settings",          icon: "agent" },
 ];
 
 // ─── Mock data ─────────────────────────────────────────────────────────────────
@@ -139,6 +141,327 @@ const seoPages = [
   { slug: "/flights", title: "Cheap Flights — Comparison", views: 3100, rank: "—", lastEdited: "Jun 1", status: "Published" },
   { slug: "/guides/best-time-to-visit-dubai", title: "Best Time to Visit Dubai", views: 2800, rank: "5", lastEdited: "May 20", status: "Draft" },
 ];
+
+// ─── Visa Requests data ───────────────────────────────────────────────────────
+
+type VRStatus = "pending" | "reviewing" | "approved" | "rejected" | "submitted";
+
+interface VisaRequestItem {
+  id: string;
+  name: string;
+  nationality: string;
+  destination: string;
+  purpose: string;
+  submitted: string;
+  status: VRStatus;
+  assignedTo: string;
+  email: string;
+}
+
+const INITIAL_VISA_REQUESTS: VisaRequestItem[] = [
+  { id: "VR-1021", name: "Ahmed Khan",      nationality: "🇵🇰 Pakistani",  destination: "🇺🇸 USA B1/B2",   purpose: "Tourism",  submitted: "Jun 10", status: "pending",   assignedTo: "—",         email: "ahmed@example.com" },
+  { id: "VR-1020", name: "Maria Santos",    nationality: "🇵🇭 Filipino",   destination: "🇨🇦 Canada",      purpose: "Work",     submitted: "Jun 9",  status: "reviewing", assignedTo: "Sana Malik", email: "maria@example.com" },
+  { id: "VR-1019", name: "Bilal Iqbal",     nationality: "🇵🇰 Pakistani",  destination: "🇬🇧 UK Visitor", purpose: "Business", submitted: "Jun 9",  status: "submitted", assignedTo: "Sana Malik", email: "bilal@example.com" },
+  { id: "VR-1018", name: "Layla Hassan",    nationality: "🇪🇬 Egyptian",   destination: "🇩🇪 Germany",     purpose: "Study",    submitted: "Jun 8",  status: "approved",  assignedTo: "Priya Sharma",email: "layla@example.com" },
+  { id: "VR-1017", name: "Rashid Ali",      nationality: "🇮🇳 Indian",     destination: "🇦🇺 Australia",   purpose: "PR",       submitted: "Jun 7",  status: "pending",   assignedTo: "—",         email: "rashid@example.com" },
+  { id: "VR-1016", name: "Nadia Iqbal",     nationality: "🇵🇰 Pakistani",  destination: "🇪🇺 Schengen",    purpose: "Tourism",  submitted: "Jun 6",  status: "rejected",  assignedTo: "Sana Malik", email: "nadia@example.com" },
+  { id: "VR-1015", name: "David Lopez",     nationality: "🇵🇭 Filipino",   destination: "🇺🇸 USA B1/B2",   purpose: "Family",   submitted: "Jun 5",  status: "approved",  assignedTo: "Hassan Al-Qadi",email: "david@example.com" },
+  { id: "VR-1014", name: "Fatima Al-Ali",   nationality: "🇯🇴 Jordanian",  destination: "🇨🇦 Canada",      purpose: "Business", submitted: "Jun 5",  status: "pending",   assignedTo: "—",         email: "fatima@example.com" },
+  { id: "VR-1013", name: "Tariq Mehmood",   nationality: "🇵🇰 Pakistani",  destination: "🇬🇧 UK Visitor", purpose: "Tourism",  submitted: "Jun 4",  status: "reviewing", assignedTo: "Priya Sharma",email: "tariq@example.com" },
+  { id: "VR-1012", name: "Grace Reyes",     nationality: "🇵🇭 Filipino",   destination: "🇸🇦 Saudi Arabia",purpose: "Work",     submitted: "Jun 3",  status: "approved",  assignedTo: "Hassan Al-Qadi",email: "grace@example.com" },
+  { id: "VR-1011", name: "Omar Farooq",     nationality: "🇵🇰 Pakistani",  destination: "🇦🇪 UAE Tourist", purpose: "Tourism",  submitted: "Jun 2",  status: "pending",   assignedTo: "—",         email: "omar@example.com" },
+  { id: "VR-1010", name: "Samira Youssef",  nationality: "🇲🇦 Moroccan",   destination: "🇫🇷 France",      purpose: "Study",    submitted: "Jun 1",  status: "rejected",  assignedTo: "Sana Malik", email: "samira@example.com" },
+  { id: "VR-1009", name: "Imran Hussain",   nationality: "🇧🇩 Bangladeshi",destination: "🇺🇸 USA F-1",     purpose: "Study",    submitted: "Jun 1",  status: "submitted", assignedTo: "Sana Malik", email: "imran@example.com" },
+  { id: "VR-1008", name: "Ana dela Cruz",   nationality: "🇵🇭 Filipino",   destination: "🇦🇺 Australia",   purpose: "Work",     submitted: "May 31", status: "approved",  assignedTo: "Hassan Al-Qadi",email: "ana@example.com" },
+];
+
+const EXPERTS_LIST = ["Sana Malik", "Hassan Al-Qadi", "Priya Sharma", "Rania Hassan"];
+
+// ─── Visa Requests Tab ────────────────────────────────────────────────────────
+
+const VR_STATUS_STYLES: Record<VRStatus, string> = {
+  pending:   "bg-gold/10 text-amber-700",
+  reviewing: "bg-blue/10 text-blue",
+  submitted: "bg-purple-50 text-purple-700",
+  approved:  "bg-emerald-50 text-emerald-700",
+  rejected:  "bg-red-50 text-red-600",
+};
+
+const VR_STATUS_LABELS: Record<VRStatus, string> = {
+  pending:   "Pending",
+  reviewing: "Under Review",
+  submitted: "Submitted to Embassy",
+  approved:  "Approved",
+  rejected:  "Rejected",
+};
+
+function VisaRequestsTab() {
+  const [requests, setRequests] = useState<VisaRequestItem[]>(INITIAL_VISA_REQUESTS);
+  const [filter, setFilter]     = useState<"all" | VRStatus>("all");
+  const [search, setSearch]     = useState("");
+  const [toast, setToast]       = useState<string | null>(null);
+
+  function updateStatus(id: string, status: VRStatus) {
+    setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status } : r));
+    setToast(`Request ${id} updated to "${VR_STATUS_LABELS[status]}"`);
+    setTimeout(() => setToast(null), 3000);
+  }
+
+  function assignExpert(id: string, expert: string) {
+    setRequests((prev) => prev.map((r) => r.id === id ? { ...r, assignedTo: expert, status: "reviewing" } : r));
+    setToast(`${id} assigned to ${expert}`);
+    setTimeout(() => setToast(null), 3000);
+  }
+
+  const displayed = requests
+    .filter((r) => filter === "all" || r.status === filter)
+    .filter((r) =>
+      !search ||
+      r.name.toLowerCase().includes(search.toLowerCase()) ||
+      r.nationality.toLowerCase().includes(search.toLowerCase()) ||
+      r.destination.toLowerCase().includes(search.toLowerCase())
+    );
+
+  const counts = {
+    pending:   requests.filter((r) => r.status === "pending").length,
+    reviewing: requests.filter((r) => r.status === "reviewing").length,
+    submitted: requests.filter((r) => r.status === "submitted").length,
+    approved:  requests.filter((r) => r.status === "approved").length,
+    rejected:  requests.filter((r) => r.status === "rejected").length,
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 rounded-2xl bg-navy px-5 py-3 text-sm font-semibold text-white shadow-[var(--shadow-premium)] animate-fade-up">
+          ✓ {toast}
+        </div>
+      )}
+
+      {/* Stats */}
+      <div className="grid gap-4 sm:grid-cols-5">
+        <StatCard label="Pending" value={String(counts.pending)} icon="shield" color="gold" />
+        <StatCard label="Under Review" value={String(counts.reviewing)} icon="doc" color="blue" />
+        <StatCard label="Submitted" value={String(counts.submitted)} icon="visa" color="navy" />
+        <StatCard label="Approved" value={String(counts.approved)} icon="check" color="green" />
+        <StatCard label="Rejected" value={String(counts.rejected)} icon="globe" color="navy" />
+      </div>
+
+      {/* Filter + Search */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <input
+          className="input flex-1 text-sm"
+          placeholder="Search by name, nationality, destination…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <div className="flex gap-1 rounded-xl border border-soft-200 bg-soft p-1 overflow-x-auto">
+          {(["all", "pending", "reviewing", "submitted", "approved", "rejected"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold whitespace-nowrap capitalize transition-all ${
+                filter === f ? "bg-white text-navy shadow-sm" : "text-charcoal/50 hover:text-navy"
+              }`}
+            >
+              {f === "all" ? `All (${requests.length})` : `${VR_STATUS_LABELS[f]} (${counts[f]})`}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Panel title="Visa Applications" subtitle={`Showing ${displayed.length} of ${requests.length} requests`} noPad>
+        {displayed.length === 0 ? (
+          <div className="py-12 text-center text-charcoal/40 text-sm">No requests match this filter.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="border-b border-soft-200 bg-soft/50">
+                  <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">ID</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Applicant</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Destination</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Purpose</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Assigned To</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Status</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-soft-200">
+                {displayed.map((r) => (
+                  <tr key={r.id} className="transition-colors hover:bg-soft/30">
+                    <td className="px-5 py-4 text-xs font-mono text-charcoal/50">{r.id}</td>
+                    <td className="px-4 py-4">
+                      <p className="font-semibold text-navy">{r.name}</p>
+                      <p className="text-xs text-charcoal/40">{r.nationality} · {r.submitted}</p>
+                    </td>
+                    <td className="px-4 py-4 text-sm text-charcoal/70">{r.destination}</td>
+                    <td className="px-4 py-4">
+                      <span className="chip text-xs">{r.purpose}</span>
+                    </td>
+                    <td className="px-4 py-4">
+                      {r.assignedTo === "—" ? (
+                        <select
+                          className="rounded-lg border border-soft-200 bg-white px-2 py-1 text-xs text-charcoal/60 focus:outline-none focus:border-blue"
+                          defaultValue=""
+                          onChange={(e) => { if (e.target.value) assignExpert(r.id, e.target.value); }}
+                        >
+                          <option value="">Assign expert</option>
+                          {EXPERTS_LIST.map((ex) => <option key={ex} value={ex}>{ex}</option>)}
+                        </select>
+                      ) : (
+                        <span className="text-xs font-medium text-blue">{r.assignedTo}</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${VR_STATUS_STYLES[r.status]}`}>
+                        {VR_STATUS_LABELS[r.status]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex gap-1 flex-wrap">
+                        {r.status === "pending" && (
+                          <button onClick={() => updateStatus(r.id, "reviewing")} className="rounded-lg border border-blue/30 bg-blue/5 px-2.5 py-1 text-[11px] font-semibold text-blue hover:bg-blue/10 transition-colors">
+                            Review
+                          </button>
+                        )}
+                        {(r.status === "pending" || r.status === "reviewing") && (
+                          <>
+                            <button onClick={() => updateStatus(r.id, "submitted")} className="rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1 text-[11px] font-semibold text-purple-700 hover:bg-purple-100 transition-colors">
+                              Submit
+                            </button>
+                            <button onClick={() => updateStatus(r.id, "approved")} className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors">
+                              ✓ Approve
+                            </button>
+                            <button onClick={() => updateStatus(r.id, "rejected")} className="rounded-lg border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-600 hover:bg-red-100 transition-colors">
+                              ✕ Reject
+                            </button>
+                          </>
+                        )}
+                        {r.status === "submitted" && (
+                          <button onClick={() => updateStatus(r.id, "approved")} className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors">
+                            ✓ Mark Approved
+                          </button>
+                        )}
+                        {(r.status === "approved" || r.status === "rejected") && (
+                          <button onClick={() => updateStatus(r.id, "pending")} className="rounded-lg border border-soft-300 bg-soft px-2.5 py-1 text-[11px] font-semibold text-charcoal/50 hover:bg-soft-200 transition-colors">
+                            Reset
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <div className="border-t border-soft-200 px-5 py-3 text-xs text-charcoal/40">
+          Showing {displayed.length} of {requests.length} visa applications · Demo data only
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
+// ─── Tour Guides Tab ──────────────────────────────────────────────────────────
+
+const INITIAL_GUIDES = [
+  { id: "TG-01", name: "Khalid Raza",    city: "Dubai",     rating: 4.9, tours: 12, bookings: 84,  languages: "EN, AR", status: "Active",  verified: true },
+  { id: "TG-02", name: "Priya Nair",     city: "Dubai",     rating: 4.8, tours: 8,  bookings: 61,  languages: "EN, HI", status: "Active",  verified: true },
+  { id: "TG-03", name: "Hassan Salim",   city: "Istanbul",  rating: 4.7, tours: 6,  bookings: 45,  languages: "EN, TR", status: "Active",  verified: true },
+  { id: "TG-04", name: "Ana Reyes",      city: "Manila",    rating: 4.6, tours: 5,  bookings: 32,  languages: "EN, TL", status: "Active",  verified: false },
+  { id: "TG-05", name: "Omar Shaikh",    city: "Lahore",    rating: 4.5, tours: 4,  bookings: 18,  languages: "EN, UR", status: "Active",  verified: false },
+  { id: "TG-06", name: "Sofia Costa",    city: "Lisbon",    rating: 0,   tours: 0,  bookings: 0,   languages: "EN, PT", status: "Pending", verified: false },
+  { id: "TG-07", name: "Ali Abdullah",   city: "Riyadh",    rating: 4.8, tours: 9,  bookings: 70,  languages: "EN, AR", status: "Active",  verified: true },
+];
+
+type GuideStatus = "Active" | "Pending" | "Suspended";
+
+function GuidesTab() {
+  const [guides, setGuides] = useState(INITIAL_GUIDES);
+  const [toast, setToast]   = useState<string | null>(null);
+
+  function toggleStatus(id: string, current: GuideStatus) {
+    const next: GuideStatus = current === "Active" ? "Suspended" : "Active";
+    setGuides((prev) => prev.map((g) => g.id === id ? { ...g, status: next } : g));
+    setToast(`Guide updated to "${next}"`);
+    setTimeout(() => setToast(null), 3000);
+  }
+
+  function toggleVerify(id: string) {
+    setGuides((prev) => prev.map((g) => g.id === id ? { ...g, verified: !g.verified } : g));
+    setToast("Verification status updated");
+    setTimeout(() => setToast(null), 3000);
+  }
+
+  return (
+    <div className="space-y-4">
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 rounded-2xl bg-navy px-5 py-3 text-sm font-semibold text-white shadow-[var(--shadow-premium)] animate-fade-up">
+          ✓ {toast}
+        </div>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-4">
+        <StatCard label="Total guides" value={String(guides.length)} icon="planner" color="blue" />
+        <StatCard label="Verified" value={String(guides.filter((g) => g.verified).length)} icon="check" color="green" />
+        <StatCard label="Active" value={String(guides.filter((g) => g.status === "Active").length)} icon="globe" color="gold" />
+        <StatCard label="Pending review" value={String(guides.filter((g) => g.status === "Pending").length)} icon="shield" color="navy" />
+      </div>
+
+      <Panel title="All Tour Guides" noPad>
+        <div className="divide-y divide-soft-200">
+          {guides.map((g) => (
+            <div key={g.id} className="flex items-center justify-between gap-4 p-5 flex-wrap">
+              <div className="flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy/8 text-sm font-bold text-navy">
+                  {g.name[0]}
+                </span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="font-bold text-navy">{g.name}</p>
+                    {g.verified && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-blue/10 px-2 py-0.5 text-[11px] font-semibold text-blue">
+                        <Icon name="check" className="h-3 w-3" /> Verified
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-charcoal/50">
+                    {g.city} · {g.languages} · {g.tours} tours · {g.bookings} bookings
+                    {g.rating > 0 && ` · ⭐ ${g.rating}`}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`chip text-xs ${g.status === "Active" ? "bg-emerald-50 text-emerald-700" : g.status === "Pending" ? "bg-gold/15 text-amber-700" : "bg-red-50 text-red-600"}`}>
+                  {g.status}
+                </span>
+                {!g.verified && g.status !== "Pending" && (
+                  <button onClick={() => toggleVerify(g.id)} className="rounded-lg border border-blue/30 bg-blue/5 px-2.5 py-1 text-[11px] font-semibold text-blue hover:bg-blue/10">
+                    Verify
+                  </button>
+                )}
+                  {g.status === "Pending" && (
+                  <button onClick={() => { setGuides((p) => p.map((x) => x.id === g.id ? { ...x, status: "Active", verified: true } : x)); setToast("Guide approved and verified"); setTimeout(() => setToast(null), 3000); }} className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100">
+                    ✓ Approve
+                  </button>
+                  )}
+                <button
+                  onClick={() => toggleStatus(g.id, g.status as GuideStatus)}
+                  className={`rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors ${g.status === "Active" ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100" : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"}`}
+                >
+                  {g.status === "Active" ? "Suspend" : "Activate"}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Panel>
+    </div>
+  );
+}
 
 // ─── Analytics Bar ─────────────────────────────────────────────────────────────
 
@@ -582,6 +905,48 @@ function AdminCommissionsTab() {
 
 export default function AdminDashboard() {
   const [userSearch, setUserSearch] = useState("");
+  const [adminToast, setAdminToast] = useState<string | null>(null);
+  const [usersData, setUsersData]   = useState(allUsers.map((u) => ({ ...u })));
+  const [featureToggles, setFeatureToggles] = useState([
+    { label: "AI Visa Assistant",           enabled: true  },
+    { label: "AI Trip Planner",             enabled: true  },
+    { label: "Referral Program",            enabled: true  },
+    { label: "Property Listings (Buy/Sell)",enabled: true  },
+    { label: "New user registrations",      enabled: true  },
+    { label: "Maintenance mode",            enabled: false },
+  ]);
+  const [supportData, setSupportData] = useState(supportTickets.map((t) => ({ ...t })));
+  const [propertiesData, setPropertiesData] = useState([
+    { name: "Marina 2BR Apartment",    host: "Omar F.",   city: "Dubai Marina",     type: "For Rent",    price: "$2,400/mo", status: "Active" as "Active" | "Removed" },
+    { name: "Furnished Studio",        host: "Omar F.",   city: "JLT, Dubai",       type: "Travel Stay", price: "$650/mo",   status: "Active" as "Active" | "Removed" },
+    { name: "3BR Villa — Jumeirah",    host: "Omar F.",   city: "Jumeirah, Dubai",  type: "For Sale",    price: "$1.2M",     status: "Active" as "Active" | "Draft" },
+    { name: "Penthouse — Downtown",    host: "Khalid R.", city: "Downtown Dubai",   type: "For Rent",    price: "$5,500/mo", status: "Active" as "Active" | "Removed" },
+  ]);
+
+  function showToast(msg: string) {
+    setAdminToast(msg);
+    setTimeout(() => setAdminToast(null), 3000);
+  }
+
+  function toggleUserStatus(name: string) {
+    setUsersData((prev) => prev.map((u) => u.name === name ? { ...u, status: u.status === "Active" ? "Suspended" : "Active" } : u));
+    showToast(`User status updated`);
+  }
+
+  function toggleFeature(label: string) {
+    setFeatureToggles((prev) => prev.map((f) => f.label === label ? { ...f, enabled: !f.enabled } : f));
+    showToast(`Feature "${label}" toggled`);
+  }
+
+  function updateTicketStatus(id: string, status: string) {
+    setSupportData((prev) => prev.map((t) => t.id === id ? { ...t, status } : t));
+    showToast(`Ticket ${id} updated to "${status}"`);
+  }
+
+  function removeProperty(name: string) {
+    setPropertiesData((prev) => prev.map((p) => p.name === name ? { ...p, status: "Removed" } : p));
+    showToast(`Listing "${name}" removed`);
+  }
 
   const sections: Record<string, React.ReactNode> = {
     overview: (
@@ -686,7 +1051,7 @@ export default function AdminDashboard() {
             </select>
           </div>
           <div className="divide-y divide-soft-200">
-            {allUsers
+            {usersData
               .filter((u) => !userSearch || u.name.toLowerCase().includes(userSearch.toLowerCase()))
               .map((u) => (
                 <div key={u.name} className="flex items-center justify-between py-3">
@@ -705,8 +1070,8 @@ export default function AdminDashboard() {
                       {u.status}
                     </span>
                     <button className="text-xs text-blue font-semibold hover:underline">View</button>
-                    {u.status === "Suspended" && <button className="text-xs text-emerald-600 font-semibold hover:underline">Restore</button>}
-                    {u.status === "Active" && <button className="text-xs text-red-500 font-semibold hover:underline">Suspend</button>}
+                    {u.status === "Suspended" && <button onClick={() => toggleUserStatus(u.name)} className="text-xs text-emerald-600 font-semibold hover:underline">Restore</button>}
+                    {u.status === "Active" && <button onClick={() => toggleUserStatus(u.name)} className="text-xs text-red-500 font-semibold hover:underline">Suspend</button>}
                   </div>
                 </div>
               ))}
@@ -750,6 +1115,8 @@ export default function AdminDashboard() {
     ),
 
     verification: <VerificationQueueTab />,
+
+    visarequests: <VisaRequestsTab />,
 
     agencies: (
       <div className="space-y-4">
@@ -827,6 +1194,8 @@ export default function AdminDashboard() {
       </div>
     ),
 
+    guides: <GuidesTab />,
+
     tours: (
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-4">
@@ -874,12 +1243,7 @@ export default function AdminDashboard() {
 
         <Panel title="Property Listings — Quick View" noPad>
           <div className="divide-y divide-soft-200">
-            {[
-              { name: "Marina 2BR Apartment", host: "Omar F.", city: "Dubai Marina", type: "For Rent", price: "$2,400/mo", status: "Active" },
-              { name: "Furnished Studio", host: "Omar F.", city: "JLT, Dubai", type: "Travel Stay", price: "$650/mo", status: "Active" },
-              { name: "3BR Villa — Jumeirah", host: "Omar F.", city: "Jumeirah, Dubai", type: "For Sale", price: "$1.2M", status: "Draft" },
-              { name: "Penthouse — Downtown", host: "Khalid R.", city: "Downtown Dubai", type: "For Rent", price: "$5,500/mo", status: "Active" },
-            ].map((p) => (
+            {propertiesData.filter((p) => p.status !== "Removed").map((p) => (
               <div key={p.name} className="flex items-center justify-between p-5">
                 <div>
                   <p className="font-bold text-navy">{p.name}</p>
@@ -888,10 +1252,13 @@ export default function AdminDashboard() {
                 <div className="flex items-center gap-3">
                   <span className="font-bold text-navy">{p.price}</span>
                   <span className={`chip text-xs ${p.status === "Active" ? "bg-emerald-50 text-emerald-700" : "bg-soft text-charcoal/50"}`}>{p.status}</span>
-                  <button className="text-xs text-red-500 font-semibold hover:underline">Remove</button>
+                  <button onClick={() => removeProperty(p.name)} className="text-xs text-red-500 font-semibold hover:underline transition-colors">Remove</button>
                 </div>
               </div>
             ))}
+            {propertiesData.every((p) => p.status === "Removed") && (
+              <div className="py-10 text-center text-sm text-charcoal/40">All listings removed this session.</div>
+            )}
           </div>
         </Panel>
       </div>
@@ -978,20 +1345,27 @@ export default function AdminDashboard() {
 
         <Panel title="Support Tickets" noPad>
           <div className="divide-y divide-soft-200">
-            {supportTickets.map((t) => (
-              <div key={t.id} className="flex items-center justify-between p-5">
+            {supportData.map((t) => (
+              <div key={t.id} className="flex items-center justify-between p-5 flex-wrap gap-3">
                 <div>
                   <p className="font-bold text-navy">{t.subject}</p>
                   <p className="text-sm text-charcoal/55">{t.id} · {t.user} · Assigned: {t.assigned} · {t.date}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className={`chip text-xs ${t.priority === "High" ? "bg-red-50 text-red-600" : t.priority === "Medium" ? "bg-gold/15 text-navy" : "bg-soft text-charcoal/50"}`}>
                     {t.priority}
                   </span>
                   <span className={`chip text-xs ${t.status === "Resolved" ? "bg-emerald-50 text-emerald-700" : t.status === "In Progress" ? "bg-blue/10 text-blue" : "bg-gold/15 text-navy"}`}>
                     {t.status}
                   </span>
-                  <button className="text-xs text-blue font-semibold hover:underline">Open</button>
+                  {t.status !== "Resolved" && (
+                    <button onClick={() => updateTicketStatus(t.id, t.status === "Open" ? "In Progress" : "Resolved")} className={`text-xs font-semibold hover:underline ${t.status === "Open" ? "text-blue" : "text-emerald-600"}`}>
+                      {t.status === "Open" ? "Start →" : "✓ Resolve"}
+                    </button>
+                  )}
+                  {t.status === "Resolved" && (
+                    <button onClick={() => updateTicketStatus(t.id, "Open")} className="text-xs text-charcoal/40 font-semibold hover:underline">Reopen</button>
+                  )}
                 </div>
               </div>
             ))}
@@ -1070,17 +1444,19 @@ export default function AdminDashboard() {
 
         <Panel title="Feature Toggles">
           <div className="space-y-3">
-            {[
-              { label: "AI Visa Assistant", enabled: true },
-              { label: "AI Trip Planner", enabled: true },
-              { label: "Referral Program", enabled: true },
-              { label: "Property Listings (Buy/Sell)", enabled: true },
-              { label: "New user registrations", enabled: true },
-              { label: "Maintenance mode", enabled: false },
-            ].map((f) => (
-              <div key={f.label} className="flex items-center justify-between rounded-xl border border-soft-200 p-4">
-                <span className="text-sm font-medium text-navy">{f.label}</span>
-                <button className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${f.enabled ? "bg-blue" : "bg-soft-200"}`}>
+            {featureToggles.map((f) => (
+              <div key={f.label} className="flex items-center justify-between rounded-xl border border-soft-200 p-4 transition-colors hover:bg-soft/50">
+                <div>
+                  <span className="text-sm font-medium text-navy">{f.label}</span>
+                  {f.label === "Maintenance mode" && f.enabled && (
+                    <p className="text-xs text-red-500 mt-0.5">⚠ Site is in maintenance mode — visitors will see maintenance page</p>
+                  )}
+                </div>
+                <button
+                  onClick={() => toggleFeature(f.label)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${f.enabled ? "bg-blue" : "bg-soft-200"}`}
+                  aria-label={`Toggle ${f.label}`}
+                >
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform ${f.enabled ? "translate-x-6" : "translate-x-1"}`} />
                 </button>
               </div>
@@ -1092,15 +1468,22 @@ export default function AdminDashboard() {
   };
 
   return (
-    <DashboardLayout
-      role="Admin"
-      name="Platform Admin"
-      initials="PA"
-      tabs={tabs}
-      sections={sections}
-      verified
-      roleColor="bg-red-50 text-red-700"
-      avatarColor="bg-red-700 text-white"
-    />
+    <>
+      {adminToast && (
+        <div className="fixed bottom-6 right-6 z-50 rounded-2xl bg-navy px-5 py-3 text-sm font-semibold text-white shadow-[var(--shadow-premium)] animate-fade-up">
+          ✓ {adminToast}
+        </div>
+      )}
+      <DashboardLayout
+        role="Admin"
+        name="Platform Admin"
+        initials="PA"
+        tabs={tabs}
+        sections={sections}
+        verified
+        roleColor="bg-red-50 text-red-700"
+        avatarColor="bg-red-700 text-white"
+      />
+    </>
   );
 }
