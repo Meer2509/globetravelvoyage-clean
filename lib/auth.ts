@@ -123,7 +123,7 @@ export async function signOut(redirectTo = "/login") {
  * Get the dashboard URL for a given role.
  */
 export function getDashboardUrl(role: UserRole | string | undefined): string {
-  return ROLE_DASHBOARD[role as UserRole] ?? "/dashboard/customer";
+  return ROLE_DASHBOARD[role as UserRole] ?? "/dashboard";
 }
 
 /**
@@ -169,3 +169,4 @@ export function formatAuthError(error: { message?: string; code?: string } | nul
 // ── Re-export for convenience ─────────────────────────────────────────────────
 
 export { isSupabaseConfigured, createClient };
+export { getSiteUrl, getAuthCallbackUrl, PRODUCTION_SITE_URL } from "@/lib/site-url";

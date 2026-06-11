@@ -41,7 +41,7 @@ const ROLE_DASHBOARD: Record<string, string> = {
 };
 
 function getDashboardForRole(role: UserRole | string | undefined): string {
-  return ROLE_DASHBOARD[role ?? "customer"] ?? "/dashboard/customer";
+  return ROLE_DASHBOARD[role ?? "customer"] ?? "/dashboard";
 }
 
 export async function proxy(request: NextRequest) {

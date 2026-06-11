@@ -12,6 +12,7 @@ import {
   formatAuthError,
 } from "@/lib/auth";
 import { syncUserRole } from "@/lib/supabase/actions";
+import { getAuthCallbackUrl } from "@/lib/site-url";
 
 type AccountType = "customer" | "visa_agent" | "travel_agency" | "tour_guide" | "property_host";
 
@@ -165,7 +166,7 @@ function RegisterForm({
           country,
           extra_info: extra,
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: getAuthCallbackUrl(),
       },
     });
 

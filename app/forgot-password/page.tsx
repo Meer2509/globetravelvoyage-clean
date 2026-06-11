@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { AuthLayout } from "@/components/AuthLayout";
 import { isSupabaseConfigured, createClient, formatAuthError } from "@/lib/auth";
+import { getAuthCallbackUrl } from "@/lib/site-url";
 
 function SetupRequired() {
   return (
@@ -45,7 +46,7 @@ function ForgotPasswordForm() {
     if (!supabase) { setLoading(false); return; }
 
     const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+      redirectTo: getAuthCallbackUrl("recovery"),
     });
 
     setLoading(false);

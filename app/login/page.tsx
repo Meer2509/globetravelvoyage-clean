@@ -79,9 +79,15 @@ function LoginForm() {
   const [showPw, setShowPw] = useState(false);
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(
-    urlError === "auth_callback" ? "Authentication failed. Please try again." : ""
-  );
+  const [error, setError] = useState(() => {
+    if (urlError === "link_expired") {
+      return "Your confirmation link has expired. Sign in or register again to receive a new email.";
+    }
+    if (urlError === "auth_callback" || urlError === "missing_code") {
+      return "Authentication failed. Please try again or request a new confirmation link.";
+    }
+    return "";
+  });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
