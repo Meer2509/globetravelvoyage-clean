@@ -29,32 +29,33 @@ export default function DashboardProfilePage() {
   const [bio, setBio] = useState("");
   const [languages, setLanguages] = useState("");
   const [specializations, setSpecializations] = useState("");
-  const [services, setServices] = useState("");
   const [yearsExperience, setYearsExperience] = useState("");
 
-  useEffect(() => {
-    fetchDashboardUser().then((result) => {
-      setLoading(false);
-      if (!result.ok) {
-        setSetupMessage(result.message);
-        return;
-      }
+  async function loadProfile() {
+    const result = await fetchDashboardUser();
+    setLoading(false);
+    if (!result.ok) {
+      setSetupMessage(result.message);
+      return;
+    }
 
-      const { profile, role: userRole, visaExpert, completion: pct } = result;
-      setRole(userRole);
-      setCompletion(pct);
-      setFullName(profile.full_name ?? "");
-      setPhone(profile.phone ?? "");
-      setCountry(profile.country ?? "");
-      setCity(profile.city ?? "");
-      setCompanyName(profile.company_name ?? "");
-      setBusinessType(profile.business_type ?? "");
-      setBio(profile.bio ?? visaExpert?.bio ?? "");
-      setLanguages(joinCommaList(visaExpert?.languages));
-      setSpecializations(joinCommaList(visaExpert?.specializations));
-      setServices(joinCommaList(visaExpert?.services));
-      setYearsExperience(visaExpert?.years_experience?.toString() ?? "");
-    });
+    const { profile, role: userRole, visaExpert, completion: pct } = result;
+    setRole(userRole);
+    setCompletion(pct);
+    setFullName(profile.full_name ?? "");
+    setPhone(profile.phone ?? "");
+    setCountry(profile.country ?? "");
+    setCity(profile.city ?? "");
+    setCompanyName(profile.company_name ?? "");
+    setBusinessType(profile.business_type ?? "");
+    setBio(profile.bio ?? visaExpert?.bio ?? "");
+    setLanguages(joinCommaList(visaExpert?.languages));
+    setSpecializations(joinCommaList(visaExpert?.specializations));
+    setYearsExperience(visaExpert?.years_experience?.toString() ?? "");
+  }
+
+  useEffect(() => {
+    loadProfile();
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -73,22 +74,18 @@ export default function DashboardProfilePage() {
       bio,
       languages,
       specializations,
-      services,
       yearsExperience,
     });
 
     setSaving(false);
 
     if (!result.ok) {
-      if (result.demo) {
-        setSuccess(true);
-        return;
-      }
-      setError(result.error);
+      setError(result.demo ? "Supabase is not configured. Add environment variables to save your profile." : result.error);
       return;
     }
 
     setSuccess(true);
+    await loadProfile();
     router.refresh();
   }
 
@@ -189,10 +186,13 @@ export default function DashboardProfilePage() {
                     <label className="label">Specializations (comma-separated)</label>
                     <input className="input" value={specializations} onChange={(e) => setSpecializations(e.target.value)} placeholder="USA B1/B2, UK Visitor, Schengen" />
                   </div>
-                  <div>
-                    <label className="label">Services (comma-separated)</label>
-                    <input className="input" value={services} onChange={(e) => setServices(e.target.value)} placeholder="Document review, Full application prep" />
-                  </div>
+                  <p className="text-sm text-charcoal/55">
+                    Manage your service packages and pricing in the{" "}
+                    <Link href="/dashboard/agent" className="font-semibold text-blue hover:underline">
+                      Services &amp; Pricing
+                    </Link>{" "}
+                    tab on your dashboard.
+                  </p>
                   <div>
                     <label className="label">Years of experience</label>
                     <input className="input" type="number" min={0} value={yearsExperience} onChange={(e) => setYearsExperience(e.target.value)} />

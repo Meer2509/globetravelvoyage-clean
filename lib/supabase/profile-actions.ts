@@ -142,7 +142,6 @@ export async function updateUserProfile(input: ProfileUpdateInput): Promise<Prof
     {
       const languages = input.languages ? parseCommaList(input.languages) : null;
       const specializations = input.specializations ? parseCommaList(input.specializations) : null;
-      const services = input.services ? parseCommaList(input.services) : null;
       const years = input.yearsExperience ? parseInt(input.yearsExperience, 10) : null;
 
       const { data: existing } = await admin
@@ -160,21 +159,29 @@ export async function updateUserProfile(input: ProfileUpdateInput): Promise<Prof
         city: input.city ?? null,
         languages,
         specializations,
-        services,
         bio: input.bio ?? null,
         years_experience: Number.isFinite(years) ? years : null,
       };
 
       if (existing) {
-        await admin.from("visa_experts").update(expertPayload).eq("user_id", user.id);
+        const { error: expertError } = await admin
+          .from("visa_experts")
+          .update(expertPayload)
+          .eq("user_id", user.id);
+        if (expertError) return { ok: false, error: expertError.message };
       } else {
-        await admin.from("visa_experts").insert({
+        const { error: expertError } = await admin.from("visa_experts").insert({
           ...expertPayload,
           verification_status: "pending",
         });
+        if (expertError) return { ok: false, error: expertError.message };
       }
     }
   }
+
+  await admin.auth.admin.updateUserById(user.id, {
+    user_metadata: { full_name: input.fullName },
+  });
 
   return { ok: true };
 }

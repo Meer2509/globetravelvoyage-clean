@@ -128,6 +128,13 @@ export function DashboardLayout({
                 Edit profile
               </Link>
               <Link
+                href="/dashboard/profile"
+                className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium text-charcoal/50 hover:bg-soft hover:text-navy transition-colors"
+              >
+                <Icon name="doc" className="h-4 w-4" />
+                Settings
+              </Link>
+              <Link
                 href="/"
                 className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium text-charcoal/50 hover:bg-soft hover:text-navy transition-colors"
               >

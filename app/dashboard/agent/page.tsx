@@ -1,16 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/auth";
-import { fetchAgentIntakeQueue, fetchAgencyLeads } from "@/lib/supabase/queries";
+import {
+  fetchAgentDashboardData,
+  type AgentApplicationRow,
+  type AgentLeadRow,
+  type AgentReviewRow,
+  type AgentPaymentRow,
+} from "@/lib/supabase/agent-data";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DashboardProfileSection } from "@/components/DashboardProfileSection";
 import { DatabaseSetupBanner } from "@/components/DatabaseSetupBanner";
 import { DashboardEmpty } from "@/components/DashboardEmpty";
+import { ExpertServicesPanel } from "@/components/ExpertServicesPanel";
 import { joinCommaList } from "@/lib/supabase/profile-utils";
+import { parseExpertServices } from "@/lib/expert-services";
+import {
+  buildAuthorizationText,
+  copyAuthorizationText,
+  printAuthorizationPdf,
+} from "@/lib/authorization-form";
 import { Disclaimer } from "@/components/Disclaimer";
-import { Icon } from "@/components/Icon";
 import {
   DashboardLayout,
   StatCard,
@@ -22,6 +34,7 @@ import {
 
 function statusToPct(status: string): number {
   const map: Record<string, number> = {
+    draft: 15,
     pending: 25,
     reviewing: 55,
     submitted: 85,
@@ -35,6 +48,10 @@ function formatRelativeDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+function formatMoney(amount: number, currency = "USD"): string {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
+}
+
 const baseTabs: DashboardTab[] = [
   { key: "overview", label: "Overview", icon: "globe" },
   { key: "profile", label: "My Profile", icon: "agent" },
@@ -46,32 +63,63 @@ const baseTabs: DashboardTab[] = [
   { key: "earnings", label: "Earnings", icon: "users" },
 ];
 
-const services = [
-  { name: "Document Review & Checklist", desc: "Full review of all required documents with feedback", price: "$40", popular: false },
-  { name: "Full Application Preparation", desc: "End-to-end preparation: forms, docs, cover letter", price: "$120", popular: true },
-  { name: "Interview Coaching Session", desc: "60-minute mock interview with visa officer simulation", price: "$60", popular: false },
-  { name: "Rush Processing — 48h", desc: "Priority preparation for urgent applications", price: "$180", popular: false },
-];
-
-// ─── Authorization Form Generator ─────────────────────────────────────────────
-
 function AuthorizationGenerator({ expertName }: { expertName: string }) {
-  const [clientName, setClientName] = useState("[Client Full Name]");
-  const [passportNo, setPassportNo] = useState("[Passport No.]");
-  const [visaType, setVisaType] = useState("[Visa Type]");
-  const agentName = expertName || "Visa Expert";
+  const [clientName, setClientName] = useState("");
+  const [passportNo, setPassportNo] = useState("");
+  const [visaType, setVisaType] = useState("");
+  const [downloading, setDownloading] = useState(false);
+  const [copying, setCopying] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const input = {
+    clientName,
+    passportNo,
+    visaType,
+    expertName: expertName || "Visa Expert",
+  };
+
+  const previewText = buildAuthorizationText(input);
+
+  async function handleCopy() {
+    setError("");
+    setSuccess("");
+    setCopying(true);
+    try {
+      await copyAuthorizationText(input);
+      setSuccess("Authorization text copied to clipboard.");
+    } catch {
+      setError("Could not copy text. Check browser clipboard permissions.");
+    } finally {
+      setCopying(false);
+    }
+  }
+
+  function handleDownload() {
+    setError("");
+    setSuccess("");
+    setDownloading(true);
+    try {
+      printAuthorizationPdf(input);
+      setSuccess("Print dialog opened — choose Save as PDF to download.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not open print dialog.");
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   return (
     <div className="space-y-4">
-      <Panel title="Generate Authorization Form" subtitle="Fill in client details — generate printable PDF">
+      <Panel title="Generate Authorization Form" subtitle="Fill in client details — preview, copy, or print to PDF">
         <div className="grid gap-4 sm:grid-cols-3 mb-5">
           <div>
             <label className="label">Client Full Name</label>
-            <input className="input" value={clientName} onChange={(e) => setClientName(e.target.value)} />
+            <input className="input" value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Client name" />
           </div>
           <div>
             <label className="label">Passport Number</label>
-            <input className="input" value={passportNo} onChange={(e) => setPassportNo(e.target.value)} />
+            <input className="input" value={passportNo} onChange={(e) => setPassportNo(e.target.value)} placeholder="Passport number" />
           </div>
           <div>
             <label className="label">Visa Type</label>
@@ -79,50 +127,38 @@ function AuthorizationGenerator({ expertName }: { expertName: string }) {
           </div>
         </div>
 
-        {/* Form preview */}
-        <div className="rounded-2xl border border-soft-200 bg-soft/50 p-6 text-sm leading-relaxed text-charcoal/80">
-          <p className="text-center text-base font-extrabold uppercase tracking-wide text-navy">Authorization Form</p>
-          <p className="mt-1 text-center text-xs text-charcoal/50">Globe Travel Voyage — Visa Preparation Services</p>
-
-          <div className="mt-6 space-y-3">
-            <p>
-              I, <span className="font-bold text-navy">{clientName}</span>, holder of passport{" "}
-              <span className="font-bold text-navy">{passportNo}</span>, hereby authorize{" "}
-              <span className="font-bold text-navy">{agentName}</span> (Visa Expert on Globe Travel Voyage) to assist me
-              with the preparation of my <span className="font-bold text-navy">{visaType}</span> visa application.
-            </p>
-            <p>
-              I confirm that all information and documents I provide are true, accurate and complete to the best of my
-              knowledge. I understand that the agent provides preparation assistance only and does{" "}
-              <strong>not</strong> guarantee visa approval, which rests solely with the relevant embassy or immigration
-              authority.
-            </p>
-            <p>
-              I authorize the agent to review, organize and advise on my documents for the purpose of this visa
-              application only.
-            </p>
-          </div>
-
-          <div className="mt-8 grid grid-cols-2 gap-8">
-            <div>
-              <div className="h-12 border-b-2 border-navy/30" />
-              <p className="mt-2 text-xs text-charcoal/50">Client signature &amp; date</p>
-            </div>
-            <div>
-              <div className="h-12 border-b-2 border-navy/30" />
-              <p className="mt-2 text-xs text-charcoal/50">Agent ({agentName}) signature &amp; date</p>
-            </div>
-          </div>
-
-          <p className="mt-6 text-[10px] text-charcoal/40 text-center">
-            Globe Travel Voyage is not an immigration authority, embassy, or law firm. This document is an internal
-            preparation agreement only.
-          </p>
+        <div className="rounded-2xl border border-soft-200 bg-soft/50 p-6 text-sm leading-relaxed text-charcoal/80 whitespace-pre-wrap">
+          {previewText}
         </div>
 
+        {error && (
+          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            ✓ {success}
+          </div>
+        )}
+
         <div className="mt-4 flex gap-3">
-          <button className="btn-primary px-5 py-2.5 text-sm">Download PDF</button>
-          <button className="btn-outline px-5 py-2.5 text-sm">Copy text</button>
+          <button
+            type="button"
+            disabled={downloading}
+            onClick={handleDownload}
+            className="btn-primary px-5 py-2.5 text-sm disabled:opacity-60"
+          >
+            {downloading ? "Opening…" : "Download PDF"}
+          </button>
+          <button
+            type="button"
+            disabled={copying}
+            onClick={handleCopy}
+            className="btn-outline px-5 py-2.5 text-sm disabled:opacity-60"
+          >
+            {copying ? "Copying…" : "Copy text"}
+          </button>
         </div>
       </Panel>
 
@@ -135,123 +171,142 @@ function AuthorizationGenerator({ expertName }: { expertName: string }) {
   );
 }
 
-// ─── Page ──────────────────────────────────────────────────────────────────────
-
-type IntakeClient = {
-  id: string;
-  name: string;
-  visa: string;
-  stage: string;
-  pct: number;
-  nationality: string;
-  submitted: string;
-};
-
-type IntakeLead = {
-  id: string;
-  title: string;
-  from: string;
-  message: string;
-  time: string;
-  status: string;
-};
-
 export default function AgentDashboard() {
   const user = useDashboardUser();
-  const [clients, setClients] = useState<IntakeClient[]>([]);
-  const [leads, setLeads] = useState<IntakeLead[]>([]);
+  const [applications, setApplications] = useState<AgentApplicationRow[]>([]);
+  const [leads, setLeads] = useState<AgentLeadRow[]>([]);
+  const [reviews, setReviews] = useState<AgentReviewRow[]>([]);
+  const [payments, setPayments] = useState<AgentPaymentRow[]>([]);
+  const [services, setServices] = useState(() =>
+    user.result?.ok ? parseExpertServices(user.result.visaExpert?.services) : []
+  );
+  const [totalEarnings, setTotalEarnings] = useState(0);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [dataError, setDataError] = useState<string | null>(null);
+  const [tableMissing, setTableMissing] = useState(false);
+
+  function loadAgentData() {
+    if (!isSupabaseConfigured) {
+      setDataLoaded(true);
+      return;
+    }
+    fetchAgentDashboardData().then((result) => {
+      setDataLoaded(true);
+      if (!result.ok) {
+        setDataError(result.error);
+        setTableMissing(Boolean(result.tableMissing));
+        return;
+      }
+      setDataError(null);
+      setApplications(result.data.applications);
+      setLeads(result.data.leads);
+      setReviews(result.data.reviews);
+      setPayments(result.data.payments);
+      setServices(result.data.services);
+      setTotalEarnings(result.data.totalEarnings);
+    });
+  }
 
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
-    Promise.all([fetchAgentIntakeQueue(), fetchAgencyLeads()]).then(([visaRows, leadRows]) => {
-      setClients(
-        visaRows.map((r) => ({
-          id: r.id,
-          name: r.full_name,
-          visa: r.destination,
-          stage: r.status,
-          pct: statusToPct(r.status),
-          nationality: r.nationality ?? "—",
-          submitted: formatRelativeDate(r.created_at),
-        }))
-      );
-      setLeads(
-        leadRows.map((l) => ({
-          id: l.id,
-          title: l.message?.slice(0, 80) || l.lead_type || "Lead request",
-          from: l.full_name,
-          message: l.message ?? "",
-          time: formatRelativeDate(l.created_at),
-          status: l.status,
-        }))
-      );
-      setDataLoaded(true);
-    });
-  }, []);
+    loadAgentData();
+  }, [user.result?.ok ? user.result.profile.updated_at : "", user.completion]);
+
+  const pipeline = useMemo(() => {
+    const stages: Record<string, number> = {};
+    for (const app of applications) {
+      stages[app.status] = (stages[app.status] ?? 0) + 1;
+    }
+    return Object.entries(stages).map(([stage, count]) => ({ stage, count }));
+  }, [applications]);
+
+  const avgReviewRating = useMemo(() => {
+    if (reviews.length === 0) return null;
+    const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+    return (sum / reviews.length).toFixed(1);
+  }, [reviews]);
+
+  const expertRating = reviews.length > 0
+    ? avgReviewRating
+    : user.result?.ok && user.result.visaExpert?.rating
+      ? String(user.result.visaExpert.rating)
+      : null;
+  const reviewCount = reviews.length > 0
+    ? reviews.length
+    : user.result?.ok
+      ? user.result.visaExpert?.review_count ?? 0
+      : 0;
 
   const tabs = baseTabs.map((t) => {
-    if (t.key === "clients" && clients.length > 0) return { ...t, badge: clients.length };
+    if (t.key === "clients" && applications.length > 0) return { ...t, badge: applications.length };
     if (t.key === "leads" && leads.length > 0) return { ...t, badge: leads.length };
+    if (t.key === "reviews" && reviews.length > 0) return { ...t, badge: reviews.length };
     return t;
   });
-
-  const expertRating = user.result?.ok ? user.result.visaExpert?.rating : null;
-  const reviewCount = user.result?.ok ? user.result.visaExpert?.review_count : null;
 
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
         {user.setupMessage && <DatabaseSetupBanner message={user.setupMessage} />}
+        {dataError && tableMissing && <DatabaseSetupBanner message={dataError} />}
         <DashboardProfileSection user={user} />
-        {dataLoaded && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-            ✓ Supabase live — {clients.length} visa requests · {leads.length} leads in intake.
-          </div>
-        )}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Active clients" value={String(clients.length)} icon="users" hint="Live intake queue" color="blue" />
-          <StatCard label="New leads" value={String(leads.length)} icon="agent" hint="Contact expert requests" color="gold" />
+          <StatCard label="Client applications" value={String(applications.length)} icon="users" hint="Assigned to you" color="blue" />
+          <StatCard label="New leads" value={String(leads.length)} icon="agent" hint="Lead requests" color="gold" />
           <StatCard label="Profile complete" value={`${user.completion}%`} icon="check" hint="Your expert profile" color="green" />
-          <StatCard label="Rating" value={expertRating ? `${expertRating} ★` : "—"} icon="star" hint={reviewCount ? `${reviewCount} reviews` : "No reviews yet"} color="navy" />
+          <StatCard
+            label="Rating"
+            value={expertRating ? `${expertRating} ★` : "—"}
+            icon="star"
+            hint={reviewCount > 0 ? `${reviewCount} reviews` : "No reviews yet"}
+            color="navy"
+          />
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <Panel title="Application Pipeline" subtitle="Current client stages">
-            {[
-              { stage: "New leads", count: 3, color: "bg-gold" },
-              { stage: "Document collection", count: 2, color: "bg-blue/70" },
-              { stage: "Application review", count: 2, color: "bg-blue" },
-              { stage: "Submitted / interview", count: 1, color: "bg-emerald-500" },
-            ].map((p) => (
-              <div key={p.stage} className="flex items-center gap-4 border-b border-soft-200 py-3 last:border-0">
-                <div className={`h-2.5 w-2.5 rounded-full ${p.color}`} />
-                <span className="flex-1 text-sm text-charcoal/70">{p.stage}</span>
-                <span className="chip font-bold">{p.count}</span>
-              </div>
-            ))}
+          <Panel title="Application Pipeline" subtitle="Real status counts from your assigned applications">
+            {pipeline.length === 0 ? (
+              <p className="text-sm text-charcoal/50 py-4">No applications assigned yet.</p>
+            ) : (
+              pipeline.map((p) => (
+                <div key={p.stage} className="flex items-center gap-4 border-b border-soft-200 py-3 last:border-0">
+                  <div className="h-2.5 w-2.5 rounded-full bg-blue" />
+                  <span className="flex-1 text-sm capitalize text-charcoal/70">{p.stage.replace(/_/g, " ")}</span>
+                  <span className="chip font-bold">{p.count}</span>
+                </div>
+              ))
+            )}
           </Panel>
 
-          <Panel title="Monthly Performance">
+          <Panel title="Profile & activity">
             <div className="space-y-4">
-              <ProgressBar label="Client satisfaction score" pct={96} color="blue" />
-              <ProgressBar label="Documents complete rate" pct={92} color="green" />
-              <ProgressBar label="Lead response rate" pct={88} color="gold" />
               <ProgressBar label="Profile completeness" pct={user.completion} color="blue" />
+              <ProgressBar
+                label="Services listed"
+                pct={services.length > 0 ? 100 : 0}
+                color="gold"
+              />
+              <ProgressBar
+                label="Reviews received"
+                pct={reviews.length > 0 ? Math.min(100, reviews.length * 20) : 0}
+                color="green"
+              />
             </div>
           </Panel>
         </div>
 
-        <Panel title="Recent intake" subtitle="Latest visa requests from Supabase">
-          {clients.length === 0 ? (
-            <p className="text-sm text-charcoal/50 py-4">No visa requests in the queue yet.</p>
+        <Panel title="Recent applications" subtitle="Latest visa applications assigned to you">
+          {applications.length === 0 ? (
+            <p className="text-sm text-charcoal/50 py-4">No client applications yet.</p>
           ) : (
-            clients.slice(0, 4).map((c) => (
+            applications.slice(0, 4).map((c) => (
               <TableRow
                 key={c.id}
-                cells={[`${c.name} — ${c.visa}`, c.submitted]}
-                badge={c.stage}
-                badgeColor={c.pct >= 85 ? "green" : "blue"}
+                cells={[
+                  `${c.applicant_name ?? "Applicant"} — ${c.visa_type}`,
+                  formatRelativeDate(c.created_at),
+                ]}
+                badge={c.status}
+                badgeColor={statusToPct(c.status) >= 85 ? "green" : "blue"}
               />
             ))
           )}
@@ -270,7 +325,7 @@ export default function AgentDashboard() {
               <p><span className="text-charcoal/50">Experience:</span> <strong className="text-navy">{user.result.visaExpert?.years_experience ?? "—"} years</strong></p>
               <p className="sm:col-span-2"><span className="text-charcoal/50">Specializations:</span> <strong className="text-navy">{joinCommaList(user.result.visaExpert?.specializations) || "—"}</strong></p>
               <p className="sm:col-span-2"><span className="text-charcoal/50">Languages:</span> <strong className="text-navy">{joinCommaList(user.result.visaExpert?.languages) || "—"}</strong></p>
-              <p className="sm:col-span-2"><span className="text-charcoal/50">Services:</span> <strong className="text-navy">{joinCommaList(user.result.visaExpert?.services) || "—"}</strong></p>
+              <p className="sm:col-span-2"><span className="text-charcoal/50">Services:</span> <strong className="text-navy">{services.length > 0 ? `${services.length} service(s) listed` : "—"}</strong></p>
             </div>
             <div className="mt-5 flex gap-3">
               <Link href="/dashboard/profile" className="btn-primary px-5 py-2.5 text-sm">Edit profile</Link>
@@ -284,55 +339,42 @@ export default function AgentDashboard() {
     ),
 
     services: (
-      <div className="space-y-4">
-        {services.map((s) => (
-          <div key={s.name} className="card flex items-center justify-between p-5">
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <p className="font-bold text-navy">{s.name}</p>
-                {s.popular && <span className="chip bg-gold/15 text-navy text-xs">Most popular</span>}
-              </div>
-              <p className="mt-0.5 text-sm text-charcoal/55">{s.desc}</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-xl font-extrabold text-navy">{s.price}</span>
-              <button className="btn-outline px-3 py-1.5 text-xs">Edit</button>
-            </div>
-          </div>
-        ))}
-        <button className="btn-outline px-5 py-2.5 text-sm">+ Add new service</button>
-        <Disclaimer variant="inline" />
-      </div>
+      <ExpertServicesPanel
+        initialServices={services}
+        onSaved={(next) => {
+          setServices(next);
+          user.refresh();
+          loadAgentData();
+        }}
+      />
     ),
 
     clients: (
       <div className="space-y-4">
-        {clients.length === 0 && (
+        {!dataLoaded ? (
+          <p className="text-sm text-charcoal/50">Loading applications…</p>
+        ) : applications.length === 0 ? (
           <DashboardEmpty
             title="No client applications yet"
-            message="Visa requests from travelers will appear here when submitted through the platform."
-            action={<Link href="/visa/start" className="btn-primary px-5 py-2.5 text-sm inline-block">View visa intake form</Link>}
+            message="Visa applications assigned to your expert profile will appear here."
           />
+        ) : (
+          applications.map((c) => (
+            <Panel
+              key={c.id}
+              title={`${c.applicant_name ?? "Applicant"} · ${c.visa_type}`}
+              subtitle={`${c.origin_country} → ${c.destination_country} · ${formatRelativeDate(c.created_at)}`}
+              action={
+                <span className={`chip ${statusToPct(c.status) >= 85 ? "bg-emerald-50 text-emerald-700" : "bg-blue/10 text-blue"}`}>
+                  {c.status}
+                </span>
+              }
+            >
+              <ProgressBar label={c.status.replace(/_/g, " ")} pct={statusToPct(c.status)} color={statusToPct(c.status) >= 85 ? "green" : "blue"} />
+              {c.notes && <p className="mt-3 text-sm text-charcoal/60">{c.notes}</p>}
+            </Panel>
+          ))
         )}
-        {clients.map((c) => (
-          <Panel
-            key={c.id}
-            title={`${c.name} · ${c.visa}`}
-            subtitle={`${c.nationality} · Submitted ${c.submitted}`}
-            action={
-              <span className={`chip ${c.pct === 100 ? "bg-emerald-50 text-emerald-700" : "bg-blue/10 text-blue"}`}>
-                {c.pct === 100 ? "Submitted" : "Active"}
-              </span>
-            }
-          >
-            <ProgressBar label={c.stage} pct={c.pct} color={c.pct === 100 ? "green" : "blue"} />
-            <div className="mt-4 flex gap-2">
-              <button className="btn-primary px-4 py-2 text-sm">View docs</button>
-              <button className="btn-outline px-4 py-2 text-sm">Message client</button>
-              {c.pct < 100 && <button className="btn-outline px-4 py-2 text-sm">Send checklist</button>}
-            </div>
-          </Panel>
-        ))}
       </div>
     ),
 
@@ -340,28 +382,30 @@ export default function AgentDashboard() {
 
     leads: (
       <div className="space-y-4">
-        {leads.length === 0 ? (
+        {!dataLoaded ? (
+          <p className="text-sm text-charcoal/50">Loading leads…</p>
+        ) : leads.length === 0 ? (
           <DashboardEmpty
             title="No leads yet"
-            message="When travelers contact an expert, their requests will appear here from Supabase."
+            message="When travelers contact a visa expert, their requests will appear here."
             action={<Link href="/lead/contact" className="btn-outline px-5 py-2.5 text-sm inline-block">View contact form</Link>}
           />
         ) : (
-          <Panel title="New Leads" subtitle="Live from lead_requests table" noPad>
+          <Panel title="Leads Inbox" subtitle="Live from lead_requests" noPad>
             <div className="divide-y divide-soft-200">
               {leads.map((l) => (
                 <div key={l.id} className="flex items-center justify-between p-5">
                   <div className="flex items-start gap-3">
                     <span className="mt-1 flex h-2 w-2 shrink-0 rounded-full bg-gold" />
                     <div>
-                      <p className="font-bold text-navy">{l.title}</p>
-                      <p className="text-sm text-charcoal/55">{l.from} · {l.time} · {l.status}</p>
+                      <p className="font-bold text-navy">{l.full_name}</p>
+                      <p className="text-sm text-charcoal/55">{l.email} · {formatRelativeDate(l.created_at)} · {l.status}</p>
                       {l.message && <p className="mt-1 text-xs text-charcoal/45 line-clamp-2">{l.message}</p>}
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button className="btn-primary px-4 py-2 text-sm">Respond</button>
-                  </div>
+                  <a href={`mailto:${l.email}`} className="btn-primary px-4 py-2 text-sm">
+                    Respond
+                  </a>
                 </div>
               ))}
             </div>
@@ -373,41 +417,76 @@ export default function AgentDashboard() {
     reviews: (
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-3">
-          <StatCard label="Overall rating" value={expertRating ? `${expertRating} ★` : "—"} icon="star" hint={reviewCount ? `${reviewCount} reviews` : "No reviews"} color="gold" />
+          <StatCard
+            label="Overall rating"
+            value={expertRating ? `${expertRating} ★` : "—"}
+            icon="star"
+            hint={reviewCount > 0 ? `${reviewCount} reviews` : "No reviews yet"}
+            color="gold"
+          />
           <StatCard label="Verification" value={user.verified ? "Verified" : "Pending"} icon="check" color="green" />
           <StatCard label="Profile" value={`${user.completion}%`} icon="agent" hint="Completion" color="blue" />
         </div>
-        <DashboardEmpty
-          title="No client reviews yet"
-          message="Reviews from your clients will appear here once the reviews system has entries for your expert profile."
-        />
+        {!dataLoaded ? (
+          <p className="text-sm text-charcoal/50">Loading reviews…</p>
+        ) : reviews.length === 0 ? (
+          <DashboardEmpty
+            title="No reviews yet"
+            message="Client reviews will appear here once submitted for your expert profile."
+          />
+        ) : (
+          <Panel title="Client reviews" subtitle="Live from Supabase reviews table">
+            {reviews.map((r) => (
+              <div key={r.id} className="border-b border-soft-200 py-4 last:border-0">
+                <div className="flex items-center justify-between">
+                  <p className="font-bold text-navy">{r.reviewer_name ?? "Client"}</p>
+                  <span className="chip bg-gold/15 text-navy">{r.rating} ★</span>
+                </div>
+                {r.title && <p className="mt-1 text-sm font-semibold text-charcoal/75">{r.title}</p>}
+                {r.body && <p className="mt-1 text-sm text-charcoal/60">{r.body}</p>}
+                <p className="mt-1 text-xs text-charcoal/45">{formatRelativeDate(r.created_at)}</p>
+              </div>
+            ))}
+          </Panel>
+        )}
       </div>
     ),
 
     earnings: (
       <div className="space-y-5">
-        <DashboardEmpty
-          title="Earnings tracking coming soon"
-          message="Payment and payout data will appear here when connected to your Supabase payments table."
-        />
-
-        <Panel title="Payout Settings">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="label">Bank account (IBAN)</label>
-              <input className="input" placeholder="AE xx xxxx xxxx xxxx xxxx x" />
-            </div>
-            <div>
-              <label className="label">Payout schedule</label>
-              <select className="input">
-                <option>Weekly (every Friday)</option>
-                <option>Bi-weekly</option>
-                <option>Monthly</option>
-              </select>
-            </div>
-          </div>
-          <button className="btn-primary mt-4 px-5 py-2.5 text-sm">Save payout info</button>
-        </Panel>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <StatCard
+            label="Total earnings"
+            value={formatMoney(totalEarnings)}
+            icon="star"
+            hint={payments.length > 0 ? `${payments.length} payment(s)` : "No payments yet"}
+            color="gold"
+          />
+          <StatCard label="Pending" value={formatMoney(0)} icon="doc" hint="Awaiting settlement" color="blue" />
+        </div>
+        {!dataLoaded ? (
+          <p className="text-sm text-charcoal/50">Loading earnings…</p>
+        ) : payments.length === 0 ? (
+          <DashboardEmpty
+            title="No earnings yet"
+            message="Payments will appear here when recorded in your Supabase payments table. Total shows $0 until then."
+          />
+        ) : (
+          <Panel title="Payment history" subtitle="Live from Supabase payments">
+            {payments.map((p) => (
+              <TableRow
+                key={p.id}
+                cells={[
+                  p.description ?? "Payment",
+                  formatRelativeDate(p.created_at),
+                  formatMoney(Number(p.amount), p.currency ?? "USD"),
+                ]}
+                badge={p.status}
+                badgeColor={p.status === "paid" || p.status === "settled" ? "green" : "blue"}
+              />
+            ))}
+          </Panel>
+        )}
       </div>
     ),
   };

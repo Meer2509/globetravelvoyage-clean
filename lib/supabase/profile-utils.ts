@@ -1,3 +1,4 @@
+import { parseExpertServices } from "@/lib/expert-services";
 import type { UserRole, VisaExpert } from "./types";
 
 export interface ProfileFields {
@@ -73,7 +74,13 @@ export function computeProfileCompletion(
     checks.push(
       { label: "Specializations", done: Boolean(visaExpert?.specializations?.length) },
       { label: "Languages", done: Boolean(visaExpert?.languages?.length) },
-      { label: "Services", done: Boolean(visaExpert?.services?.length) },
+      {
+        label: "Services",
+        done: Boolean(
+          parseExpertServices(visaExpert?.services).length ||
+          visaExpert?.services?.some((s) => s.trim() && !s.startsWith("gtv-service:"))
+        ),
+      },
       { label: "Professional bio", done: Boolean(visaExpert?.bio?.trim() || profile.bio?.trim()) }
     );
   } else {

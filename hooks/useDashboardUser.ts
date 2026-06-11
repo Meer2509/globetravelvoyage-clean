@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { fetchDashboardUser, type DashboardUserResult } from "@/lib/supabase/queries";
 import { getInitials } from "@/lib/supabase/profile-utils";
 import { ROLE_LABELS } from "@/lib/auth";
@@ -18,56 +18,76 @@ export interface DashboardUserState {
   missingFields: string[];
   verified: boolean;
   setupMessage: string | null;
+  refresh: () => void;
 }
 
-const FALLBACK: DashboardUserState = {
+const FALLBACK = {
   loading: false,
   result: null,
   displayName: "Your Account",
   email: "",
   initials: "GT",
   roleLabel: "Traveler",
-  role: "customer",
+  role: "customer" as UserRole,
   completion: 0,
-  missingFields: [],
+  missingFields: [] as string[],
   verified: false,
   setupMessage: null,
 };
 
+function buildState(
+  result: DashboardUserResult | null,
+  refresh: () => void,
+  loading = false
+): DashboardUserState {
+  if (!result?.ok) {
+    return {
+      ...FALLBACK,
+      loading,
+      result,
+      refresh,
+      setupMessage:
+        result?.reason === "table_missing" || result?.reason === "not_configured"
+          ? result.message
+          : null,
+    };
+  }
+
+  const name = result.profile.full_name?.trim() || "Your Account";
+  return {
+    loading,
+    result,
+    displayName: name,
+    email: result.profile.email,
+    initials: getInitials(name),
+    roleLabel: ROLE_LABELS[result.role] ?? "Traveler",
+    role: result.role,
+    completion: result.completion,
+    missingFields: result.missingFields,
+    verified: result.visaExpert?.verification_status === "verified",
+    setupMessage: null,
+    refresh,
+  };
+}
+
 export function useDashboardUser(): DashboardUserState {
-  const [state, setState] = useState<DashboardUserState>({ ...FALLBACK, loading: true });
+  const [refreshKey, setRefreshKey] = useState(0);
+  const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
+  const [state, setState] = useState<DashboardUserState>(() =>
+    buildState(null, refresh, true)
+  );
 
   useEffect(() => {
+    let cancelled = false;
+    setState((prev) => ({ ...prev, loading: true }));
     fetchDashboardUser().then((result) => {
-      if (!result.ok) {
-        setState({
-          ...FALLBACK,
-          loading: false,
-          result,
-          setupMessage:
-            result.reason === "table_missing" || result.reason === "not_configured"
-              ? result.message
-              : null,
-        });
-        return;
-      }
-
-      const name = result.profile.full_name?.trim() || "Your Account";
-      setState({
-        loading: false,
-        result,
-        displayName: name,
-        email: result.profile.email,
-        initials: getInitials(name),
-        roleLabel: ROLE_LABELS[result.role] ?? "Traveler",
-        role: result.role,
-        completion: result.completion,
-        missingFields: result.missingFields,
-        verified: result.visaExpert?.verification_status === "verified",
-        setupMessage: null,
-      });
+      if (cancelled) return;
+      setState(buildState(result, refresh));
     });
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshKey, refresh]);
 
   return state;
 }
