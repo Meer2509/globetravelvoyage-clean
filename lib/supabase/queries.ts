@@ -138,3 +138,113 @@ export async function fetchAdminSupportTickets() {
 
   return data ?? [];
 }
+
+export interface RoleDashboardSummary {
+  visaRequests: number;
+  bookingRequests: number;
+  leadRequests: number;
+  propertyListings: number;
+  tourListings: number;
+  supportTickets: number;
+}
+
+export async function fetchRoleDashboardSummary(): Promise<RoleDashboardSummary | null> {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return null;
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const [visaRes, bookingRes, leadRes, propertyRes, tourRes, supportRes] = await Promise.all([
+    supabase.from("visa_requests").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+    supabase.from("booking_requests").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+    supabase.from("lead_requests").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+    supabase.from("property_listings").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+    supabase.from("tour_listings").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+    supabase.from("support_messages").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+  ]);
+
+  return {
+    visaRequests: visaRes.count ?? 0,
+    bookingRequests: bookingRes.count ?? 0,
+    leadRequests: leadRes.count ?? 0,
+    propertyListings: propertyRes.count ?? 0,
+    tourListings: tourRes.count ?? 0,
+    supportTickets: supportRes.count ?? 0,
+  };
+}
+
+/** Pending intake items visible to visa agents (unassigned queue). */
+export async function fetchAgentIntakeQueue() {
+  const admin = createAdminClient();
+  if (!admin) return [];
+
+  const { data } = await admin
+    .from("visa_requests")
+    .select("id, full_name, email, nationality, destination, purpose, status, created_at")
+    .in("status", ["pending", "reviewing"])
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  return data ?? [];
+}
+
+export async function fetchAgencyLeads() {
+  const admin = createAdminClient();
+  if (!admin) return [];
+
+  const { data } = await admin
+    .from("lead_requests")
+    .select("id, full_name, email, message, lead_type, status, created_at")
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  return data ?? [];
+}
+
+export async function fetchAgencyBookings() {
+  const admin = createAdminClient();
+  if (!admin) return [];
+
+  const { data } = await admin
+    .from("booking_requests")
+    .select("id, service_type, service_name, full_name, status, created_at, travelers, budget")
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  return data ?? [];
+}
+
+export async function fetchHostListings() {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return [];
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data } = await supabase
+    .from("property_listings")
+    .select("id, title, city, listing_type, price, status, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  return data ?? [];
+}
+
+export async function fetchGuideTours() {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return [];
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data } = await supabase
+    .from("tour_listings")
+    .select("id, title, city, tour_type, price, status, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  return data ?? [];
+}

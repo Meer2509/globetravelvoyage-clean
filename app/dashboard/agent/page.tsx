@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { isSupabaseConfigured } from "@/lib/auth";
+import { fetchAgentIntakeQueue, fetchRoleDashboardSummary } from "@/lib/supabase/queries";
 import { Disclaimer } from "@/components/Disclaimer";
 import { Stars } from "@/components/Stars";
 import { Icon } from "@/components/Icon";
@@ -146,12 +148,28 @@ function AuthorizationGenerator() {
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function AgentDashboard() {
+  const [queueCount, setQueueCount] = useState<number | null>(null);
+  const [liveLeads, setLiveLeads] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    fetchAgentIntakeQueue().then((rows) => setQueueCount(rows.length));
+    fetchRoleDashboardSummary().then((s) => {
+      if (s) setLiveLeads(s.leadRequests);
+    });
+  }, []);
+
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
+        {queueCount !== null && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            ✓ Supabase live — {queueCount} visa requests in intake queue.
+          </div>
+        )}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Active clients" value="5" icon="users" hint="Across 5 visa types" color="blue" />
-          <StatCard label="New leads" value="3" icon="agent" hint="This week" delta="+3" color="gold" />
+          <StatCard label="Active clients" value={queueCount !== null ? String(queueCount) : "5"} icon="users" hint={queueCount !== null ? "Live intake queue" : "Across 5 visa types"} color="blue" />
+          <StatCard label="New leads" value={liveLeads !== null ? String(liveLeads) : "3"} icon="agent" hint={liveLeads !== null ? "Your lead requests" : "This week"} delta={liveLeads !== null ? undefined : "+3"} color="gold" />
           <StatCard label="Approval prep score" value="92%" icon="check" hint="Docs completeness avg" color="green" />
           <StatCard label="Rating" value="4.9 ★" icon="star" hint="312 total reviews" color="navy" />
         </div>

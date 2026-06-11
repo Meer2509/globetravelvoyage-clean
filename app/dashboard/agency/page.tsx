@@ -1,6 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { isSupabaseConfigured } from "@/lib/auth";
+import { fetchAgencyBookings, fetchAgencyLeads } from "@/lib/supabase/queries";
 import { Disclaimer } from "@/components/Disclaimer";
 import { Icon } from "@/components/Icon";
 import {
@@ -68,13 +71,27 @@ const monthlyRevenue = [
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function AgencyDashboard() {
+  const [liveBookings, setLiveBookings] = useState<number | null>(null);
+  const [liveLeads, setLiveLeads] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    fetchAgencyBookings().then((rows) => setLiveBookings(rows.length));
+    fetchAgencyLeads().then((rows) => setLiveLeads(rows.length));
+  }, []);
+
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
+        {liveBookings !== null && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            ✓ Supabase live — {liveBookings} booking requests · {liveLeads ?? 0} leads in intake.
+          </div>
+        )}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Active packages" value="3" icon="planner" hint="4 total listings" color="blue" />
-          <StatCard label="New leads" value="6" icon="users" hint="This week" delta="+6" color="gold" />
-          <StatCard label="Bookings (month)" value="42" icon="doc" delta="+18%" color="green" />
+          <StatCard label="New leads" value={liveLeads !== null ? String(liveLeads) : "6"} icon="users" hint={liveLeads !== null ? "Live intake" : "This week"} delta={liveLeads !== null ? undefined : "+6"} color="gold" />
+          <StatCard label="Bookings (month)" value={liveBookings !== null ? String(liveBookings) : "42"} icon="doc" delta={liveBookings !== null ? undefined : "+18%"} color="green" />
           <StatCard label="Revenue (month)" value="$28.4k" icon="star" delta="+18%" color="navy" />
         </div>
 

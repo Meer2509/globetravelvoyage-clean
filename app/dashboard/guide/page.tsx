@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { isSupabaseConfigured } from "@/lib/auth";
+import { fetchGuideTours, fetchRoleDashboardSummary } from "@/lib/supabase/queries";
 import { Stars } from "@/components/Stars";
 import {
   DashboardLayout,
@@ -112,12 +114,28 @@ function AvailabilityCalendar() {
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function GuideDashboard() {
+  const [tourCount, setTourCount] = useState<number | null>(null);
+  const [bookingCount, setBookingCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    fetchGuideTours().then((rows) => setTourCount(rows.length));
+    fetchRoleDashboardSummary().then((s) => {
+      if (s) setBookingCount(s.bookingRequests);
+    });
+  }, []);
+
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
+        {tourCount !== null && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            ✓ Supabase live — {tourCount} tour listings · {bookingCount ?? 0} booking requests.
+          </div>
+        )}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Active tours" value="3" icon="ticket" hint="1 draft" color="blue" />
-          <StatCard label="Pending requests" value="5" icon="users" hint="2 need response" delta="+5" color="gold" />
+          <StatCard label="Active tours" value={tourCount !== null ? String(tourCount) : "3"} icon="ticket" hint={tourCount !== null ? "Your listings" : "1 draft"} color="blue" />
+          <StatCard label="Pending requests" value={bookingCount !== null ? String(bookingCount) : "5"} icon="users" hint={bookingCount !== null ? "Live booking requests" : "2 need response"} delta={bookingCount !== null ? undefined : "+5"} color="gold" />
           <StatCard label="Total guests (mo.)" value="42" icon="globe" delta="+15%" color="green" />
           <StatCard label="Rating" value="4.96 ★" icon="star" hint="68 reviews" color="navy" />
         </div>

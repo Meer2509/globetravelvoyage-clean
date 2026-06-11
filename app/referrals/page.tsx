@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { referralTiers } from "@/lib/data";
 import { commissionRates } from "@/lib/pricing";
 import { Icon } from "@/components/Icon";
 import { Disclaimer } from "@/components/Disclaimer";
+import { submitReferralSignup } from "@/lib/supabase/actions";
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
@@ -63,9 +64,44 @@ export default function ReferralsPage() {
   const [activeTab, setActiveTab]     = useState<"all" | CommissionStatus>("all");
   const [payoutLoading, setPayoutLoading] = useState(false);
   const [payoutRequested, setPayoutRequested] = useState(false);
+  const [referralCode, setReferralCode] = useState(MOCK_REFERRAL_CODE);
+  const [signupName, setSignupName] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupLoading, setSignupLoading] = useState(false);
+  const [signupError, setSignupError] = useState("");
+  const [signupDone, setSignupDone] = useState(false);
+
+  const [referralLink, setReferralLink] = useState(
+    `https://globetravelvoyage.com/register?ref=${MOCK_REFERRAL_CODE}`
+  );
+
+  useEffect(() => {
+    setReferralLink(`${window.location.origin}/register?ref=${referralCode}`);
+  }, [referralCode]);
+
+  async function handleSignup(e: React.FormEvent) {
+    e.preventDefault();
+    setSignupError("");
+    setSignupLoading(true);
+
+    const result = await submitReferralSignup({ name: signupName, email: signupEmail });
+    setSignupLoading(false);
+
+    if (!result.ok) {
+      if (result.demo) {
+        setSignupDone(true);
+        return;
+      }
+      setSignupError(result.error);
+      return;
+    }
+
+    if (result.data?.code) setReferralCode(result.data.code);
+    setSignupDone(true);
+  }
 
   function handleCopy() {
-    navigator.clipboard.writeText(MOCK_REFERRAL_LINK).catch(() => {});
+    navigator.clipboard.writeText(referralLink).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   }
@@ -116,6 +152,34 @@ export default function ReferralsPage() {
 
       <div className="container-px py-8 space-y-6">
 
+        {/* ── Referral signup ── */}
+        {!signupDone ? (
+          <div className="card overflow-hidden">
+            <div className="border-b border-soft-200 bg-navy/3 px-5 py-4">
+              <h2 className="font-extrabold text-navy">Join the referral program</h2>
+              <p className="mt-0.5 text-xs text-charcoal/50">Get your unique code and start earning commissions today.</p>
+            </div>
+            <form onSubmit={handleSignup} className="p-5 space-y-4 max-w-lg">
+              <div>
+                <label className="label">Full name</label>
+                <input className="input" required value={signupName} onChange={(e) => setSignupName(e.target.value)} placeholder="Your name" />
+              </div>
+              <div>
+                <label className="label">Email</label>
+                <input className="input" type="email" required value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} placeholder="you@example.com" />
+              </div>
+              {signupError && <p className="text-sm text-red-600">{signupError}</p>}
+              <button type="submit" disabled={signupLoading} className="btn-primary px-5 py-2.5 text-sm disabled:opacity-60">
+                {signupLoading ? "Creating your code…" : "Get my referral code"}
+              </button>
+            </form>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            ✓ You&apos;re enrolled! Your referral code is <strong className="font-mono">{referralCode}</strong> — share the link below.
+          </div>
+        )}
+
         {/* ── Stats row ── */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <StatCard label="Total referrals"    value={String(mockReferrals.length)} sub="all time"              color="text-navy"         />
@@ -135,7 +199,7 @@ export default function ReferralsPage() {
               <div className="relative flex-1">
                 <div className="flex items-center gap-3 rounded-xl border border-soft-200 bg-soft px-4 py-3">
                   <span className="text-lg">🔗</span>
-                  <span className="flex-1 truncate font-mono text-sm text-navy">{MOCK_REFERRAL_LINK}</span>
+                  <span className="flex-1 truncate font-mono text-sm text-navy">{referralLink}</span>
                 </div>
               </div>
               <button
@@ -156,7 +220,7 @@ export default function ReferralsPage() {
 
             <div className="flex flex-wrap gap-3">
               <span className="flex items-center gap-2 rounded-lg bg-soft-100 px-3 py-1.5 text-xs text-charcoal/60">
-                🔑 Code: <strong className="text-navy font-mono">{MOCK_REFERRAL_CODE}</strong>
+                🔑 Code: <strong className="text-navy font-mono">{referralCode}</strong>
               </span>
               <span className="flex items-center gap-2 rounded-lg bg-blue/5 px-3 py-1.5 text-xs text-blue">
                 📊 {mockReferrals.length} referrals total

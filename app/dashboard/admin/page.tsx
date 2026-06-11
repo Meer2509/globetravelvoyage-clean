@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { isSupabaseConfigured } from "@/lib/auth";
-import { fetchAdminCounts, type AdminDashboardCounts } from "@/lib/supabase/queries";
+import { fetchAdminCounts, fetchAdminVisaRequests, type AdminDashboardCounts } from "@/lib/supabase/queries";
 import Link from "next/link";
 import { Stars } from "@/components/Stars";
 import { Icon } from "@/components/Icon";
@@ -197,11 +197,53 @@ const VR_STATUS_LABELS: Record<VRStatus, string> = {
   rejected:  "Rejected",
 };
 
+function formatSubmittedDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function mapDbVisaRequest(row: {
+  id: string;
+  full_name: string;
+  email: string;
+  nationality: string | null;
+  destination: string;
+  purpose: string | null;
+  status: string;
+  created_at: string;
+}): VisaRequestItem {
+  const status = (["pending", "reviewing", "submitted", "approved", "rejected"].includes(row.status)
+    ? row.status
+    : "pending") as VRStatus;
+
+  return {
+    id: `VR-${row.id.slice(0, 4).toUpperCase()}`,
+    name: row.full_name,
+    nationality: row.nationality ?? "—",
+    destination: row.destination,
+    purpose: row.purpose ?? "—",
+    submitted: formatSubmittedDate(row.created_at),
+    status,
+    assignedTo: "—",
+    email: row.email,
+  };
+}
+
 function VisaRequestsTab() {
   const [requests, setRequests] = useState<VisaRequestItem[]>(INITIAL_VISA_REQUESTS);
   const [filter, setFilter]     = useState<"all" | VRStatus>("all");
   const [search, setSearch]     = useState("");
   const [toast, setToast]       = useState<string | null>(null);
+  const [liveLoaded, setLiveLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    fetchAdminVisaRequests().then((rows) => {
+      if (rows.length > 0) {
+        setRequests(rows.map(mapDbVisaRequest));
+        setLiveLoaded(true);
+      }
+    });
+  }, []);
 
   function updateStatus(id: string, status: VRStatus) {
     setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status } : r));
@@ -238,6 +280,12 @@ function VisaRequestsTab() {
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 rounded-2xl bg-navy px-5 py-3 text-sm font-semibold text-white shadow-[var(--shadow-premium)] animate-fade-up">
           ✓ {toast}
+        </div>
+      )}
+
+      {liveLoaded && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          ✓ Showing live visa requests from Supabase ({requests.length} total).
         </div>
       )}
 

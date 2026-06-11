@@ -1,5 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { isSupabaseConfigured } from "@/lib/auth";
+import { fetchHostListings, fetchRoleDashboardSummary } from "@/lib/supabase/queries";
 import { Disclaimer } from "@/components/Disclaimer";
 import {
   DashboardLayout,
@@ -95,13 +98,33 @@ const inquiries = [
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function HostDashboard() {
+  const [listingCount, setListingCount] = useState<number | null>(null);
+  const [leadCount, setLeadCount] = useState<number | null>(null);
+  const [bookingCount, setBookingCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    fetchHostListings().then((rows) => setListingCount(rows.length));
+    fetchRoleDashboardSummary().then((s) => {
+      if (s) {
+        setLeadCount(s.leadRequests);
+        setBookingCount(s.bookingRequests);
+      }
+    });
+  }, []);
+
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
+        {listingCount !== null && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            ✓ Supabase live — {listingCount} property listings · {leadCount ?? 0} leads · {bookingCount ?? 0} bookings.
+          </div>
+        )}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Active listings" value="2" icon="property" hint="1 draft" color="blue" />
-          <StatCard label="Booking requests" value="4" icon="doc" hint="3 need response" color="gold" />
-          <StatCard label="Total leads" value="5" icon="users" hint="This week" delta="+5" color="green" />
+          <StatCard label="Active listings" value={listingCount !== null ? String(listingCount) : "2"} icon="property" hint={listingCount !== null ? "Your listings" : "1 draft"} color="blue" />
+          <StatCard label="Booking requests" value={bookingCount !== null ? String(bookingCount) : "4"} icon="doc" hint={bookingCount !== null ? "Live requests" : "3 need response"} color="gold" />
+          <StatCard label="Total leads" value={leadCount !== null ? String(leadCount) : "5"} icon="users" hint={leadCount !== null ? "Your lead requests" : "This week"} delta={leadCount !== null ? undefined : "+5"} color="green" />
           <StatCard label="Revenue (month)" value="$2,750" icon="star" delta="+8%" color="navy" />
         </div>
 
