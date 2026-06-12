@@ -12,11 +12,14 @@ import {
   fetchCustomerPaymentsExtended,
   fetchCustomerStripeBookings,
   fetchCustomerVisaCase,
+  fetchCustomerActiveServices,
   type PaymentRowExtended,
   type StripeBookingRow,
   type VisaCaseData,
+  type ActiveServiceRow,
 } from "@/lib/supabase/payment-queries";
 import { VisaCasePanel } from "@/components/VisaCasePanel";
+import { CustomerActiveServices } from "@/components/CustomerActiveServices";
 import { formatPaymentAmount, formatPaymentDate, paymentServiceLabel } from "@/lib/payments-display";
 import { fetchCustomerLeadRequests, fetchCustomerBookingRequests } from "@/lib/supabase/mvp-queries";
 import { submitSupportTicket } from "@/lib/supabase/actions";
@@ -24,7 +27,7 @@ import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DashboardProfileSection } from "@/components/DashboardProfileSection";
 import { CustomerDashboardHero } from "@/components/CustomerDashboardHero";
 import { DashboardEmpty } from "@/components/DashboardEmpty";
-import { DocumentUploadPanel } from "@/components/DocumentUploadPanel";
+import { CaseDocumentChecklist } from "@/components/CaseDocumentChecklist";
 import { MessagesInbox } from "@/components/MessagesInbox";
 import { Disclaimer } from "@/components/Disclaimer";
 import { Stars } from "@/components/Stars";
@@ -42,7 +45,7 @@ import {
 
 const tabs: DashboardTab[] = [
   { key: "overview", label: "Overview", icon: "globe" },
-  { key: "visa-case", label: "My Visa Case", icon: "visa" },
+  { key: "visa-case", label: "My Visa Cases", icon: "visa" },
   { key: "timeline", label: "Trip Timeline", icon: "planner" },
   { key: "visas", label: "Visa Applications", icon: "visa" },
   { key: "saved", label: "Saved Trips", icon: "star" },
@@ -140,19 +143,25 @@ function CustomerDashboardContent() {
   const [customerPayments, setCustomerPayments] = useState<PaymentRowExtended[]>([]);
   const [stripeBookings, setStripeBookings] = useState<StripeBookingRow[]>([]);
   const [visaCase, setVisaCase] = useState<VisaCaseData | null>(null);
+  const [activeServices, setActiveServices] = useState<ActiveServiceRow[]>([]);
   const [supportSubject, setSupportSubject] = useState("");
   const [supportBody, setSupportBody] = useState("");
   const [supportSending, setSupportSending] = useState(false);
   const [supportMsg, setSupportMsg] = useState("");
+
+  function reloadPostPayment() {
+    fetchCustomerPaymentsExtended().then(setCustomerPayments);
+    fetchCustomerStripeBookings().then(setStripeBookings);
+    fetchCustomerVisaCase().then(setVisaCase);
+    fetchCustomerActiveServices().then(setActiveServices);
+  }
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     fetchCustomerDashboard().then((data) => {
       if (data) setLive(data);
     });
-    fetchCustomerPaymentsExtended().then(setCustomerPayments);
-    fetchCustomerStripeBookings().then(setStripeBookings);
-    fetchCustomerVisaCase().then(setVisaCase);
+    reloadPostPayment();
   }, []);
 
   async function handleSupportSubmit(e: React.FormEvent) {
@@ -202,6 +211,7 @@ function CustomerDashboardContent() {
     overview: (
       <div className="space-y-6">
         <CustomerDashboardHero firstName={firstName} />
+        <CustomerActiveServices services={activeServices} visaCase={visaCase} />
         <DashboardProfileSection user={user} />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Visa requests" value={String(visaCount)} icon="visa" hint="Your submissions" color="gold" />
@@ -235,7 +245,7 @@ function CustomerDashboardContent() {
       </div>
     ),
 
-    "visa-case": <VisaCasePanel visaCase={visaCase} />,
+    "visa-case": <VisaCasePanel visaCase={visaCase} onRefresh={reloadPostPayment} />,
 
     timeline: (
       <DashboardEmpty
@@ -334,7 +344,22 @@ function CustomerDashboardContent() {
 
     documents: (
       <div className="space-y-5">
-        <DocumentUploadPanel />
+        {visaCase ? (
+          <Panel title="Document checklist" subtitle={`Case ${visaCase.caseNumber}`}>
+            <CaseDocumentChecklist
+              caseId={visaCase.id}
+              items={visaCase.checklist}
+              onUpdated={reloadPostPayment}
+            />
+          </Panel>
+        ) : (
+          <EmptyState
+            emoji="📁"
+            title="No documents uploaded yet"
+            description="Purchase a visa service to unlock your document checklist and upload panel."
+            action={{ label: "Start visa service", href: "/services#premium" }}
+          />
+        )}
         <Disclaimer variant="inline" />
       </div>
     ),
@@ -411,7 +436,7 @@ function CustomerDashboardContent() {
         <Link href="/services#premium" className="btn-outline inline-flex px-4 py-2.5 text-sm">
           Browse premium services
         </Link>
-        <p className="text-xs text-muted">Encrypted payments · Receipts available for every purchase</p>
+        <p className="text-xs text-muted">Secure checkout powered by Stripe · Receipts available for paid orders</p>
       </div>
     ),
 

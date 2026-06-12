@@ -9,9 +9,15 @@ import {
   fetchAdminPayments,
   fetchAdminBookingRequests,
   fetchAdminSupportTickets,
+  fetchAdminVisaCases,
+  fetchAdminStripeBookings,
+  fetchAdminEmailLogs,
   type AdminDashboardCounts,
   type AdminProfileRow,
   type AdminPaymentRow,
+  type AdminVisaCaseRow,
+  type AdminStripeBookingRow,
+  type AdminEmailLogRow,
 } from "@/lib/supabase/queries";
 import { fetchAdminProviders, fetchAdminProviderServices } from "@/lib/supabase/mvp-queries";
 import { updateIntakeStatus } from "@/lib/supabase/mvp-actions";
@@ -34,19 +40,19 @@ import {
 
 const tabs: DashboardTab[] = [
   { key: "overview",      label: "Overview",          icon: "globe" },
-  { key: "users",         label: "Users & Roles",     icon: "users",    badge: 1240 },
-  { key: "verification",  label: "Verification Queue",icon: "shield",   badge: 7 },
-  { key: "visarequests",  label: "Visa Requests",     icon: "visa",     badge: 14 },
-  { key: "agencies",      label: "Agencies",          icon: "agent",    badge: 38 },
-  { key: "visaexperts",   label: "Visa Experts",      icon: "visa",     badge: 94 },
-  { key: "guides",        label: "Tour Guides",       icon: "planner",  badge: 21 },
+  { key: "users",         label: "Users & Roles",     icon: "users" },
+  { key: "verification",  label: "Verification Queue",icon: "shield" },
+  { key: "visarequests",  label: "Visa Requests",     icon: "visa" },
+  { key: "agencies",      label: "Agencies",          icon: "agent" },
+  { key: "visaexperts",   label: "Visa Experts",      icon: "visa" },
+  { key: "guides",        label: "Tour Guides",       icon: "planner" },
   { key: "tours",         label: "Tours & Tickets",   icon: "ticket" },
   { key: "properties",    label: "Properties",        icon: "property" },
   { key: "bookings",      label: "Bookings",          icon: "doc" },
   { key: "payments",      label: "Payments",          icon: "star" },
   { key: "referrals",     label: "Referrals",         icon: "users" },
-  { key: "reviews",       label: "Reviews",           icon: "star",     badge: 3 },
-  { key: "support",       label: "Support Tickets",   icon: "shield",   badge: 12 },
+  { key: "reviews",       label: "Reviews",           icon: "star" },
+  { key: "support",       label: "Support Tickets",   icon: "shield" },
   { key: "seo",           label: "SEO Pages",         icon: "globe" },
   { key: "settings",      label: "Settings",          icon: "agent" },
 ];
@@ -934,7 +940,7 @@ function AdminCommissionsTab() {
 
         <div className="border-t border-soft-200 px-5 py-3 flex items-center justify-between text-xs text-charcoal/40">
           <span>Showing {filtered.length} of {commissions.length} commissions</span>
-          <span>Live Supabase data — payments update via Stripe webhook</span>
+          <span>Stripe payments — updated via webhook</span>
         </div>
       </Panel>
 
@@ -997,20 +1003,41 @@ export default function AdminDashboard() {
   }>>([]);
   const [liveExperts, setLiveExperts] = useState<Array<{ id: string; is_verified: boolean; is_active: boolean }>>([]);
   const [liveServices, setLiveServices] = useState<Array<{ id: string; title: string; category: string | null; price: number; is_active: boolean }>>([]);
+  const [liveVisaCases, setLiveVisaCases] = useState<AdminVisaCaseRow[]>([]);
+  const [liveStripeBookings, setLiveStripeBookings] = useState<AdminStripeBookingRow[]>([]);
+  const [liveEmailLogs, setLiveEmailLogs] = useState<AdminEmailLogRow[]>([]);
+  const [dbWarnings, setDbWarnings] = useState<string[]>([]);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
-    fetchAdminCounts().then(setLiveCounts);
-    fetchAdminProfiles().then((res) => {
-      if (!res.tableMissing && res.profiles.length > 0) setLiveProfiles(res.profiles);
-    });
-    fetchAdminPayments().then((res) => {
-      if (!res.tableMissing) setLivePayments(res.payments);
-    });
-    fetchAdminBookingRequests().then((rows) => setLiveBookings(rows as typeof liveBookings));
-    fetchAdminSupportTickets().then((rows) => setLiveSupport(rows as typeof liveSupport));
-    fetchAdminProviders().then((res) => setLiveExperts(res.experts as typeof liveExperts));
-    fetchAdminProviderServices().then((rows) => setLiveServices(rows as typeof liveServices));
+    const warnings: string[] = [];
+
+    void Promise.all([
+      fetchAdminCounts().then(setLiveCounts),
+      fetchAdminProfiles().then((res) => {
+        if (!res.tableMissing && res.profiles.length > 0) setLiveProfiles(res.profiles);
+      }),
+      fetchAdminPayments().then((res) => {
+        if (!res.tableMissing) setLivePayments(res.payments);
+        if (res.tableMissing && res.error) warnings.push(res.error);
+      }),
+      fetchAdminBookingRequests().then((rows) => setLiveBookings(rows as typeof liveBookings)),
+      fetchAdminSupportTickets().then((rows) => setLiveSupport(rows as typeof liveSupport)),
+      fetchAdminProviders().then((res) => setLiveExperts(res.experts as typeof liveExperts)),
+      fetchAdminProviderServices().then((rows) => setLiveServices(rows as typeof liveServices)),
+      fetchAdminVisaCases().then((res) => {
+        if (!res.tableMissing) setLiveVisaCases(res.cases);
+        else if (res.error) warnings.push(res.error);
+      }),
+      fetchAdminStripeBookings().then((res) => {
+        if (!res.tableMissing) setLiveStripeBookings(res.bookings);
+        else if (res.error) warnings.push(res.error);
+      }),
+      fetchAdminEmailLogs().then((res) => {
+        if (!res.tableMissing) setLiveEmailLogs(res.logs);
+        else if (res.error) warnings.push(res.error);
+      }),
+    ]).then(() => setDbWarnings([...warnings]));
   }, []);
   const [usersData, setUsersData]   = useState(allUsers.map((u) => ({ ...u })));
   const [featureToggles, setFeatureToggles] = useState([
@@ -1061,11 +1088,25 @@ export default function AdminDashboard() {
     overview: (
       <div className="space-y-6">
         <DatabaseStatusBanner health={dashUser.databaseHealth} />
+        {dbWarnings.length > 0 && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 space-y-1">
+            {dbWarnings.map((w) => (
+              <p key={w}>{w}</p>
+            ))}
+          </div>
+        )}
         {liveCounts && (
           <div className="rounded-xl border border-soft-200 bg-white px-4 py-3 text-sm text-muted">
             Platform records — {liveCounts.users} profiles · {liveCounts.visaRequests} visa requests · {liveCounts.bookingRequests} booking requests · {liveCounts.supportTickets} support tickets
           </div>
         )}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard label="Payments" value={String(livePayments.length)} icon="star" hint="Stripe checkout" color="gold" />
+          <StatCard label="Visa cases" value={String(liveVisaCases.length)} icon="visa" hint="Paid visa services" color="green" />
+          <StatCard label="Stripe bookings" value={String(liveStripeBookings.length)} icon="doc" hint="Confirmed bookings" color="blue" />
+          <StatCard label="Email logs" value={String(liveEmailLogs.length)} icon="shield" hint="Sent or logged" color="navy" />
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Total users" value={liveCounts ? String(liveCounts.users) : "0"} icon="users" hint="Registered profiles" color="blue" />
           <StatCard label="Booking requests" value={liveCounts ? String(liveCounts.bookingRequests) : "0"} icon="doc" hint="Live intake table" color="gold" />
@@ -1426,7 +1467,7 @@ export default function AdminDashboard() {
             label="Total payments"
             value={String(livePayments.length)}
             icon="star"
-            hint={liveCounts ? `${liveCounts.payments} in DB` : "Live from Supabase"}
+            hint={liveCounts ? `${liveCounts.payments} in DB` : "Payment records"}
             color="blue"
           />
           <StatCard
@@ -1458,7 +1499,7 @@ export default function AdminDashboard() {
           </Link>
         </div>
 
-        <Panel title="Stripe payments" subtitle="Live from Supabase payments table" noPad>
+        <Panel title="Stripe payments" subtitle="Payment records from Supabase" noPad>
           {livePayments.length === 0 ? (
             <p className="p-8 text-center text-sm text-charcoal/50">
               No payments recorded yet. Completed Stripe checkouts appear here.
@@ -1491,6 +1532,61 @@ export default function AdminDashboard() {
                       {p.status}
                     </span>
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Panel>
+
+        <Panel title="Visa cases" subtitle="Created after paid visa services" noPad>
+          {liveVisaCases.length === 0 ? (
+            <p className="p-8 text-center text-sm text-charcoal/50">No visa cases yet.</p>
+          ) : (
+            <div className="divide-y divide-soft-200">
+              {liveVisaCases.map((c) => (
+                <div key={c.id} className="flex items-center justify-between gap-4 p-5">
+                  <div>
+                    <p className="font-bold text-navy">{c.service_name}</p>
+                    <p className="text-sm text-charcoal/55 font-mono">{c.case_number}</p>
+                    <p className="text-xs text-charcoal/40">{formatPaymentDate(c.created_at)} · {c.progress_percent}%</p>
+                  </div>
+                  <span className="chip text-xs bg-gold/15 text-navy capitalize">{c.status.replace(/_/g, " ")}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Panel>
+
+        <Panel title="Stripe bookings" subtitle="Linked to payments" noPad>
+          {liveStripeBookings.length === 0 ? (
+            <p className="p-8 text-center text-sm text-charcoal/50">No Stripe bookings yet.</p>
+          ) : (
+            <div className="divide-y divide-soft-200">
+              {liveStripeBookings.map((b) => (
+                <div key={b.id} className="flex items-center justify-between gap-4 p-5">
+                  <div>
+                    <p className="font-bold text-navy">{b.listing_title ?? b.booking_type.replace(/_/g, " ")}</p>
+                    <p className="text-xs text-charcoal/40">{formatPaymentDate(b.created_at)}</p>
+                  </div>
+                  <span className="chip text-xs bg-emerald-50 text-emerald-700 capitalize">{b.status}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Panel>
+
+        <Panel title="Email logs" subtitle="Payment confirmations and system emails" noPad>
+          {liveEmailLogs.length === 0 ? (
+            <p className="p-8 text-center text-sm text-charcoal/50">No email logs yet. Events are logged when RESEND_API_KEY is not set.</p>
+          ) : (
+            <div className="divide-y divide-soft-200">
+              {liveEmailLogs.map((log) => (
+                <div key={log.id} className="flex items-center justify-between gap-4 p-5">
+                  <div className="min-w-0">
+                    <p className="font-bold text-navy truncate">{log.subject}</p>
+                    <p className="text-sm text-charcoal/55 truncate">{log.email} · {log.type}</p>
+                  </div>
+                  <span className="chip text-xs bg-soft text-navy capitalize shrink-0">{log.status}</span>
                 </div>
               ))}
             </div>

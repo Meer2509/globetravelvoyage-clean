@@ -268,6 +268,7 @@ export async function fulfillStripePaymentComplete(
     const emailPayload = {
       customerEmail: email,
       customerName: session.customer_details?.name ?? null,
+      userId: userId ?? null,
       serviceType: payment.service_type ?? productKey,
       description: payment.description ?? product?.name ?? "",
       amount,
@@ -276,6 +277,8 @@ export async function fulfillStripePaymentComplete(
       paymentId,
       bookingId: bookingId ?? undefined,
       visaApplicationId,
+      visaCaseId,
+      caseNumber,
     };
     await Promise.all([
       sendCustomerPaymentConfirmation(emailPayload),

@@ -2,7 +2,9 @@
 
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isMissingTableError } from "@/lib/supabase/profile-utils";
 import { claimPaymentsByEmail } from "@/lib/stripe/link-user";
+import { paymentServiceLabel } from "@/lib/payments-display";
 import { VISA_CASE_STATUSES, type VisaCaseStatus } from "@/lib/visa-case-constants";
 
 export interface PaymentRowExtended {
@@ -49,6 +51,33 @@ export interface VisaCaseData {
   invoiceNumber: string | null;
   createdAt: string;
   checklist: Array<{ name: string; status: string; documentId?: string }>;
+}
+
+export interface ActiveServiceRow {
+  id: string;
+  serviceName: string;
+  productKey: string | null;
+  status: string;
+  purchasedAt: string;
+  amount: number | null;
+  currency: string;
+  isVisa: boolean;
+}
+
+export async function fetchCustomerActiveServices(): Promise<ActiveServiceRow[]> {
+  const payments = await fetchCustomerPaymentsExtended();
+  return payments
+    .filter((p) => p.status === "paid")
+    .map((p) => ({
+      id: p.id,
+      serviceName: paymentServiceLabel(p.service_type, p.description),
+      productKey: p.service_type,
+      status: "active",
+      purchasedAt: p.paid_at ?? p.created_at,
+      amount: Number(p.amount),
+      currency: p.currency ?? "USD",
+      isVisa: Boolean(p.service_type?.includes("visa")),
+    }));
 }
 
 export async function fetchCustomerPaymentsExtended(): Promise<PaymentRowExtended[]> {
@@ -102,7 +131,7 @@ export async function fetchCustomerVisaCase(): Promise<VisaCaseData | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: visaCaseRow } = await supabase
+  const { data: visaCaseRow, error: caseError } = await supabase
     .from("visa_cases")
     .select("*")
     .eq("user_id", user.id)
@@ -110,6 +139,10 @@ export async function fetchCustomerVisaCase(): Promise<VisaCaseData | null> {
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  if (caseError && isMissingTableError(caseError)) {
+    console.error("[visa_cases] table missing:", caseError.message);
+  }
 
   if (visaCaseRow) {
     return mapVisaCaseFromTable(visaCaseRow as Record<string, unknown>, supabase);
@@ -172,9 +205,9 @@ export async function fetchCustomerVisaCase(): Promise<VisaCaseData | null> {
       caseNumber: `GTV-LEGACY-${(ent.payment_id ?? user.id).slice(0, 8).toUpperCase()}`,
       visaType: ent.metadata?.product_name ?? "Visa Premium Service",
       destinationCountry: "—",
-      status: "intake_started",
-      progressPercent: 10,
-      currentStep: "intake_started",
+      status: "documents_needed",
+      progressPercent: 15,
+      currentStep: "Upload required documents",
       assignedExpert: null,
       serviceProductKey: ent.product_key,
       serviceName: ent.metadata?.product_name ?? null,
@@ -218,7 +251,7 @@ async function mapVisaCaseFromTable(
       const doc = d as { id: string; document_type: string; file_name: string | null; status: string };
       return {
         name: doc.document_type,
-        status: doc.status === "uploaded" ? "uploaded" : "pending",
+        status: doc.status ?? "pending",
         documentId: doc.id,
       };
     });

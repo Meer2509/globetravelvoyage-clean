@@ -136,7 +136,7 @@ export async function activatePaidService(input: {
       providerUserId: input.agentId ?? null,
       visaType: product?.name ?? "Visa Service",
     });
-    if (visaCase) {
+    if (visaCase && "caseId" in visaCase) {
       visaCaseId = visaCase.caseId;
       caseNumber = visaCase.caseNumber;
       if (input.email) {

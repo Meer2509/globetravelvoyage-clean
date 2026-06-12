@@ -1,3 +1,5 @@
+export const VISA_INITIAL_STEP = "Upload required documents";
+
 export const VISA_CASE_STATUSES = [
   "intake_started",
   "documents_needed",

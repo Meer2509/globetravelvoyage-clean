@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/profile-utils";
 import {
   CASE_DOCUMENT_TYPES,
+  VISA_INITIAL_STEP,
   type VisaCaseStatus,
 } from "@/lib/visa-case-constants";
 
@@ -29,14 +30,14 @@ export function isVisaProductKey(productKey: string): boolean {
 
 export function generateCaseNumber(): string {
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
-  return `GTV-VC-${date}-${rand}`;
+  const seq = Math.floor(10000 + Math.random() * 90000);
+  return `GTV-${date}-${seq}`;
 }
 
 export function progressForStatus(status: VisaCaseStatus): number {
   const map: Record<VisaCaseStatus, number> = {
     intake_started: 10,
-    documents_needed: 20,
+    documents_needed: 15,
     documents_uploaded: 35,
     under_review: 50,
     expert_assigned: 60,
@@ -57,15 +58,23 @@ export async function createVisaCase(input: {
   providerUserId?: string | null;
   visaCountry?: string;
   visaType?: string;
-}): Promise<{ caseId: string; caseNumber: string } | null> {
+}): Promise<{ caseId: string; caseNumber: string } | { error: string; tableMissing?: boolean } | null> {
   const admin = createAdminClient();
-  if (!admin) return null;
+  if (!admin) return { error: "Database connection is not configured." };
 
-  const { data: existing } = await admin
+  const { data: existing, error: lookupError } = await admin
     .from("visa_cases")
     .select("id, case_number")
     .eq("payment_id", input.paymentId)
     .maybeSingle();
+
+  if (lookupError) {
+    if (isMissingTableError(lookupError)) {
+      console.error("[visa_cases] table missing:", lookupError.message);
+      return { error: "visa_cases table is not available. Run migration 010_launch_platform.sql.", tableMissing: true };
+    }
+    return { error: lookupError.message };
+  }
 
   if (existing) {
     const row = existing as { id: string; case_number: string };
@@ -73,7 +82,7 @@ export async function createVisaCase(input: {
   }
 
   const caseNumber = generateCaseNumber();
-  const status: VisaCaseStatus = "intake_started";
+  const status: VisaCaseStatus = "documents_needed";
 
   const { data: visaCase, error } = await admin
     .from("visa_cases")
@@ -87,28 +96,34 @@ export async function createVisaCase(input: {
       visa_country: input.visaCountry ?? null,
       visa_type: input.visaType ?? input.serviceName,
       status,
-      progress_percent: progressForStatus(status),
-      current_step: status,
+      progress_percent: 15,
+      current_step: VISA_INITIAL_STEP,
     })
     .select("id, case_number")
     .single();
 
   if (error) {
-    if (!isMissingTableError(error)) {
-      console.error("visa_cases insert failed:", error.message);
+    if (isMissingTableError(error)) {
+      console.error("[visa_cases] insert failed — table missing:", error.message);
+      return { error: "visa_cases table is not available. Run migration 010_launch_platform.sql.", tableMissing: true };
     }
-    return null;
+    console.error("visa_cases insert failed:", error.message);
+    return { error: error.message };
   }
 
   const row = visaCase as { id: string; case_number: string };
 
   for (const docType of CASE_DOCUMENT_TYPES) {
-    await admin.from("case_documents").insert({
+    const { error: docError } = await admin.from("case_documents").insert({
       case_id: row.id,
       user_id: input.userId,
       document_type: docType,
       status: "pending",
     });
+    if (docError && isMissingTableError(docError)) {
+      console.error("[case_documents] table missing:", docError.message);
+      break;
+    }
   }
 
   return { caseId: row.id, caseNumber: row.case_number };

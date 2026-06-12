@@ -10,6 +10,7 @@ const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL ?? "admin@globetravelvo
 interface PaymentEmailPayload {
   customerEmail: string;
   customerName?: string | null;
+  userId?: string | null;
   serviceType: string;
   description: string;
   amount: number;
@@ -18,6 +19,8 @@ interface PaymentEmailPayload {
   paymentId: string;
   bookingId?: string;
   visaApplicationId?: string;
+  visaCaseId?: string;
+  caseNumber?: string;
 }
 
 function luxuryEmailShell(content: string): string {
@@ -52,7 +55,7 @@ export async function sendCustomerPaymentConfirmation(
   const amountStr = formatPaymentAmount(payload.amount, payload.currency);
   const receiptUrl = `${siteUrl}/api/receipt/${payload.paymentId}`;
   const dashboardUrl = `${siteUrl}/dashboard/customer?tab=billing`;
-  const visaCaseUrl = payload.visaApplicationId
+  const visaCaseUrl = payload.visaCaseId || payload.visaApplicationId
     ? `${siteUrl}/dashboard/customer?tab=visa-case`
     : dashboardUrl;
 
@@ -75,7 +78,7 @@ export async function sendCustomerPaymentConfirmation(
     <p style="color:#4a5568;font-size:14px;line-height:1.7;margin:0 0 20px;"><strong>Next steps</strong></p>
     <ol style="color:#4a5568;font-size:14px;line-height:1.8;padding-left:20px;margin:0 0 28px;">
       <li>Access your dashboard to track your service</li>
-      ${payload.visaApplicationId ? "<li>Your visa case has been created — upload documents when ready</li>" : ""}
+      ${payload.visaCaseId || payload.visaApplicationId ? `<li>Your visa case${payload.caseNumber ? ` (${payload.caseNumber})` : ""} is open — upload documents when ready</li>` : ""}
       <li>Download your receipt for your records</li>
       <li>Our team will contact you within 24–48 hours for premium services</li>
     </ol>
@@ -90,7 +93,7 @@ export async function sendCustomerPaymentConfirmation(
         </td>
       </tr>
     </table>
-    ${payload.visaApplicationId ? `<p style="margin-top:20px;"><a href="${visaCaseUrl}" style="color:#c9a227;font-size:14px;">View My Visa Case →</a></p>` : ""}
+    ${payload.visaCaseId || payload.visaApplicationId ? `<p style="margin-top:20px;"><a href="${visaCaseUrl}" style="color:#c9a227;font-size:14px;">View My Visa Case →</a></p>` : ""}
   `);
 
   return sendEmail({
@@ -98,6 +101,7 @@ export async function sendCustomerPaymentConfirmation(
     subject: "Your Globe Travel Voyage order is confirmed",
     html,
     type: "payment_confirmation",
+    userId: payload.userId,
   });
 }
 

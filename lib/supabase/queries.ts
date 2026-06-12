@@ -497,3 +497,106 @@ export async function fetchGuideTours() {
 
   return data ?? [];
 }
+
+export interface AdminVisaCaseRow {
+  id: string;
+  case_number: string;
+  user_id: string;
+  service_name: string;
+  status: string;
+  progress_percent: number;
+  payment_id: string | null;
+  booking_id: string | null;
+  created_at: string;
+}
+
+export interface AdminEmailLogRow {
+  id: string;
+  user_id: string | null;
+  email: string;
+  subject: string;
+  type: string;
+  status: string;
+  created_at: string;
+}
+
+export interface AdminStripeBookingRow {
+  id: string;
+  user_id: string | null;
+  booking_type: string;
+  listing_title: string | null;
+  status: string;
+  total_amount: number | null;
+  currency: string | null;
+  payment_id: string | null;
+  created_at: string;
+}
+
+export async function fetchAdminVisaCases(): Promise<{
+  cases: AdminVisaCaseRow[];
+  error?: string;
+  tableMissing?: boolean;
+}> {
+  const admin = createAdminClient();
+  if (!admin) return { cases: [] };
+
+  const { data, error } = await admin
+    .from("visa_cases")
+    .select("id, case_number, user_id, service_name, status, progress_percent, payment_id, booking_id, created_at")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      return { cases: [], tableMissing: true, error: "visa_cases table missing — run migration 010_launch_platform.sql" };
+    }
+    return { cases: [], error: error.message };
+  }
+  return { cases: (data ?? []) as AdminVisaCaseRow[] };
+}
+
+export async function fetchAdminStripeBookings(): Promise<{
+  bookings: AdminStripeBookingRow[];
+  error?: string;
+  tableMissing?: boolean;
+}> {
+  const admin = createAdminClient();
+  if (!admin) return { bookings: [] };
+
+  const { data, error } = await admin
+    .from("bookings")
+    .select("id, user_id, booking_type, listing_title, status, total_amount, currency, payment_id, created_at")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      return { bookings: [], tableMissing: true, error: "bookings table missing" };
+    }
+    return { bookings: [], error: error.message };
+  }
+  return { bookings: (data ?? []) as AdminStripeBookingRow[] };
+}
+
+export async function fetchAdminEmailLogs(): Promise<{
+  logs: AdminEmailLogRow[];
+  error?: string;
+  tableMissing?: boolean;
+}> {
+  const admin = createAdminClient();
+  if (!admin) return { logs: [] };
+
+  const { data, error } = await admin
+    .from("email_logs")
+    .select("id, user_id, email, subject, type, status, created_at")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      return { logs: [], tableMissing: true, error: "email_logs table missing — run migration 010_launch_platform.sql" };
+    }
+    return { logs: [], error: error.message };
+  }
+  return { logs: (data ?? []) as AdminEmailLogRow[] };
+}

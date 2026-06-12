@@ -77,6 +77,67 @@ export async function uploadCaseDocument(input: {
   return { ok: true, fileUrl };
 }
 
+export async function markCaseDocumentPrepared(input: {
+  caseId: string;
+  documentType: string;
+  documentId?: string;
+}): Promise<{ ok: boolean; error?: string; tableMissing?: boolean }> {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return { ok: false, error: "Sign in to update your checklist." };
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Sign in to update your checklist." };
+
+  const admin = createAdminClient() as UntypedDb | null;
+  if (!admin) return { ok: true };
+
+  const query = admin.from("case_documents");
+  const updatePayload = { status: "prepared", file_name: null };
+
+  if (input.documentId) {
+    const { error } = await query.update(updatePayload).eq("id", input.documentId).eq("user_id", user.id);
+    if (error) {
+      if (isMissingTableError(error)) {
+        return { ok: false, error: "Document checklist is not available yet. Run migration 010_launch_platform.sql.", tableMissing: true };
+      }
+      return { ok: false, error: error.message };
+    }
+    return { ok: true };
+  }
+
+  const { data: existing } = await query
+    .select("id")
+    .eq("case_id", input.caseId)
+    .eq("document_type", input.documentType)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await query.update(updatePayload).eq("id", (existing as { id: string }).id);
+    if (error) {
+      if (isMissingTableError(error)) {
+        return { ok: false, error: "case_documents table is not available. Run migration 010_launch_platform.sql.", tableMissing: true };
+      }
+      return { ok: false, error: error.message };
+    }
+  } else {
+    const { error } = await query.insert({
+      case_id: input.caseId,
+      user_id: user.id,
+      document_type: input.documentType,
+      status: "prepared",
+    });
+    if (error) {
+      if (isMissingTableError(error)) {
+        return { ok: false, error: "case_documents table is not available. Run migration 010_launch_platform.sql.", tableMissing: true };
+      }
+      return { ok: false, error: error.message };
+    }
+  }
+
+  return { ok: true };
+}
+
 export async function submitSupportTicket(input: {
   subject: string;
   message: string;
