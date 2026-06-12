@@ -133,10 +133,16 @@ export async function POST(request: Request) {
         },
       ],
       success_url: `${siteUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}/payment-cancelled`,
+      cancel_url: `${siteUrl}/payment-cancelled?product_key=${encodeURIComponent(productKey)}`,
       customer_email: userEmail,
       metadata,
     });
+
+    if (typeof session.payment_intent === "string") {
+      await stripe.paymentIntents.update(session.payment_intent, {
+        metadata: { checkout_session_id: session.id, product_key: productKey },
+      });
+    }
 
     if (!session.url) {
       return NextResponse.json({ error: "Stripe did not return a checkout URL." }, { status: 500 });
@@ -157,29 +163,39 @@ export async function POST(request: Request) {
 
     if (!record.ok) {
       console.error("Payment record insert failed:", record.error);
-    } else {
-      const bookingResult = await createPendingBooking({
-        userId,
-        email: userEmail ?? null,
-        providerUserId: metadata.provider_user_id || null,
-        productKey,
-        amount,
-        currency,
-        stripeSessionId: session.id,
-        paymentId: record.id,
-        agentId: metadata.agent_id || null,
-        listingId: metadata.listing_id || null,
-        listingTitle: metadata.listing_title || name,
-      });
-      if (!bookingResult.ok) {
-        console.error("Pending booking insert failed:", bookingResult.error);
+      try {
+        await stripe.checkout.sessions.expire(session.id);
+      } catch {
+        /* session may already be active */
       }
+      return NextResponse.json(
+        { error: `Could not save payment record: ${record.error}` },
+        { status: 500 }
+      );
+    }
+
+    const bookingResult = await createPendingBooking({
+      userId,
+      email: userEmail ?? null,
+      providerUserId: metadata.provider_user_id || null,
+      productKey,
+      amount,
+      currency,
+      stripeSessionId: session.id,
+      paymentId: record.id,
+      agentId: metadata.agent_id || null,
+      listingId: metadata.listing_id || null,
+      listingTitle: metadata.listing_title || name,
+    });
+    if (!bookingResult.ok) {
+      console.error("Pending booking insert failed:", bookingResult.error);
     }
 
     return NextResponse.json({
       url: session.url,
       sessionId: session.id,
-      paymentRecordSaved: record.ok,
+      paymentRecordSaved: true,
+      productKey,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Checkout session creation failed.";

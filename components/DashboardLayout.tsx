@@ -27,6 +27,7 @@ export function DashboardLayout({
   verified,
   roleColor = "bg-blue/10 text-blue",
   avatarColor = "bg-navy text-gold",
+  defaultTab,
 }: {
   role: string;
   name: string;
@@ -38,8 +39,12 @@ export function DashboardLayout({
   verified?: boolean;
   roleColor?: string;
   avatarColor?: string;
+  defaultTab?: string;
 }) {
-  const [active, setActive] = useState(tabs[0]?.key);
+  const initialTab =
+    defaultTab && tabs.some((t) => t.key === defaultTab) ? defaultTab : tabs[0]?.key;
+  const [active, setActive] = useState(initialTab);
+
   const activeTab = tabs.find((t) => t.key === active);
 
   return (

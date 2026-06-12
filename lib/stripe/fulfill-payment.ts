@@ -5,6 +5,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/profile-utils";
 import { splitPaymentAmount } from "@/lib/stripe/commission";
 import { fulfillPaymentFromCheckoutSession } from "@/lib/stripe/payment-records";
+import { resolveUserIdFromEmail } from "@/lib/stripe/link-user";
+import { activatePaidService } from "@/lib/stripe/activate-service";
+import {
+  sendCustomerPaymentConfirmation,
+  sendAdminPaymentNotification,
+} from "@/lib/email/send-payment-emails";
+import { getCheckoutProduct } from "@/lib/stripe/products";
 
 const BOOKING_TYPE_MAP: Record<string, string> = {
   usa_visa_consultation: "visa_consultation",
@@ -41,9 +48,19 @@ function bookingTypeFromProduct(productKey: string): string {
   return BOOKING_TYPE_MAP[productKey] ?? productKey;
 }
 
+export interface FulfillResult {
+  ok: true;
+  bookingId?: string;
+  paymentId?: string;
+  visaApplicationId?: string;
+  entitlementType?: string;
+  invoiceNumber?: string;
+  alreadyFulfilled?: boolean;
+}
+
 export async function fulfillStripePaymentComplete(
   session: Stripe.Checkout.Session
-): Promise<{ ok: true; bookingId?: string } | { ok: false; error: string }> {
+): Promise<FulfillResult | { ok: false; error: string }> {
   if (session.payment_status !== "paid") {
     return { ok: false, error: "Session is not paid." };
   }
@@ -59,53 +76,103 @@ export async function fulfillStripePaymentComplete(
     session.metadata?.email ??
     null;
 
+  const meta = session.metadata ?? {};
+  const productKey = meta.product_key ?? "";
+  const product = getCheckoutProduct(productKey);
+  const amount = session.amount_total != null ? session.amount_total / 100 : 0;
+  const currency = (session.currency ?? "usd").toUpperCase();
+
+  let userId = meta.user_id || null;
+  if (!userId && email) {
+    userId = await resolveUserIdFromEmail(email);
+  }
+
+  const admin = createAdminClient();
+  if (!admin) {
+    return { ok: false, error: "Supabase admin client is not configured." };
+  }
+
+  const { data: existingPaid } = await admin
+    .from("payments")
+    .select("id, booking_id, invoice_number, status")
+    .eq("stripe_session_id", session.id)
+    .eq("status", "paid")
+    .maybeSingle();
+
+  if (existingPaid) {
+    const row = existingPaid as { id: string; booking_id: string | null; invoice_number: string | null };
+    return {
+      ok: true,
+      paymentId: row.id,
+      bookingId: row.booking_id ?? undefined,
+      invoiceNumber: row.invoice_number ?? undefined,
+      alreadyFulfilled: true,
+    };
+  }
+
   const fulfillResult = await fulfillPaymentFromCheckoutSession({
     stripeSessionId: session.id,
     stripePaymentIntentId: paymentIntentId,
-    amount: session.amount_total != null ? session.amount_total / 100 : undefined,
-    currency: session.currency ?? undefined,
+    amount,
+    currency,
     email,
+    userId,
+    serviceType: productKey,
+    description: meta.listing_title || product?.name || productKey,
+    providerUserId: meta.provider_user_id || null,
+    providerServiceId: meta.provider_service_id || null,
   });
 
   if (!fulfillResult.ok) return fulfillResult;
 
-  const admin = createAdminClient();
-  if (!admin) return { ok: true };
-
-  const meta = session.metadata ?? {};
-  const productKey = meta.product_key ?? "";
-  const amount = session.amount_total != null ? session.amount_total / 100 : 0;
-  const currency = (session.currency ?? "usd").toUpperCase();
-  const userId = meta.user_id || null;
+  const paymentId = fulfillResult.paymentId;
   const providerUserId = meta.provider_user_id || null;
   const split = providerUserId ? splitPaymentAmount(amount) : null;
 
   const { data: paymentRow } = await admin
     .from("payments")
-    .select("id, booking_id")
-    .eq("stripe_session_id", session.id)
-    .maybeSingle();
+    .select("id, booking_id, invoice_number, description, service_type")
+    .eq("id", paymentId)
+    .single();
 
-  const paymentId = (paymentRow as { id: string; booking_id: string | null } | null)?.id;
-  let bookingId = (paymentRow as { id: string; booking_id: string | null } | null)?.booking_id ?? null;
+  const payment = paymentRow as {
+    id: string;
+    booking_id: string | null;
+    invoice_number: string | null;
+    description: string | null;
+    service_type: string | null;
+  };
 
-  if (!bookingId && paymentId) {
+  let bookingId = payment.booking_id ?? null;
+
+  if (!bookingId) {
     const { data: existingBooking } = await admin
       .from("bookings")
-      .select("id")
+      .select("id, status")
       .eq("stripe_session_id", session.id)
       .maybeSingle();
 
     bookingId = (existingBooking as { id: string } | null)?.id ?? null;
 
-    if (!bookingId) {
+    if (bookingId) {
+      await admin
+        .from("bookings")
+        .update({
+          status: "confirmed",
+          payment_id: paymentId,
+          stripe_payment_id: paymentIntentId,
+          user_id: userId || undefined,
+          customer_email: email,
+        })
+        .eq("id", bookingId);
+    } else {
       const bookingInsert = {
         user_id: userId || null,
         customer_email: email,
         provider_user_id: providerUserId || null,
         booking_type: bookingTypeFromProduct(productKey),
         listing_id: meta.listing_id || null,
-        listing_title: meta.listing_title || null,
+        listing_title: meta.listing_title || product?.name || null,
         agent_id: meta.agent_id || null,
         payment_id: paymentId,
         status: "confirmed",
@@ -124,47 +191,91 @@ export async function fulfillStripePaymentComplete(
 
       if (bookingError && !isMissingTableError(bookingError)) {
         console.error("Booking insert failed:", bookingError.message);
-      } else if (booking) {
+        return { ok: false, error: `Booking save failed: ${bookingError.message}` };
+      }
+      if (booking) {
         bookingId = (booking as { id: string }).id;
-        await admin.from("payments").update({ booking_id: bookingId }).eq("id", paymentId);
       }
-    } else {
-      await admin
-        .from("bookings")
-        .update({ status: "confirmed", payment_id: paymentId, stripe_payment_id: paymentIntentId })
-        .eq("id", bookingId);
+    }
+
+    if (bookingId) {
+      await admin.from("payments").update({ booking_id: bookingId }).eq("id", paymentId);
     }
   }
 
-  if (paymentId) {
-    const { data: existingTx } = await admin
-      .from("transactions")
-      .select("id")
-      .eq("stripe_session_id", session.id)
-      .maybeSingle();
+  const { data: existingTx } = await admin
+    .from("transactions")
+    .select("id")
+    .eq("stripe_session_id", session.id)
+    .maybeSingle();
 
-    if (!existingTx) {
-      const { error: txError } = await admin.from("transactions").insert({
-        payment_id: paymentId,
-        booking_id: bookingId,
-        user_id: userId || null,
-        provider_user_id: providerUserId || null,
-        transaction_type: "payment",
-        amount,
-        platform_fee: split?.platformFee ?? null,
-        provider_amount: split?.providerAmount ?? null,
-        currency,
-        status: "completed",
-        stripe_payment_intent_id: paymentIntentId,
-        stripe_session_id: session.id,
-        description: meta.listing_title || productKey || "Stripe payment",
-      });
+  if (!existingTx) {
+    const { error: txError } = await admin.from("transactions").insert({
+      payment_id: paymentId,
+      booking_id: bookingId,
+      user_id: userId || null,
+      provider_user_id: providerUserId || null,
+      transaction_type: "payment",
+      amount,
+      platform_fee: split?.platformFee ?? null,
+      provider_amount: split?.providerAmount ?? null,
+      currency,
+      status: "completed",
+      stripe_payment_intent_id: paymentIntentId,
+      stripe_session_id: session.id,
+      description: meta.listing_title || product?.name || productKey || "Stripe payment",
+    });
 
-      if (txError && !isMissingTableError(txError)) {
-        console.error("Transaction insert failed:", txError.message);
-      }
+    if (txError && !isMissingTableError(txError)) {
+      console.error("Transaction insert failed:", txError.message);
+      return { ok: false, error: `Transaction save failed: ${txError.message}` };
     }
   }
 
-  return { ok: true, bookingId: bookingId ?? undefined };
+  let visaApplicationId: string | undefined;
+  let entitlementType: string | undefined;
+
+  if (userId && productKey) {
+    const activation = await activatePaidService({
+      userId,
+      productKey,
+      paymentId,
+      bookingId,
+      email,
+      listingTitle: meta.listing_title || null,
+      agentId: meta.agent_id || null,
+    });
+    if (activation) {
+      visaApplicationId = activation.visaApplicationId;
+      entitlementType = activation.entitlementType;
+    }
+  }
+
+  if (email) {
+    const emailPayload = {
+      customerEmail: email,
+      customerName: session.customer_details?.name ?? null,
+      serviceType: payment.service_type ?? productKey,
+      description: payment.description ?? product?.name ?? "",
+      amount,
+      currency,
+      invoiceNumber: payment.invoice_number ?? `GTV-${paymentId.slice(0, 8).toUpperCase()}`,
+      paymentId,
+      bookingId: bookingId ?? undefined,
+      visaApplicationId,
+    };
+    await Promise.all([
+      sendCustomerPaymentConfirmation(emailPayload),
+      sendAdminPaymentNotification(emailPayload),
+    ]);
+  }
+
+  return {
+    ok: true,
+    bookingId: bookingId ?? undefined,
+    paymentId,
+    visaApplicationId,
+    entitlementType,
+    invoiceNumber: payment.invoice_number ?? undefined,
+  };
 }

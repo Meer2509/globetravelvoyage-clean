@@ -1,14 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/auth";
 import {
   fetchCustomerDashboard,
-  fetchCustomerPayments,
   type CustomerDashboardData,
-  type PaymentRow,
 } from "@/lib/supabase/queries";
+import {
+  fetchCustomerPaymentsExtended,
+  fetchCustomerStripeBookings,
+  fetchCustomerVisaCase,
+  type PaymentRowExtended,
+  type StripeBookingRow,
+  type VisaCaseData,
+} from "@/lib/supabase/payment-queries";
+import { VisaCasePanel } from "@/components/VisaCasePanel";
 import { formatPaymentAmount, formatPaymentDate, paymentServiceLabel } from "@/lib/payments-display";
 import { fetchCustomerLeadRequests, fetchCustomerBookingRequests } from "@/lib/supabase/mvp-queries";
 import { submitSupportTicket } from "@/lib/supabase/actions";
@@ -34,11 +42,12 @@ import {
 
 const tabs: DashboardTab[] = [
   { key: "overview", label: "Overview", icon: "globe" },
+  { key: "visa-case", label: "My Visa Case", icon: "visa" },
   { key: "timeline", label: "Trip Timeline", icon: "planner" },
   { key: "visas", label: "Visa Applications", icon: "visa" },
   { key: "saved", label: "Saved Trips", icon: "star" },
   { key: "bookings", label: "Bookings", icon: "doc" },
-  { key: "payments", label: "Payments", icon: "star" },
+  { key: "billing", label: "Billing & Payments", icon: "star" },
   { key: "documents", label: "Documents", icon: "doc" },
   { key: "referrals", label: "Referrals", icon: "users" },
   { key: "support", label: "Support", icon: "shield" },
@@ -123,10 +132,14 @@ function AiPanel() {
 
 // ─── Page Component ───────────────────────────────────────────────────────────
 
-export default function CustomerDashboard() {
+function CustomerDashboardContent() {
+  const searchParams = useSearchParams();
+  const defaultTab = searchParams.get("tab") ?? undefined;
   const user = useDashboardUser();
   const [live, setLive] = useState<CustomerDashboardData | null>(null);
-  const [customerPayments, setCustomerPayments] = useState<PaymentRow[]>([]);
+  const [customerPayments, setCustomerPayments] = useState<PaymentRowExtended[]>([]);
+  const [stripeBookings, setStripeBookings] = useState<StripeBookingRow[]>([]);
+  const [visaCase, setVisaCase] = useState<VisaCaseData | null>(null);
   const [supportSubject, setSupportSubject] = useState("");
   const [supportBody, setSupportBody] = useState("");
   const [supportSending, setSupportSending] = useState(false);
@@ -137,7 +150,9 @@ export default function CustomerDashboard() {
     fetchCustomerDashboard().then((data) => {
       if (data) setLive(data);
     });
-    fetchCustomerPayments().then(setCustomerPayments);
+    fetchCustomerPaymentsExtended().then(setCustomerPayments);
+    fetchCustomerStripeBookings().then(setStripeBookings);
+    fetchCustomerVisaCase().then(setVisaCase);
   }, []);
 
   async function handleSupportSubmit(e: React.FormEvent) {
@@ -170,7 +185,8 @@ export default function CustomerDashboard() {
   const supportCount = live?.supportTickets.length ?? 0;
 
   const customerTabs = tabs.map((t) => {
-    if (t.key === "payments" && customerPayments.length > 0) return { ...t, badge: customerPayments.length };
+    if (t.key === "billing" && customerPayments.length > 0) return { ...t, badge: customerPayments.length };
+    if (t.key === "visa-case" && visaCase) return { ...t, badge: "Active" };
     if (t.key === "visas" && visaCount > 0) return { ...t, badge: visaCount };
     if (t.key === "bookings" && bookingCount > 0) return { ...t, badge: bookingCount };
     if (t.key === "support" && supportCount > 0) return { ...t, badge: supportCount };
@@ -213,6 +229,8 @@ export default function CustomerDashboard() {
         <AiPanel />
       </div>
     ),
+
+    "visa-case": <VisaCasePanel visaCase={visaCase} />,
 
     timeline: (
       <DashboardEmpty
@@ -267,7 +285,23 @@ export default function CustomerDashboard() {
 
     bookings: (
       <div className="space-y-4">
-        <Panel title="Booking requests" subtitle="Live from Supabase">
+        {stripeBookings.length > 0 && (
+          <Panel title="Paid bookings" subtitle="Confirmed from Stripe checkout">
+            {stripeBookings.map((b) => (
+              <TableRow
+                key={b.id}
+                cells={[
+                  b.listing_title ?? b.booking_type.replace(/_/g, " "),
+                  new Date(b.created_at).toLocaleDateString(),
+                  b.total_amount != null ? formatPaymentAmount(Number(b.total_amount), b.currency ?? "USD") : "—",
+                ]}
+                badge={b.status}
+                badgeColor={b.status === "confirmed" ? "green" : "blue"}
+              />
+            ))}
+          </Panel>
+        )}
+        <Panel title="Booking requests" subtitle="Free quote requests">
           {(live?.bookingRequests.length ?? 0) === 0 ? (
             <DashboardEmpty
               title="No booking requests"
@@ -308,7 +342,7 @@ export default function CustomerDashboard() {
       />
     ),
 
-    payments: (
+    billing: (
       <div className="space-y-5">
         <div className="grid gap-4 sm:grid-cols-2">
           <StatCard
@@ -331,29 +365,48 @@ export default function CustomerDashboard() {
             emoji="💳"
             title="No payments yet"
             description="Your Stripe checkout purchases will appear here after you complete a payment."
-            action={{ label: "Explore free services", href: "/services" }}
+            action={{ label: "Explore premium services", href: "/services#premium" }}
           />
         ) : (
-          <Panel title="Payment history" subtitle="Live from Supabase payments table">
+          <Panel title="Payment history" subtitle="Invoices and receipts for all purchases">
             {customerPayments.map((p) => (
-              <TableRow
-                key={p.id}
-                cells={[
-                  paymentServiceLabel(p.service_type, p.description),
-                  formatPaymentDate(p.paid_at ?? p.created_at),
-                  formatPaymentAmount(Number(p.amount), p.currency),
-                ]}
-                badge={p.status}
-                badgeColor={p.status === "paid" ? "green" : "blue"}
-              />
+              <div key={p.id} className="border-b border-soft-200 last:border-0 py-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-navy">
+                      {paymentServiceLabel(p.service_type, p.description)}
+                    </p>
+                    <p className="text-xs text-muted mt-0.5">
+                      {formatPaymentDate(p.paid_at ?? p.created_at)}
+                      {p.invoice_number ? ` · Invoice ${p.invoice_number}` : ""}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-navy">{formatPaymentAmount(Number(p.amount), p.currency)}</p>
+                    <span className={`text-xs font-bold capitalize ${p.status === "paid" ? "text-emerald-600" : "text-muted"}`}>
+                      {p.status}
+                    </span>
+                  </div>
+                </div>
+                {p.status === "paid" && (
+                  <a
+                    href={`/api/receipt/${p.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-block text-xs font-semibold text-blue hover:underline"
+                  >
+                    Download receipt →
+                  </a>
+                )}
+              </div>
             ))}
           </Panel>
         )}
 
-        <Link href="/services" className="btn-primary inline-flex px-4 py-2.5 text-sm">
-          Explore services
+        <Link href="/services#premium" className="btn-outline inline-flex px-4 py-2.5 text-sm">
+          Browse premium services
         </Link>
-        <p className="text-xs text-muted">Most features are free. Premium upgrades use secure Stripe checkout.</p>
+        <p className="text-xs text-muted">Secure checkout powered by Stripe. Confirmation emails sent on purchase.</p>
       </div>
     ),
 
@@ -409,6 +462,15 @@ export default function CustomerDashboard() {
       sections={sections}
       roleColor="bg-blue/10 text-blue"
       avatarColor="bg-navy text-gold"
+      defaultTab={defaultTab}
     />
+  );
+}
+
+export default function CustomerDashboard() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-soft flex items-center justify-center"><div className="skeleton h-64 w-full max-w-4xl rounded-2xl" /></div>}>
+      <CustomerDashboardContent />
+    </Suspense>
   );
 }

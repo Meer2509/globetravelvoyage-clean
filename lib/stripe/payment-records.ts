@@ -3,6 +3,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/profile-utils";
 import { splitPaymentAmount } from "@/lib/stripe/commission";
+import { generateInvoiceNumber } from "@/lib/stripe/invoice";
+import { resolveUserIdFromEmail } from "@/lib/stripe/link-user";
 
 export interface CreatePaymentInput {
   userId: string | null;
@@ -14,6 +16,7 @@ export interface CreatePaymentInput {
   stripeSessionId: string;
   providerUserId?: string | null;
   providerServiceId?: string | null;
+  customerName?: string | null;
 }
 
 export interface FulfillPaymentInput {
@@ -22,6 +25,11 @@ export interface FulfillPaymentInput {
   amount?: number;
   currency?: string;
   email?: string | null;
+  userId?: string | null;
+  serviceType?: string;
+  description?: string;
+  providerUserId?: string | null;
+  providerServiceId?: string | null;
 }
 
 type PaymentInsert = {
@@ -34,6 +42,8 @@ type PaymentInsert = {
   stripe_session_id: string;
   stripe_payment_id: string;
   description: string;
+  invoice_number?: string;
+  customer_name?: string | null;
   provider_user_id?: string | null;
   provider_service_id?: string | null;
   platform_fee?: number | null;
@@ -47,6 +57,8 @@ type PaymentUpdate = {
   amount?: number;
   currency?: string;
   email?: string | null;
+  user_id?: string | null;
+  invoice_number?: string;
 };
 
 export async function createPaymentRecord(
@@ -58,6 +70,7 @@ export async function createPaymentRecord(
   }
 
   const split = input.providerUserId ? splitPaymentAmount(input.amount) : null;
+  const invoiceNumber = await generateInvoiceNumber();
 
   const row: PaymentInsert = {
     user_id: input.userId,
@@ -69,6 +82,8 @@ export async function createPaymentRecord(
     stripe_session_id: input.stripeSessionId,
     stripe_payment_id: input.stripeSessionId,
     description: input.description,
+    invoice_number: invoiceNumber,
+    customer_name: input.customerName ?? null,
     provider_user_id: input.providerUserId ?? null,
     provider_service_id: input.providerServiceId ?? null,
     platform_fee: split?.platformFee ?? null,
@@ -79,7 +94,7 @@ export async function createPaymentRecord(
 
   if (error) {
     if (isMissingTableError(error)) {
-      return { ok: false, error: "Payments table not found. Run supabase/migrations/002_intake_tables.sql." };
+      return { ok: false, error: "Payments table not found. Run supabase migrations." };
     }
     return { ok: false, error: error.message };
   }
@@ -90,7 +105,7 @@ export async function createPaymentRecord(
 async function updatePaymentBySession(
   stripeSessionId: string,
   updates: PaymentUpdate
-): Promise<{ ok: true } | { ok: false; error: string }> {
+): Promise<{ ok: true; paymentId?: string } | { ok: false; error: string }> {
   const admin = createAdminClient();
   if (!admin) return { ok: false, error: "Supabase admin client is not configured." };
 
@@ -101,20 +116,94 @@ async function updatePaymentBySession(
     .select("id");
 
   if (sessionError) return { ok: false, error: sessionError.message };
-  if (bySession && bySession.length > 0) return { ok: true };
+  if (bySession && bySession.length > 0) {
+    return { ok: true, paymentId: (bySession[0] as { id: string }).id };
+  }
 
-  const { error: legacyError } = await admin
+  const { data: byLegacy, error: legacyError } = await admin
     .from("payments")
     .update(updates)
-    .eq("stripe_payment_id", stripeSessionId);
+    .eq("stripe_payment_id", stripeSessionId)
+    .select("id");
 
   if (legacyError) return { ok: false, error: legacyError.message };
+  if (byLegacy && byLegacy.length > 0) {
+    return { ok: true, paymentId: (byLegacy[0] as { id: string }).id };
+  }
+
   return { ok: true };
+}
+
+/** Create paid payment row from session if checkout insert was missed. */
+async function ensurePaymentRecord(
+  input: FulfillPaymentInput
+): Promise<{ ok: true; paymentId: string } | { ok: false; error: string }> {
+  const admin = createAdminClient();
+  if (!admin) return { ok: false, error: "Supabase admin client is not configured." };
+
+  const { data: existing } = await admin
+    .from("payments")
+    .select("id")
+    .eq("stripe_session_id", input.stripeSessionId)
+    .maybeSingle();
+
+  if (existing) {
+    return { ok: true, paymentId: (existing as { id: string }).id };
+  }
+
+  let userId = input.userId ?? null;
+  if (!userId && input.email) {
+    userId = await resolveUserIdFromEmail(input.email);
+  }
+
+  const invoiceNumber = await generateInvoiceNumber();
+  const amount = input.amount ?? 0;
+  const split = input.providerUserId ? splitPaymentAmount(amount) : null;
+
+  const { data, error } = await admin
+    .from("payments")
+    .insert({
+      user_id: userId,
+      email: input.email ?? null,
+      service_type: input.serviceType ?? "unknown",
+      amount,
+      currency: (input.currency ?? "USD").toUpperCase(),
+      status: "paid",
+      stripe_session_id: input.stripeSessionId,
+      stripe_payment_id: input.stripeSessionId,
+      stripe_payment_intent_id: input.stripePaymentIntentId,
+      description: input.description ?? "Stripe payment",
+      invoice_number: invoiceNumber,
+      paid_at: new Date().toISOString(),
+      provider_user_id: input.providerUserId ?? null,
+      provider_service_id: input.providerServiceId ?? null,
+      platform_fee: split?.platformFee ?? null,
+      provider_amount: split?.providerAmount ?? null,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      return { ok: false, error: "Payments table not found." };
+    }
+    return { ok: false, error: error.message };
+  }
+
+  return { ok: true, paymentId: (data as { id: string }).id };
 }
 
 export async function fulfillPaymentFromCheckoutSession(
   input: FulfillPaymentInput
-): Promise<{ ok: true } | { ok: false; error: string }> {
+): Promise<{ ok: true; paymentId: string } | { ok: false; error: string }> {
+  const ensured = await ensurePaymentRecord(input);
+  if (!ensured.ok) return ensured;
+
+  let userId = input.userId ?? null;
+  if (!userId && input.email) {
+    userId = await resolveUserIdFromEmail(input.email);
+  }
+
   const updates: PaymentUpdate = {
     status: "paid",
     stripe_payment_intent_id: input.stripePaymentIntentId,
@@ -124,8 +213,24 @@ export async function fulfillPaymentFromCheckoutSession(
   if (input.amount !== undefined) updates.amount = input.amount;
   if (input.currency) updates.currency = input.currency.toUpperCase();
   if (input.email) updates.email = input.email;
+  if (userId) updates.user_id = userId;
 
-  return updatePaymentBySession(input.stripeSessionId, updates);
+  const admin = createAdminClient();
+  if (admin) {
+    const { data: row } = await admin
+      .from("payments")
+      .select("invoice_number")
+      .eq("id", ensured.paymentId)
+      .maybeSingle();
+    if (!(row as { invoice_number: string | null } | null)?.invoice_number) {
+      updates.invoice_number = await generateInvoiceNumber();
+    }
+  }
+
+  const result = await updatePaymentBySession(input.stripeSessionId, updates);
+  if (!result.ok) return result;
+
+  return { ok: true, paymentId: result.paymentId ?? ensured.paymentId };
 }
 
 export async function markPaymentStatusBySession(
@@ -142,16 +247,4 @@ export async function markPaymentStatusBySession(
 
   if (error) return { ok: false, error: error.message };
   return { ok: true };
-}
-
-/** @deprecated Use fulfillPaymentFromCheckoutSession */
-export async function updatePaymentBySessionId(
-  stripeSessionId: string,
-  updates: { status: string; amount?: number }
-): Promise<{ ok: true } | { ok: false; error: string }> {
-  return fulfillPaymentFromCheckoutSession({
-    stripeSessionId,
-    stripePaymentIntentId: null,
-    amount: updates.amount,
-  });
 }

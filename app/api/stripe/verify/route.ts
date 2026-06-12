@@ -27,9 +27,23 @@ export async function GET(request: Request) {
     const product = productKey ? getCheckoutProduct(productKey) : undefined;
 
     let bookingId: string | undefined;
+    let paymentId: string | undefined;
+    let visaApplicationId: string | undefined;
+    let entitlementType: string | undefined;
+    let invoiceNumber: string | undefined;
+    let alreadyFulfilled = false;
+
     if (paid) {
       const fulfill = await fulfillStripeCheckoutSession(session);
-      if (fulfill.ok && fulfill.bookingId) bookingId = fulfill.bookingId;
+      if (!fulfill.ok) {
+        return NextResponse.json({ error: fulfill.error }, { status: 500 });
+      }
+      bookingId = fulfill.bookingId;
+      paymentId = fulfill.paymentId;
+      visaApplicationId = fulfill.visaApplicationId;
+      entitlementType = fulfill.entitlementType;
+      invoiceNumber = fulfill.invoiceNumber;
+      alreadyFulfilled = fulfill.alreadyFulfilled ?? false;
     }
 
     const listingTitle = session.metadata?.listing_title;
@@ -37,15 +51,28 @@ export async function GET(request: Request) {
       ? `${product?.name ?? "Purchase"}: ${listingTitle}`
       : product?.name ?? session.metadata?.product_key ?? "Your purchase";
 
+    const isVisaService =
+      productKey.includes("visa") ||
+      productKey === "full_visa_application_support" ||
+      entitlementType?.includes("visa");
+
     return NextResponse.json({
       ok: true,
       paid,
       sessionId: session.id,
       productName: displayName,
+      productKey,
       serviceType: productKey || null,
       amount,
       currency: session.currency?.toUpperCase() ?? "USD",
       bookingId,
+      paymentId,
+      visaApplicationId,
+      entitlementType,
+      invoiceNumber,
+      alreadyFulfilled,
+      isVisaService,
+      hasVisaCase: Boolean(visaApplicationId),
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Could not verify payment session.";

@@ -41,6 +41,7 @@ export async function POST(request: Request) {
       const result = await fulfillStripeCheckoutSession(session);
       if (!result.ok) {
         console.error("Webhook payment fulfill failed:", result.error);
+        return NextResponse.json({ error: result.error }, { status: 500 });
       }
     } else if (event.type === "checkout.session.expired") {
       const session = event.data.object as Stripe.Checkout.Session;

@@ -262,6 +262,7 @@ export interface PaymentRow {
   stripe_session_id: string | null;
   stripe_payment_intent_id: string | null;
   stripe_payment_id: string | null;
+  invoice_number: string | null;
   created_at: string;
   paid_at: string | null;
 }
@@ -301,7 +302,7 @@ export async function fetchCustomerPayments(): Promise<PaymentRow[]> {
   const { data, error } = await supabase
     .from("payments")
     .select(
-      "id, user_id, email, service_type, amount, currency, status, description, stripe_session_id, stripe_payment_intent_id, stripe_payment_id, created_at, paid_at"
+      "id, user_id, email, service_type, amount, currency, status, description, stripe_session_id, stripe_payment_intent_id, stripe_payment_id, invoice_number, created_at, paid_at"
     )
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
@@ -322,7 +323,7 @@ export async function fetchAdminPayments(): Promise<{
   const { data, error } = await admin
     .from("payments")
     .select(
-      "id, user_id, email, service_type, amount, currency, status, description, stripe_session_id, stripe_payment_intent_id, stripe_payment_id, created_at, paid_at"
+      "id, user_id, email, service_type, amount, currency, status, description, stripe_session_id, stripe_payment_intent_id, stripe_payment_id, invoice_number, created_at, paid_at"
     )
     .order("created_at", { ascending: false })
     .limit(100);

@@ -65,6 +65,7 @@ export default async function AdminPaymentsPage() {
                   <tr className="border-b border-soft-200 bg-soft/50 text-left text-xs font-bold uppercase tracking-wide text-muted">
                     <th className="px-5 py-3">Service</th>
                     <th className="px-5 py-3">Customer</th>
+                    <th className="px-5 py-3">Invoice</th>
                     <th className="px-5 py-3">Amount</th>
                     <th className="px-5 py-3">Status</th>
                     <th className="px-5 py-3">Date</th>
@@ -78,6 +79,9 @@ export default async function AdminPaymentsPage() {
                       </td>
                       <td className="px-5 py-3 text-muted">
                         {p.customer_name ?? p.customer_email ?? p.email ?? "—"}
+                      </td>
+                      <td className="px-5 py-3 font-mono text-xs text-muted">
+                        {p.invoice_number ?? "—"}
                       </td>
                       <td className="px-5 py-3 font-bold text-navy">
                         {formatPaymentAmount(Number(p.amount), p.currency ?? "USD")}

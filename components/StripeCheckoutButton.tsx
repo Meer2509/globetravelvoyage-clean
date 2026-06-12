@@ -55,7 +55,7 @@ export function StripeCheckoutButton({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = (await res.json()) as { url?: string; error?: string };
+      const data = (await res.json()) as { url?: string; error?: string; paymentRecordSaved?: boolean };
       if (!res.ok || !data.url) {
         setError(data.error ?? "Could not start checkout.");
         setLoading(false);
