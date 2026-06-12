@@ -28,7 +28,7 @@ import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DashboardProfileSection } from "@/components/DashboardProfileSection";
 import { CustomerDashboardHero } from "@/components/CustomerDashboardHero";
 import { DashboardEmpty } from "@/components/DashboardEmpty";
-import { visaCaseWorkspacePath } from "@/lib/visa-case-routes";
+import { visaCaseWorkspacePath, dashboardBillingPath, dashboardDocumentsPath, dashboardSupportPath } from "@/lib/visa-case-routes";
 import { MessagesInbox } from "@/components/MessagesInbox";
 import { Disclaimer } from "@/components/Disclaimer";
 import { Stars } from "@/components/Stars";
@@ -224,7 +224,7 @@ function CustomerDashboardContent() {
               {visaCase.checklist.filter((d) => d.required !== false).length} required items ·{" "}
               {visaCase.checklist.filter((d) => ["uploaded", "prepared", "reviewed"].includes(d.status)).length} ready
             </p>
-            <Link href={visaCaseWorkspacePath(visaCase.id, "documents")} className="btn-gold px-5 py-2.5 text-sm">
+            <Link href={dashboardDocumentsPath(visaCase.id)} className="btn-gold px-5 py-2.5 text-sm">
               Open document checklist
             </Link>
           </Panel>
@@ -246,14 +246,14 @@ function CustomerDashboardContent() {
                 ))}
               </div>
             )}
-            <Link href="/dashboard/customer?tab=billing" className="mt-3 inline-block text-xs font-semibold text-blue hover:underline">
+            <Link href={dashboardBillingPath()} className="mt-3 inline-block text-xs font-semibold text-blue hover:underline">
               View all payments →
             </Link>
           </Panel>
           <Panel title="Support & messages" subtitle="Get help with your case">
             <p className="text-sm text-muted mb-3">Questions about documents, payments, or your visa case.</p>
             <div className="flex flex-wrap gap-2">
-              <Link href="/dashboard/customer?tab=support" className="btn-outline px-4 py-2 text-sm">
+              <Link href={dashboardSupportPath(visaCase?.id)} className="btn-outline px-4 py-2 text-sm">
                 Support
               </Link>
               <Link href="/dashboard/customer?tab=messages" className="btn-outline px-4 py-2 text-sm">
@@ -402,7 +402,7 @@ function CustomerDashboardContent() {
                 Upload and track all required documents in your case workspace.
               </p>
               <Link
-                href={visaCaseWorkspacePath(visaCase.id, "documents")}
+                href={dashboardDocumentsPath(visaCase.id)}
                 className="btn-primary px-5 py-2.5 text-sm"
               >
                 Open case workspace

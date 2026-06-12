@@ -6,7 +6,7 @@ import { VisaCaseSummaryCard } from "@/components/VisaCaseSummaryCard";
 import { formatPaymentAmount, formatPaymentDate, paymentServiceLabel } from "@/lib/payments-display";
 import type { ActiveServiceRow } from "@/lib/supabase/payment-queries";
 import type { VisaCaseData } from "@/lib/supabase/payment-queries";
-import { visaCaseWorkspacePath } from "@/lib/visa-case-routes";
+import { visaCaseWorkspacePath, dashboardSupportPath } from "@/lib/visa-case-routes";
 
 export function CustomerActiveServices({
   services,
@@ -96,7 +96,7 @@ export function CustomerActiveServices({
               >
                 Upload documents
               </Link>
-              <Link href="/dashboard/customer?tab=support" className="btn-outline px-5 py-2.5 text-sm">
+              <Link href={dashboardSupportPath(visaCase.id)} className="btn-outline px-5 py-2.5 text-sm">
                 Message support
               </Link>
             </div>

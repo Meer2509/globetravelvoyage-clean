@@ -3,25 +3,22 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { Panel, ProgressBar, TimelineItem } from "@/components/DashboardLayout";
+import { Panel, ProgressBar } from "@/components/DashboardLayout";
 import { CaseDocumentChecklist } from "@/components/CaseDocumentChecklist";
+import { CaseTimeline } from "@/components/CaseTimeline";
+import { CaseSupportForm } from "@/components/CaseSupportForm";
 import { formatPaymentAmount, formatPaymentDate, paymentServiceLabel } from "@/lib/payments-display";
 import type { VisaCaseData } from "@/lib/supabase/payment-queries";
 import { fetchCustomerVisaCaseById } from "@/lib/supabase/visa-case-queries";
-import { VISA_CASE_STATUSES } from "@/lib/visa-case-constants";
+import { downloadCaseChecklist, printCaseChecklist } from "@/lib/visa-case-checklist-download";
+import { computeCaseProgress } from "@/lib/visa-case-progress";
+import { dashboardBillingPath } from "@/lib/visa-case-routes";
 
-const STATUS_LABELS: Record<string, string> = {
-  intake_started: "Intake started",
-  documents_needed: "Documents needed",
-  documents_uploaded: "Documents uploaded",
-  under_review: "Under review",
-  expert_assigned: "Expert assigned",
-  prep_in_progress: "Preparation in progress",
-  ready_for_submission: "Ready for submission",
-  completed: "Completed",
-  cancelled: "Cancelled",
-  "Upload required documents": "Upload required documents",
-};
+function scrollToSection(id: string) {
+  window.setTimeout(() => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 150);
+}
 
 export function VisaCaseWorkspace({
   initialCase,
@@ -32,24 +29,39 @@ export function VisaCaseWorkspace({
 }) {
   const router = useRouter();
   const [visaCase, setVisaCase] = useState(initialCase);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [checklistBusy, setChecklistBusy] = useState(false);
 
   const reload = useCallback(() => {
+    setChecklistBusy(true);
     fetchCustomerVisaCaseById(initialCase.id).then((data) => {
       if (data) setVisaCase(data);
-      setRefreshKey((k) => k + 1);
+      setChecklistBusy(false);
     });
   }, [initialCase.id]);
 
   useEffect(() => {
-    if (window.location.hash === "#documents") {
-      document.getElementById("documents")?.scrollIntoView({ behavior: "smooth" });
-    }
+    const handleHash = () => {
+      const hash = window.location.hash.replace("#", "");
+      if (hash) scrollToSection(hash);
+    };
+    handleHash();
+    window.addEventListener("hashchange", handleHash);
+    return () => window.removeEventListener("hashchange", handleHash);
   }, []);
 
-  const progressPct = visaCase.progressPercent ?? 15;
-  const currentIdx = VISA_CASE_STATUSES.indexOf(visaCase.status as (typeof VISA_CASE_STATUSES)[number]);
-  const stepLabel = STATUS_LABELS[visaCase.currentStep] ?? visaCase.currentStep;
+  function applyProgress(progress?: { progressPercent: number; currentStep: string; status: string }) {
+    if (!progress) return;
+    setVisaCase((prev) => ({
+      ...prev,
+      progressPercent: progress.progressPercent,
+      currentStep: progress.currentStep,
+      status: progress.status,
+    }));
+  }
+
+  const liveProgress = computeCaseProgress(visaCase.checklist);
+  const progressPct = visaCase.progressPercent ?? liveProgress.progressPercent;
+  const stepLabel = visaCase.currentStep || liveProgress.currentStep;
 
   return (
     <div className="min-h-screen bg-soft">
@@ -68,10 +80,26 @@ export function VisaCaseWorkspace({
           <p className="mt-2 text-sm text-white/70">
             {paymentServiceLabel(visaCase.serviceProductKey, visaCase.serviceName)}
           </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => scrollToSection("documents")}
+              className="btn-gold px-4 py-2 text-xs sm:text-sm"
+            >
+              Upload documents
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection("support")}
+              className="rounded-lg border border-white/25 px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-white/10"
+            >
+              Message support
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="container-px py-8 space-y-6 max-w-4xl mx-auto" key={refreshKey}>
+      <div className="container-px py-8 space-y-6 max-w-4xl mx-auto">
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="card p-4">
             <p className="text-xs text-muted">Payment status</p>
@@ -84,49 +112,101 @@ export function VisaCaseWorkspace({
             </p>
           </div>
           <div className="card p-4">
-            <p className="text-xs text-muted">Current step</p>
+            <p className="text-xs text-muted">Next step</p>
             <p className="mt-1 font-bold text-gold">{stepLabel}</p>
           </div>
         </div>
 
-        <Panel title="Case progress" subtitle={`${progressPct}% complete`}>
+        <Panel title="Case progress" subtitle={`${progressPct}% complete · ${liveProgress.done}/${liveProgress.total} documents ready`}>
           <ProgressBar pct={progressPct} label={`${progressPct}% complete`} color="gold" />
-          <div className="mt-6 space-y-1">
-            {VISA_CASE_STATUSES.filter((s) => s !== "cancelled").map((status, i) => (
-              <TimelineItem
-                key={status}
-                title={STATUS_LABELS[status] ?? status}
-                date=""
-                status={currentIdx > i ? "done" : currentIdx === i ? "active" : "upcoming"}
-                last={i === VISA_CASE_STATUSES.length - 2}
-              />
-            ))}
+          <div className="mt-6">
+            <CaseTimeline visaCase={visaCase} />
           </div>
         </Panel>
 
         <div id="documents">
-          <Panel title="Document checklist" subtitle="Required and optional items for your case">
+          <Panel
+            title="Document checklist"
+            subtitle="Required and optional items for your case"
+            action={
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => downloadCaseChecklist(visaCase)}
+                  className="btn-outline px-3 py-1.5 text-xs"
+                >
+                  Download checklist
+                </button>
+                <button
+                  type="button"
+                  onClick={() => printCaseChecklist(visaCase)}
+                  className="btn-outline px-3 py-1.5 text-xs"
+                >
+                  Print checklist
+                </button>
+              </div>
+            }
+          >
+            {checklistBusy && (
+              <p className="text-xs text-muted mb-3">Refreshing your checklist…</p>
+            )}
             <CaseDocumentChecklist
               caseId={visaCase.id}
               items={visaCase.checklist}
               storageReady={storageReady}
               onUpdated={reload}
+              onProgress={applyProgress}
             />
           </Panel>
         </div>
 
-        <div id="support">
-          <Panel title="Support" subtitle="Questions about your case">
-            <div className="flex flex-wrap gap-3">
-              <Link href="/dashboard/customer?tab=support" className="btn-primary px-5 py-2.5 text-sm">
-                Message support
-              </Link>
-              {visaCase.paymentStatus === "paid" && visaCase.invoiceNumber && (
-                <Link href="/dashboard/customer?tab=billing" className="btn-outline px-5 py-2.5 text-sm">
-                  View receipt
-                </Link>
-              )}
+        <Panel title="Payment receipt" subtitle="Your purchase record">
+          <div className="grid gap-3 sm:grid-cols-2 text-sm">
+            <div className="rounded-xl bg-soft p-4">
+              <p className="text-xs text-muted">Service</p>
+              <p className="font-semibold text-navy">
+                {paymentServiceLabel(visaCase.serviceProductKey, visaCase.serviceName)}
+              </p>
             </div>
+            <div className="rounded-xl bg-soft p-4">
+              <p className="text-xs text-muted">Amount</p>
+              <p className="font-semibold text-navy">
+                {visaCase.amount != null ? formatPaymentAmount(visaCase.amount, visaCase.currency) : "—"}
+              </p>
+            </div>
+            <div className="rounded-xl bg-soft p-4">
+              <p className="text-xs text-muted">Date</p>
+              <p className="font-semibold text-navy">{formatPaymentDate(visaCase.createdAt)}</p>
+            </div>
+            <div className="rounded-xl bg-soft p-4">
+              <p className="text-xs text-muted">Status</p>
+              <p className="font-semibold text-emerald-600 capitalize">{visaCase.paymentStatus}</p>
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-3">
+            {visaCase.paymentId ? (
+              <a
+                href={`/api/receipt/${visaCase.paymentId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary px-5 py-2.5 text-sm"
+              >
+                View receipt
+              </a>
+            ) : (
+              <p className="text-sm text-muted rounded-lg border border-soft-200 bg-soft px-4 py-3">
+                Stripe receipt will be available once finalized.
+              </p>
+            )}
+            <Link href={dashboardBillingPath()} className="btn-outline px-5 py-2.5 text-sm">
+              Payment history
+            </Link>
+          </div>
+        </Panel>
+
+        <div id="support">
+          <Panel title="Support" subtitle={`Case ${visaCase.caseNumber}`}>
+            <CaseSupportForm caseId={visaCase.id} caseNumber={visaCase.caseNumber} />
           </Panel>
         </div>
 

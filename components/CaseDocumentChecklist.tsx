@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { VISA_DOCUMENT_CHECKLIST } from "@/lib/visa-case-checklist";
+import { DocumentStatusBadge } from "@/components/DocumentStatusBadge";
 import {
   markCaseDocumentPrepared,
   uploadCaseDocument,
   saveCaseDocumentNotes,
+  type DocumentActionResult,
 } from "@/lib/supabase/case-document-actions";
 
 export type ChecklistItem = {
@@ -17,39 +19,35 @@ export type ChecklistItem = {
   notes?: string | null;
 };
 
-function statusIcon(status: string) {
-  if (status === "reviewed") return "★";
-  if (status === "uploaded") return "✓";
-  if (status === "prepared") return "◆";
-  return "○";
-}
-
-function statusLabel(status: string) {
-  if (status === "reviewed") return "Reviewed";
-  if (status === "uploaded") return "Uploaded";
-  if (status === "prepared") return "Prepared";
-  return "Pending";
-}
+type ProgressUpdate = DocumentActionResult["progress"];
 
 export function CaseDocumentChecklist({
   caseId,
   items,
   storageReady = true,
   onUpdated,
+  onProgress,
 }: {
   caseId: string;
   items: ChecklistItem[];
   storageReady?: boolean;
   onUpdated?: () => void;
+  onProgress?: (progress: ProgressUpdate) => void;
 }) {
+  const [localItems, setLocalItems] = useState<ChecklistItem[]>(items);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [savedNotes, setSavedNotes] = useState<Record<string, boolean>>({});
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
 
+  useEffect(() => {
+    setLocalItems(items);
+  }, [items]);
+
   const checklist: ChecklistItem[] =
-    items.length > 0
-      ? items
+    localItems.length > 0
+      ? localItems
       : VISA_DOCUMENT_CHECKLIST.map((item) => ({
           name: item.documentType,
           status: "pending",
@@ -57,32 +55,48 @@ export function CaseDocumentChecklist({
           notes: null,
         }));
 
+  function patchItem(name: string, patch: Partial<ChecklistItem>) {
+    setLocalItems((prev) =>
+      prev.map((d) => (d.name === name ? { ...d, ...patch } : d))
+    );
+  }
+
   async function handlePrepared(doc: ChecklistItem) {
     setBusy(doc.name);
     setError("");
     setMessage("");
+    patchItem(doc.name, { status: "prepared" });
+
     const result = await markCaseDocumentPrepared({
       caseId,
       documentType: doc.name,
       documentId: doc.documentId ?? doc.id,
     });
     setBusy(null);
+
     if (!result.ok) {
-      setError(result.error ?? "Could not save.");
+      patchItem(doc.name, { status: doc.status });
+      setError(result.error ?? "Could not save. Please try again.");
       return;
     }
+
     setMessage(`${doc.name} marked as prepared.`);
+    if (result.progress) onProgress?.(result.progress);
     onUpdated?.();
   }
 
   async function handleFile(doc: ChecklistItem, file: File) {
     if (!storageReady) {
-      setError("Secure upload coming soon. Mark this item as prepared for now.");
+      setError(
+        "Secure file upload is being activated. You can mark this document as prepared for now."
+      );
       return;
     }
+
     setBusy(doc.name);
     setError("");
     setMessage("");
+
     const result = await uploadCaseDocument({
       caseId,
       documentType: doc.name,
@@ -90,19 +104,21 @@ export function CaseDocumentChecklist({
       file,
     });
     setBusy(null);
+
     if (!result.ok) {
-      setError(result.error ?? "Upload failed.");
+      if (result.storageUnavailable) {
+        setError(
+          "Secure file upload is being activated. You can mark this document as prepared for now."
+        );
+      } else {
+        setError(result.error ?? "Upload failed. Please try again.");
+      }
       return;
     }
-    if (result.storageUnavailable) {
-      setError("Secure upload coming soon. Your item was not stored — mark as prepared instead.");
-      return;
-    }
-    setMessage(
-      result.fileUrl
-        ? `${doc.name} uploaded successfully.`
-        : `${doc.name} saved.`
-    );
+
+    patchItem(doc.name, { status: "uploaded" });
+    setMessage(`${doc.name} uploaded successfully.`);
+    if (result.progress) onProgress?.(result.progress);
     onUpdated?.();
   }
 
@@ -110,6 +126,8 @@ export function CaseDocumentChecklist({
     const notes = noteDrafts[doc.name] ?? doc.notes ?? "";
     setBusy(`notes-${doc.name}`);
     setError("");
+    setMessage("");
+
     const result = await saveCaseDocumentNotes({
       caseId,
       documentType: doc.name,
@@ -117,11 +135,16 @@ export function CaseDocumentChecklist({
       notes,
     });
     setBusy(null);
+
     if (!result.ok) {
       setError(result.error ?? "Could not save notes.");
       return;
     }
+
+    patchItem(doc.name, { notes });
+    setSavedNotes((prev) => ({ ...prev, [doc.name]: true }));
     setMessage(`Notes saved for ${doc.name}.`);
+    setTimeout(() => setSavedNotes((prev) => ({ ...prev, [doc.name]: false })), 2500);
     onUpdated?.();
   }
 
@@ -129,43 +152,28 @@ export function CaseDocumentChecklist({
     <div className="space-y-3">
       {!storageReady && (
         <p className="text-xs rounded-lg border border-gold/30 bg-gold/5 px-3 py-2 text-navy">
-          Secure upload coming soon. You can mark documents as prepared and add notes until file storage is enabled.
+          Secure file upload is being activated. You can mark documents as prepared and add notes until file storage is enabled.
         </p>
       )}
       <ul className="space-y-3">
         {checklist.map((doc) => (
           <li
             key={doc.name}
-            className="rounded-xl border border-soft-200 bg-white px-4 py-4 text-sm space-y-3"
+            className="rounded-xl border border-soft-200 bg-white px-4 py-4 text-sm space-y-3 shadow-sm"
           >
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <div className="flex flex-1 items-center gap-3 min-w-0">
-                <span
-                  className={
-                    doc.status === "reviewed"
-                      ? "text-gold"
-                      : doc.status === "uploaded"
-                        ? "text-emerald-500"
-                        : doc.status === "prepared"
-                          ? "text-gold"
-                          : "text-muted"
-                  }
-                >
-                  {statusIcon(doc.status)}
-                </span>
-                <div className="min-w-0">
-                  <span className="text-navy font-medium block truncate">{doc.name}</span>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="flex flex-1 items-start gap-3 min-w-0">
+                <div className="min-w-0 flex-1">
+                  <span className="text-navy font-semibold block">{doc.name}</span>
                   <span
-                    className={`text-xs font-semibold ${
-                      doc.required !== false ? "text-navy/70" : "text-muted"
+                    className={`text-xs font-semibold mt-0.5 inline-block ${
+                      doc.required !== false ? "text-gold" : "text-muted"
                     }`}
                   >
                     {doc.required !== false ? "Required" : "Optional"}
                   </span>
                 </div>
-                <span className="ml-auto text-xs capitalize text-muted shrink-0">
-                  {statusLabel(doc.status)}
-                </span>
+                <DocumentStatusBadge status={doc.status} />
               </div>
               <div className="flex flex-wrap gap-2 shrink-0">
                 {doc.status !== "uploaded" && doc.status !== "prepared" && doc.status !== "reviewed" && (
@@ -173,14 +181,14 @@ export function CaseDocumentChecklist({
                     type="button"
                     disabled={busy === doc.name}
                     onClick={() => handlePrepared(doc)}
-                    className="rounded-lg border border-soft-200 px-3 py-1.5 text-xs font-semibold text-navy hover:border-gold hover:text-gold disabled:opacity-50"
+                    className="btn-outline px-3 py-1.5 text-xs disabled:opacity-50"
                   >
                     {busy === doc.name ? "Saving…" : "Mark prepared"}
                   </button>
                 )}
                 {storageReady ? (
-                  <label className="rounded-lg border border-navy/15 bg-white px-3 py-1.5 text-xs font-semibold text-navy cursor-pointer hover:bg-navy hover:text-white disabled:opacity-50">
-                    {busy === doc.name ? "Saving…" : "Upload"}
+                  <label className="btn-primary px-3 py-1.5 text-xs cursor-pointer disabled:opacity-50">
+                    {busy === doc.name ? "Uploading…" : "Upload file"}
                     <input
                       type="file"
                       className="hidden"
@@ -193,7 +201,7 @@ export function CaseDocumentChecklist({
                     />
                   </label>
                 ) : (
-                  <span className="rounded-lg border border-dashed border-soft-200 px-3 py-1.5 text-xs text-muted">
+                  <span className="rounded-lg border border-dashed border-gold/40 bg-gold/5 px-3 py-1.5 text-xs text-navy">
                     Upload soon
                   </span>
                 )}
@@ -207,23 +215,30 @@ export function CaseDocumentChecklist({
                 onChange={(e) =>
                   setNoteDrafts((prev) => ({ ...prev, [doc.name]: e.target.value }))
                 }
+                disabled={busy === `notes-${doc.name}`}
               />
               <button
                 type="button"
                 disabled={busy === `notes-${doc.name}`}
                 onClick={() => handleSaveNotes(doc)}
-                className="rounded-lg border border-soft-200 px-3 py-1.5 text-xs font-semibold text-navy hover:border-gold shrink-0 disabled:opacity-50"
+                className="btn-outline px-3 py-1.5 text-xs shrink-0 disabled:opacity-50"
               >
-                {busy === `notes-${doc.name}` ? "Saving…" : "Save notes"}
+                {busy === `notes-${doc.name}`
+                  ? "Saving…"
+                  : savedNotes[doc.name]
+                    ? "Saved ✓"
+                    : "Save notes"}
               </button>
             </div>
           </li>
         ))}
       </ul>
       {error && (
-        <p className="text-xs text-red-600 rounded-lg border border-red-200 bg-red-50 px-3 py-2">{error}</p>
+        <p className="text-sm text-red-700 rounded-lg border border-red-200 bg-red-50 px-3 py-2">{error}</p>
       )}
-      {message && <p className="text-xs text-emerald-600">{message}</p>}
+      {message && (
+        <p className="text-sm text-emerald-700 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">{message}</p>
+      )}
     </div>
   );
 }

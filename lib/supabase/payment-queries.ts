@@ -49,6 +49,7 @@ export interface VisaCaseData {
   serviceProductKey: string | null;
   serviceName: string | null;
   paymentStatus: string;
+  paymentId: string | null;
   amount: number | null;
   currency: string;
   invoiceNumber: string | null;
@@ -231,6 +232,7 @@ export async function fetchCustomerVisaCase(): Promise<VisaCaseData | null> {
       serviceProductKey: ent.product_key,
       serviceName: ent.metadata?.product_name ?? null,
       paymentStatus: (payment.status as string) ?? "paid",
+      paymentId: ent.payment_id,
       amount: payment.amount != null ? Number(payment.amount) : null,
       currency: (payment.currency as string) ?? "USD",
       invoiceNumber: (payment.invoice_number as string) ?? null,
@@ -325,6 +327,7 @@ function mapLegacyVisaCase(
     serviceProductKey: (visaApp.service_product_key as string) ?? null,
     serviceName: (visaApp.visa_type as string) ?? null,
     paymentStatus: (payment?.status as string) ?? "paid",
+    paymentId: (payment?.id as string) ?? (visaApp.payment_id as string) ?? null,
     amount: payment?.amount != null ? Number(payment.amount) : (visaApp.agent_fee as number) ?? null,
     currency: (payment?.currency as string) ?? "USD",
     invoiceNumber: (payment?.invoice_number as string) ?? null,

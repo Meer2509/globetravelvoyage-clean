@@ -67,6 +67,7 @@ export async function mapVisaCaseRow(
     serviceProductKey: (payment?.service_type as string) ?? null,
     serviceName: (row.service_name as string) ?? null,
     paymentStatus: (payment?.status as string) ?? "paid",
+    paymentId: (row.payment_id as string) ?? null,
     amount: payment?.amount != null ? Number(payment.amount) : null,
     currency: (payment?.currency as string) ?? "USD",
     invoiceNumber: (payment?.invoice_number as string) ?? null,
