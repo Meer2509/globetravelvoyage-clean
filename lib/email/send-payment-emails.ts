@@ -3,8 +3,8 @@
 import { getSiteUrl } from "@/lib/site-url";
 import { formatPaymentAmount } from "@/lib/payments-display";
 import { paymentServiceLabel } from "@/lib/payments-display";
+import { sendEmail } from "@/lib/email/send-email";
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "Globe Travel Voyage <orders@globetravelvoyage.com>";
 const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL ?? "admin@globetravelvoyage.com";
 
 interface PaymentEmailPayload {
@@ -18,34 +18,6 @@ interface PaymentEmailPayload {
   paymentId: string;
   bookingId?: string;
   visaApplicationId?: string;
-}
-
-async function sendViaResend(to: string, subject: string, html: string): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
-  if (!apiKey) {
-    console.warn("RESEND_API_KEY not set — skipping email:", subject);
-    return false;
-  }
-
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ from: FROM_EMAIL, to: [to], subject, html }),
-    });
-    if (!res.ok) {
-      const err = await res.text();
-      console.error("Resend error:", err);
-      return false;
-    }
-    return true;
-  } catch (err) {
-    console.error("Resend send failed:", err);
-    return false;
-  }
 }
 
 function luxuryEmailShell(content: string): string {
@@ -121,11 +93,12 @@ export async function sendCustomerPaymentConfirmation(
     ${payload.visaApplicationId ? `<p style="margin-top:20px;"><a href="${visaCaseUrl}" style="color:#c9a227;font-size:14px;">View My Visa Case →</a></p>` : ""}
   `);
 
-  return sendViaResend(
-    payload.customerEmail,
-    "Your Globe Travel Voyage order is confirmed",
-    html
-  );
+  return sendEmail({
+    to: payload.customerEmail,
+    subject: "Your Globe Travel Voyage order is confirmed",
+    html,
+    type: "payment_confirmation",
+  });
 }
 
 export async function sendAdminPaymentNotification(
@@ -149,5 +122,10 @@ export async function sendAdminPaymentNotification(
     <p style="margin-top:24px;"><a href="${siteUrl}/dashboard/admin/payments" style="color:#081c3a;">View in admin dashboard →</a></p>
   `);
 
-  return sendViaResend(ADMIN_EMAIL, "New paid booking received — Globe Travel Voyage", html);
+  return sendEmail({
+    to: ADMIN_EMAIL,
+    subject: "New paid booking received — Globe Travel Voyage",
+    html,
+    type: "payment_confirmation",
+  });
 }

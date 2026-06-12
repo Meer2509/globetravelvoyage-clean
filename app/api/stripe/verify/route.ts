@@ -29,6 +29,8 @@ export async function GET(request: Request) {
     let bookingId: string | undefined;
     let paymentId: string | undefined;
     let visaApplicationId: string | undefined;
+    let visaCaseId: string | undefined;
+    let caseNumber: string | undefined;
     let entitlementType: string | undefined;
     let invoiceNumber: string | undefined;
     let alreadyFulfilled = false;
@@ -41,6 +43,8 @@ export async function GET(request: Request) {
       bookingId = fulfill.bookingId;
       paymentId = fulfill.paymentId;
       visaApplicationId = fulfill.visaApplicationId;
+      visaCaseId = fulfill.visaCaseId;
+      caseNumber = fulfill.caseNumber;
       entitlementType = fulfill.entitlementType;
       invoiceNumber = fulfill.invoiceNumber;
       alreadyFulfilled = fulfill.alreadyFulfilled ?? false;
@@ -72,7 +76,9 @@ export async function GET(request: Request) {
       invoiceNumber,
       alreadyFulfilled,
       isVisaService,
-      hasVisaCase: Boolean(visaApplicationId),
+      visaCaseId,
+      caseNumber,
+      hasVisaCase: Boolean(visaCaseId || visaApplicationId),
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Could not verify payment session.";

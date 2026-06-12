@@ -40,8 +40,11 @@ const PUBLIC_ROUTES = [
   "/tickets", "/trip-planner", "/properties", "/agents", "/agencies", "/referrals",
   "/contact", "/login", "/register", "/checkout", "/payment-success", "/payment-cancelled",
   "/legal/privacy", "/legal/terms", "/legal/disclaimer", "/legal/refund",
-  "/legal/cancellation", "/legal/cookies", "/legal/provider-terms", "/legal/customer-terms",
+  "/legal/refund-policy", "/legal/cancellation", "/legal/cancellation-policy",
+  "/legal/cookies", "/legal/cookie-policy", "/legal/provider-terms", "/legal/customer-terms",
   "/legal/payment-terms",
+  "/visa/usa-from-pakistan", "/visa/canada-from-india", "/visa/uk-from-uae", "/visa/schengen-from-pakistan",
+  "/travel/dubai", "/travel/maldives", "/travel/turkey", "/travel/saudi", "/travel/uae",
   "/dashboard", "/dashboard/customer", "/dashboard/agent", "/dashboard/agency",
   "/dashboard/guide", "/dashboard/host", "/dashboard/payouts", "/dashboard/admin",
   "/admin/setup", "/admin/audit",
@@ -56,6 +59,14 @@ const MVP_TABLES = [
   "lead_requests",
   "booking_requests",
   "payments",
+  "bookings",
+  "transactions",
+  "visa_cases",
+  "case_documents",
+  "email_logs",
+  "provider_verifications",
+  "provider_reviews",
+  "support_tickets",
   "messages",
   "support_messages",
   "documents",
@@ -65,6 +76,7 @@ const MVP_TABLES = [
   "tour_listings",
   "saved_items",
   "reviews",
+  "user_entitlements",
 ];
 
 async function probeTable(table: string): Promise<{ exists: boolean; count: number }> {
@@ -199,11 +211,33 @@ export async function getProductionAuditReport(): Promise<ProductionAuditReport>
     detail: "Not active — provider payouts at /dashboard/payouts labeled as coming soon",
   });
 
+  const resendConfigured = Boolean(process.env.RESEND_API_KEY?.trim());
+  const emailProbe = await probeTable("email_logs");
+  checks.push({
+    id: "email_system",
+    label: "Email system status",
+    status: resendConfigured ? "pass" : emailProbe.exists ? "warn" : "warn",
+    detail: resendConfigured
+      ? "RESEND_API_KEY configured — live emails enabled"
+      : emailProbe.exists
+        ? "No RESEND_API_KEY — events logged to email_logs table"
+        : "Run migration 010 for email_logs; add RESEND_API_KEY for live send",
+  });
+
+  checks.push({
+    id: "visa_cases",
+    label: "Visa case management",
+    status: (await probeTable("visa_cases")).exists ? "pass" : "warn",
+    detail: (await probeTable("visa_cases")).exists
+      ? `${(await probeTable("visa_cases")).count} visa case(s) in database`
+      : "Run migration 010_launch_platform.sql for visa_cases table",
+  });
+
   checks.push({
     id: "fake_data",
-    label: "Fake data removed checklist",
+    label: "Demo language removed",
     status: "pass",
-    detail: "Homepage stats, reviews, referrals, saved, agencies, admin overview use Supabase or honest empty states; browse catalog labeled sample estimates",
+    detail: "Customer pages use honest empty states; admin shows real Supabase counts; no fake earnings or reviews",
   });
 
   checks.push({

@@ -14,6 +14,8 @@ interface VerifyData {
   bookingId?: string;
   paymentId?: string;
   visaApplicationId?: string;
+  visaCaseId?: string;
+  caseNumber?: string;
   invoiceNumber?: string;
   hasVisaCase?: boolean;
   isVisaService?: boolean;
@@ -58,11 +60,11 @@ function PaymentSuccessContent() {
   const steps = [
     { label: "Payment confirmed", done: data?.paid },
     {
-      label: data?.hasVisaCase ? "Visa case created" : "Service activated",
+      label: data?.caseNumber ? `Visa case ${data.caseNumber} created` : data?.hasVisaCase ? "Visa case created" : "Service activated",
       done: data?.paid && Boolean(data?.paymentId),
     },
     {
-      label: data?.isVisaService ? "Expert assignment in progress" : "Team notified",
+      label: data?.isVisaService ? "Upload documents when ready" : "Access your dashboard",
       done: data?.paid,
     },
   ];
@@ -71,9 +73,9 @@ function PaymentSuccessContent() {
     <div className="min-h-screen bg-soft">
       <div className="bg-hero-gradient py-12">
         <div className="container-px text-center">
-          <p className="eyebrow-white mb-2">Order confirmed</p>
+          <p className="eyebrow-white mb-2">Payment confirmed</p>
           <h1 className="text-3xl font-extrabold text-white sm:text-4xl">
-            Welcome to premium service
+            Thank you for your purchase
           </h1>
         </div>
       </div>
@@ -98,6 +100,9 @@ function PaymentSuccessContent() {
                 {data?.invoiceNumber && (
                   <p className="mt-2 font-mono text-xs text-muted">Invoice {data.invoiceNumber}</p>
                 )}
+                {data?.caseNumber && (
+                  <p className="mt-3 font-mono text-sm font-bold text-navy">Case {data.caseNumber}</p>
+                )}
               </>
             )}
           </div>
@@ -111,7 +116,29 @@ function PaymentSuccessContent() {
           {!loading && data?.paid && (
             <div className="px-8 py-8 space-y-6">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-muted mb-4">What happens next</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-muted mb-4">Order summary</p>
+                <div className="rounded-xl bg-soft p-4 text-sm space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted">Service</span>
+                    <span className="font-semibold text-navy">{data.productName}</span>
+                  </div>
+                  {formattedAmount && (
+                    <div className="flex justify-between">
+                      <span className="text-muted">Amount</span>
+                      <span className="font-semibold text-navy">{formattedAmount}</span>
+                    </div>
+                  )}
+                  {data.caseNumber && (
+                    <div className="flex justify-between">
+                      <span className="text-muted">Case number</span>
+                      <span className="font-mono font-semibold text-navy">{data.caseNumber}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-muted mb-4">Next steps</p>
                 <ul className="space-y-3">
                   {steps.map((s) => (
                     <li key={s.label} className="flex items-center gap-3 text-sm">
@@ -129,7 +156,7 @@ function PaymentSuccessContent() {
               </div>
 
               <p className="text-sm text-muted leading-relaxed">
-                A confirmation email has been sent with your receipt and next steps. Your purchase is saved to your account.
+                Secure checkout powered by Stripe. Visa approval is never guaranteed. A confirmation email will be sent when configured.
               </p>
 
               <div className="flex flex-col gap-3 sm:flex-row">
@@ -138,8 +165,8 @@ function PaymentSuccessContent() {
                     Open My Visa Case
                   </Link>
                 ) : (
-                  <Link href="/dashboard/customer?tab=billing" className="btn-primary flex-1 py-3.5 text-center">
-                    Go to dashboard
+                  <Link href="/dashboard/customer" className="btn-primary flex-1 py-3.5 text-center">
+                    Open dashboard
                   </Link>
                 )}
                 {data.hasVisaCase && (

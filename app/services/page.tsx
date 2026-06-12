@@ -5,6 +5,7 @@ import {
   ServicesPageHeader,
   StripeTrustBanner,
 } from "@/components/ServicesCatalog";
+import { TrustSection } from "@/components/TrustSection";
 export const metadata: Metadata = {
   title: "Services & Pricing — Globe Travel Voyage",
   description:
@@ -21,6 +22,7 @@ export default function ServicesPage() {
         <ServicesCatalog />
         <StripeTrustBanner className="mt-10" />
       </div>
+      <TrustSection compact />
     </div>
   );
 }

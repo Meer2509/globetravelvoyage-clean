@@ -3,6 +3,7 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { claimPaymentsByEmail } from "@/lib/stripe/link-user";
+import { VISA_CASE_STATUSES, type VisaCaseStatus } from "@/lib/visa-case-constants";
 
 export interface PaymentRowExtended {
   id: string;
@@ -33,10 +34,12 @@ export interface StripeBookingRow {
 
 export interface VisaCaseData {
   id: string;
+  caseNumber: string;
   visaType: string;
   destinationCountry: string;
   status: string;
-  progressStep: number;
+  progressPercent: number;
+  currentStep: string;
   assignedExpert: string | null;
   serviceProductKey: string | null;
   serviceName: string | null;
@@ -45,7 +48,7 @@ export interface VisaCaseData {
   currency: string;
   invoiceNumber: string | null;
   createdAt: string;
-  checklist: Array<{ name: string; status: string }>;
+  checklist: Array<{ name: string; status: string; documentId?: string }>;
 }
 
 export async function fetchCustomerPaymentsExtended(): Promise<PaymentRowExtended[]> {
@@ -99,6 +102,19 @@ export async function fetchCustomerVisaCase(): Promise<VisaCaseData | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
+  const { data: visaCaseRow } = await supabase
+    .from("visa_cases")
+    .select("*")
+    .eq("user_id", user.id)
+    .not("status", "eq", "cancelled")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (visaCaseRow) {
+    return mapVisaCaseFromTable(visaCaseRow as Record<string, unknown>, supabase);
+  }
+
   const { data: entitlement } = await supabase
     .from("user_entitlements")
     .select("visa_application_id, payment_id, product_key, metadata")
@@ -120,7 +136,7 @@ export async function fetchCustomerVisaCase(): Promise<VisaCaseData | null> {
       .maybeSingle();
 
     if (!visaApp) return null;
-    return mapVisaCase(visaApp as Record<string, unknown>, null);
+    return mapLegacyVisaCase(visaApp as Record<string, unknown>, null);
   }
 
   const ent = entitlement as {
@@ -144,7 +160,7 @@ export async function fetchCustomerVisaCase(): Promise<VisaCaseData | null> {
   if (ent.payment_id) {
     const { data } = await supabase
       .from("payments")
-      .select("status, amount, currency, invoice_number, description")
+      .select("status, amount, currency, invoice_number, description, service_type")
       .eq("id", ent.payment_id)
       .maybeSingle();
     payment = data as Record<string, unknown> | null;
@@ -153,11 +169,13 @@ export async function fetchCustomerVisaCase(): Promise<VisaCaseData | null> {
   if (!visaApp && payment) {
     return {
       id: ent.payment_id ?? user.id,
+      caseNumber: `GTV-LEGACY-${(ent.payment_id ?? user.id).slice(0, 8).toUpperCase()}`,
       visaType: ent.metadata?.product_name ?? "Visa Premium Service",
-      destinationCountry: "USA",
-      status: "in_review",
-      progressStep: 2,
-      assignedExpert: "Assignment in progress",
+      destinationCountry: "—",
+      status: "intake_started",
+      progressPercent: 10,
+      currentStep: "intake_started",
+      assignedExpert: null,
       serviceProductKey: ent.product_key,
       serviceName: ent.metadata?.product_name ?? null,
       paymentStatus: (payment.status as string) ?? "paid",
@@ -170,23 +188,88 @@ export async function fetchCustomerVisaCase(): Promise<VisaCaseData | null> {
   }
 
   if (!visaApp) return null;
-  return mapVisaCase(visaApp, payment);
+  return mapLegacyVisaCase(visaApp, payment);
 }
 
-function mapVisaCase(
+async function mapVisaCaseFromTable(
+  row: Record<string, unknown>,
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>
+): Promise<VisaCaseData> {
+  const caseId = row.id as string;
+  let payment: Record<string, unknown> | null = null;
+
+  if (row.payment_id && supabase) {
+    const { data } = await supabase
+      .from("payments")
+      .select("status, amount, currency, invoice_number, service_type")
+      .eq("id", row.payment_id as string)
+      .maybeSingle();
+    payment = data as Record<string, unknown> | null;
+  }
+
+  let checklist: VisaCaseData["checklist"] = [];
+  if (supabase) {
+    const { data: docs } = await supabase
+      .from("case_documents")
+      .select("id, document_type, file_name, status")
+      .eq("case_id", caseId)
+      .order("created_at", { ascending: true });
+    checklist = (docs ?? []).map((d) => {
+      const doc = d as { id: string; document_type: string; file_name: string | null; status: string };
+      return {
+        name: doc.document_type,
+        status: doc.status === "uploaded" ? "uploaded" : "pending",
+        documentId: doc.id,
+      };
+    });
+  }
+
+  const status = (row.status as string) ?? "intake_started";
+
+  return {
+    id: caseId,
+    caseNumber: (row.case_number as string) ?? caseId.slice(0, 12),
+    visaType: (row.visa_type as string) ?? (row.service_name as string) ?? "Visa Service",
+    destinationCountry: (row.visa_country as string) ?? "—",
+    status,
+    progressPercent: (row.progress_percent as number) ?? 10,
+    currentStep: (row.current_step as string) ?? status,
+    assignedExpert: row.provider_user_id ? "Expert assigned" : null,
+    serviceProductKey: (payment?.service_type as string) ?? null,
+    serviceName: (row.service_name as string) ?? null,
+    paymentStatus: (payment?.status as string) ?? "paid",
+    amount: payment?.amount != null ? Number(payment.amount) : null,
+    currency: (payment?.currency as string) ?? "USD",
+    invoiceNumber: (payment?.invoice_number as string) ?? null,
+    createdAt: (row.created_at as string) ?? new Date().toISOString(),
+    checklist,
+  };
+}
+
+function mapLegacyVisaCase(
   visaApp: Record<string, unknown>,
   payment: Record<string, unknown> | null
 ): VisaCaseData {
   const checklist = Array.isArray(visaApp.ai_checklist)
-    ? (visaApp.ai_checklist as Array<{ name: string; status: string }>)
+    ? (visaApp.ai_checklist as Array<{ name: string; status: string }>).map((d) => ({
+        name: d.name,
+        status: d.status,
+      }))
     : [];
+
+  const legacyStatus = (visaApp.status as string) ?? "submitted";
+  const mappedStatus: VisaCaseStatus = VISA_CASE_STATUSES.includes(legacyStatus as VisaCaseStatus)
+    ? (legacyStatus as VisaCaseStatus)
+    : "under_review";
 
   return {
     id: visaApp.id as string,
+    caseNumber: `GTV-LEGACY-${(visaApp.id as string).slice(0, 8).toUpperCase()}`,
     visaType: (visaApp.visa_type as string) ?? "Visa Application",
     destinationCountry: (visaApp.destination_country as string) ?? "—",
-    status: (visaApp.status as string) ?? "submitted",
-    progressStep: (visaApp.progress_step as number) ?? 1,
+    status: mappedStatus,
+    progressPercent: ((visaApp.progress_step as number) ?? 1) * 15,
+    currentStep: mappedStatus,
     assignedExpert: (visaApp.assigned_expert_name as string) ?? null,
     serviceProductKey: (visaApp.service_product_key as string) ?? null,
     serviceName: (visaApp.visa_type as string) ?? null,
@@ -197,4 +280,29 @@ function mapVisaCase(
     createdAt: (visaApp.created_at as string) ?? new Date().toISOString(),
     checklist,
   };
+}
+
+export async function fetchProviderReviews(providerUserId: string) {
+  const admin = createAdminClient();
+  if (!admin) return [];
+  const { data } = await admin
+    .from("provider_reviews")
+    .select("id, rating, review_text, created_at, customer_id")
+    .eq("provider_user_id", providerUserId)
+    .eq("status", "published")
+    .order("created_at", { ascending: false })
+    .limit(20);
+  return data ?? [];
+}
+
+export async function fetchHomepageReviews() {
+  const admin = createAdminClient();
+  if (!admin) return [];
+  const { data } = await admin
+    .from("provider_reviews")
+    .select("id, rating, review_text, created_at, provider_user_id")
+    .eq("status", "published")
+    .order("created_at", { ascending: false })
+    .limit(6);
+  return data ?? [];
 }

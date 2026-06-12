@@ -3,6 +3,15 @@
 // =============================================================================
 
 export type CheckoutProductKey =
+  | "visa_document_review"
+  | "visa_application_assistance"
+  | "premium_visa_filing_support"
+  | "urgent_visa_prep"
+  | "family_visa_package"
+  | "premium_ai_trip_plan"
+  | "human_trip_planner"
+  | "luxury_concierge_planning"
+  | "honeymoon_planning"
   | "usa_visa_consultation"
   | "usa_b1b2_document_review"
   | "full_visa_application_support"
@@ -10,9 +19,7 @@ export type CheckoutProductKey =
   | "uk_visitor_visa_support"
   | "schengen_visa_support"
   | "visa_expert_consultation"
-  | "visa_document_review"
   | "visa_application_prep"
-  | "premium_ai_trip_plan"
   | "family_vacation_plan"
   | "concierge_travel_planning"
   | "expert_featured_listing"
@@ -48,66 +55,110 @@ export interface CheckoutProduct {
 }
 
 export const CHECKOUT_PRODUCTS: CheckoutProduct[] = [
-  // Traveler Premium
+  // Traveler Premium — launch catalog
   {
-    key: "usa_visa_consultation",
-    name: "Visa Consultation",
-    description: "1-on-1 session with a verified expert when you need personal guidance.",
+    key: "visa_document_review",
+    name: "Visa Document Review",
+    description: "Expert review of your visa documents before you submit. Case tracking included.",
     amountCents: 4900,
-    currency: "usd",
-    emoji: "🇺🇸",
-    category: "Traveler Premium",
-    tier: "premium",
-    ctaLabel: "Upgrade",
-  },
-  {
-    key: "usa_b1b2_document_review",
-    name: "Document Review",
-    description: "Expert review of your visa documents before you submit.",
-    amountCents: 9900,
     currency: "usd",
     emoji: "📄",
     category: "Traveler Premium",
     tier: "premium",
-    ctaLabel: "Upgrade",
+    ctaLabel: "Purchase",
   },
   {
-    key: "full_visa_application_support",
-    name: "Full Visa Application Support",
-    description: "End-to-end guided support for your complete visa application.",
-    amountCents: 19900,
+    key: "visa_application_assistance",
+    name: "Visa Application Assistance",
+    description: "Guided assistance through your visa application with document checklist support.",
+    amountCents: 9900,
     currency: "usd",
     emoji: "🛂",
     category: "Traveler Premium",
     tier: "premium",
-    ctaLabel: "Upgrade",
+    ctaLabel: "Purchase",
+  },
+  {
+    key: "premium_visa_filing_support",
+    name: "Premium Visa Filing Support",
+    description: "End-to-end preparation support for your complete visa application.",
+    amountCents: 19900,
+    currency: "usd",
+    emoji: "📋",
+    category: "Traveler Premium",
+    tier: "premium",
+    ctaLabel: "Purchase",
+  },
+  {
+    key: "urgent_visa_prep",
+    name: "Urgent Visa Prep Support",
+    description: "Priority visa preparation for time-sensitive travel. No approval guarantee.",
+    amountCents: 29900,
+    currency: "usd",
+    emoji: "⚡",
+    category: "Traveler Premium",
+    tier: "premium",
+    ctaLabel: "Purchase",
+  },
+  {
+    key: "family_visa_package",
+    name: "Family Visa Package",
+    description: "Coordinated visa preparation support for families traveling together.",
+    amountCents: 39900,
+    currency: "usd",
+    emoji: "👨‍👩‍👧‍👦",
+    category: "Traveler Premium",
+    tier: "premium",
+    ctaLabel: "Purchase",
   },
   {
     key: "premium_ai_trip_plan",
-    name: "Premium AI Itinerary",
+    name: "Premium AI Trip Plan",
     description: "Full luxury itinerary with hotels, routes, activities, and export.",
     amountCents: 1900,
     currency: "usd",
     emoji: "✈️",
     category: "Traveler Premium",
     tier: "premium",
-    ctaLabel: "Upgrade",
+    ctaLabel: "Purchase",
   },
   {
-    key: "concierge_travel_planning",
-    name: "Concierge Travel Planning",
-    description: "Human concierge session for complex multi-city luxury trips.",
+    key: "human_trip_planner",
+    name: "Human Trip Planner",
+    description: "One-on-one session with a travel planner for your next journey.",
     amountCents: 9900,
     currency: "usd",
     emoji: "🧳",
     category: "Traveler Premium",
     tier: "premium",
-    ctaLabel: "Upgrade",
+    ctaLabel: "Purchase",
   },
-  // Provider Featured
+  {
+    key: "luxury_concierge_planning",
+    name: "Luxury Concierge Planning",
+    description: "Concierge planning for complex multi-city luxury trips.",
+    amountCents: 29900,
+    currency: "usd",
+    emoji: "🌟",
+    category: "Traveler Premium",
+    tier: "premium",
+    ctaLabel: "Purchase",
+  },
+  {
+    key: "honeymoon_planning",
+    name: "Honeymoon Planning",
+    description: "Bespoke honeymoon itinerary with premium stays and experiences.",
+    amountCents: 49900,
+    currency: "usd",
+    emoji: "💍",
+    category: "Traveler Premium",
+    tier: "premium",
+    ctaLabel: "Purchase",
+  },
+  // Provider Featured — launch catalog
   {
     key: "expert_featured_listing",
-    name: "Featured Listing",
+    name: "Featured Visa Expert Listing",
     description: "Top placement for your visa expert profile in search results.",
     amountCents: 4900,
     currency: "usd",
@@ -119,8 +170,8 @@ export const CHECKOUT_PRODUCTS: CheckoutProduct[] = [
   },
   {
     key: "agency_featured_listing",
-    name: "Premium Placement",
-    description: "Priority search placement and Featured badge for your agency.",
+    name: "Featured Travel Agency Listing",
+    description: "Priority search placement and featured badge for your agency.",
     amountCents: 9900,
     currency: "usd",
     emoji: "🏢",
@@ -131,7 +182,7 @@ export const CHECKOUT_PRODUCTS: CheckoutProduct[] = [
   },
   {
     key: "verified_badge_fee",
-    name: "Verified Badge",
+    name: "Verified Provider Review",
     description: "One-time review for your verified provider trust badge.",
     amountCents: 2900,
     currency: "usd",
@@ -151,6 +202,51 @@ export const CHECKOUT_PRODUCTS: CheckoutProduct[] = [
     tier: "featured",
     priceLabel: "$149/month",
     ctaLabel: "Get featured",
+  },
+  // Legacy traveler keys (existing payments)
+  {
+    key: "usa_visa_consultation",
+    name: "Visa Document Review",
+    description: "Expert review of your visa documents before you submit.",
+    amountCents: 4900,
+    currency: "usd",
+    emoji: "🇺🇸",
+    category: "Traveler Premium",
+    tier: "premium",
+    ctaLabel: "Purchase",
+  },
+  {
+    key: "usa_b1b2_document_review",
+    name: "Visa Application Assistance",
+    description: "Guided assistance through your visa application.",
+    amountCents: 9900,
+    currency: "usd",
+    emoji: "📄",
+    category: "Traveler Premium",
+    tier: "premium",
+    ctaLabel: "Purchase",
+  },
+  {
+    key: "full_visa_application_support",
+    name: "Premium Visa Filing Support",
+    description: "End-to-end preparation support for your complete visa application.",
+    amountCents: 19900,
+    currency: "usd",
+    emoji: "🛂",
+    category: "Traveler Premium",
+    tier: "premium",
+    ctaLabel: "Purchase",
+  },
+  {
+    key: "concierge_travel_planning",
+    name: "Human Trip Planner",
+    description: "One-on-one session with a travel planner.",
+    amountCents: 9900,
+    currency: "usd",
+    emoji: "🧳",
+    category: "Traveler Premium",
+    tier: "premium",
+    ctaLabel: "Purchase",
   },
   // Legacy keys (API / existing payments — not shown in launch catalog)
   {
@@ -193,17 +289,6 @@ export const CHECKOUT_PRODUCTS: CheckoutProduct[] = [
     amountCents: 4900,
     currency: "usd",
     emoji: "👔",
-    category: "Traveler Premium",
-    tier: "premium",
-    ctaLabel: "Upgrade",
-  },
-  {
-    key: "visa_document_review",
-    name: "Visa Document Review",
-    description: "Expert review of your visa application documents.",
-    amountCents: 9900,
-    currency: "usd",
-    emoji: "📄",
     category: "Traveler Premium",
     tier: "premium",
     ctaLabel: "Upgrade",
@@ -372,11 +457,15 @@ export function formatProductPrice(product: CheckoutProduct): string {
 
 /** Premium & featured services shown on /services (Stripe checkout). */
 export const SERVICES_CATALOG_KEYS: CheckoutProductKey[] = [
-  "usa_visa_consultation",
-  "usa_b1b2_document_review",
-  "full_visa_application_support",
+  "visa_document_review",
+  "visa_application_assistance",
+  "premium_visa_filing_support",
+  "urgent_visa_prep",
+  "family_visa_package",
   "premium_ai_trip_plan",
-  "concierge_travel_planning",
+  "human_trip_planner",
+  "luxury_concierge_planning",
+  "honeymoon_planning",
   "expert_featured_listing",
   "agency_featured_listing",
   "verified_badge_fee",
@@ -385,9 +474,9 @@ export const SERVICES_CATALOG_KEYS: CheckoutProductKey[] = [
 
 /** Soft premium upsell on homepage (not aggressive). */
 export const FEATURED_HOME_PREMIUM_KEYS: CheckoutProductKey[] = [
-  "usa_visa_consultation",
+  "visa_document_review",
   "premium_ai_trip_plan",
-  "concierge_travel_planning",
+  "human_trip_planner",
   "expert_featured_listing",
 ];
 

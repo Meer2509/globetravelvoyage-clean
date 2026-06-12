@@ -3,8 +3,17 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/profile-utils";
 import { getCheckoutProduct } from "@/lib/stripe/products";
+import { createVisaCase, isVisaProductKey } from "@/lib/visa-case";
+import { sendEmail } from "@/lib/email/send-email";
+import { visaCaseCreatedEmail } from "@/lib/email/templates";
+import { getSiteUrl } from "@/lib/site-url";
 
 const VISA_PRODUCTS = new Set([
+  "visa_document_review",
+  "visa_application_assistance",
+  "premium_visa_filing_support",
+  "urgent_visa_prep",
+  "family_visa_package",
   "usa_visa_consultation",
   "usa_b1b2_document_review",
   "full_visa_application_support",
@@ -12,7 +21,6 @@ const VISA_PRODUCTS = new Set([
   "uk_visitor_visa_support",
   "schengen_visa_support",
   "visa_expert_consultation",
-  "visa_document_review",
   "visa_application_prep",
 ]);
 
@@ -28,16 +36,29 @@ const PROVIDER_FEATURED = new Set([
 export interface ActivationResult {
   entitlementId?: string;
   visaApplicationId?: string;
+  visaCaseId?: string;
+  caseNumber?: string;
   entitlementType: string;
 }
 
 function entitlementTypeForProduct(productKey: string): string {
-  if (productKey === "full_visa_application_support" || productKey === "visa_application_prep") {
+  if (
+    productKey === "full_visa_application_support" ||
+    productKey === "premium_visa_filing_support" ||
+    productKey === "visa_application_prep"
+  ) {
     return "visa_full_support";
   }
-  if (VISA_PRODUCTS.has(productKey)) return "visa_premium";
+  if (isVisaProductKey(productKey) || VISA_PRODUCTS.has(productKey)) return "visa_premium";
   if (productKey === "premium_ai_trip_plan" || productKey === "family_vacation_plan") return "premium_ai";
-  if (productKey === "concierge_travel_planning") return "concierge";
+  if (
+    productKey === "concierge_travel_planning" ||
+    productKey === "human_trip_planner" ||
+    productKey === "luxury_concierge_planning" ||
+    productKey === "honeymoon_planning"
+  ) {
+    return "concierge";
+  }
   if (PROVIDER_FEATURED.has(productKey)) return "provider_featured";
   if (productKey === "verified_badge_fee") return "verified_badge";
   return productKey;
@@ -69,8 +90,10 @@ export async function activatePaidService(input: {
   const entitlementType = entitlementTypeForProduct(input.productKey);
 
   let visaApplicationId: string | undefined;
+  let visaCaseId: string | undefined;
+  let caseNumber: string | undefined;
 
-  if (VISA_PRODUCTS.has(input.productKey)) {
+  if (isVisaProductKey(input.productKey) || VISA_PRODUCTS.has(input.productKey)) {
     const isFullSupport =
       input.productKey === "full_visa_application_support" ||
       input.productKey === "visa_application_prep";
@@ -103,12 +126,49 @@ export async function activatePaidService(input: {
     } else if (visaError && !isMissingTableError(visaError)) {
       console.error("Visa application create failed:", visaError.message);
     }
+
+    const visaCase = await createVisaCase({
+      userId: input.userId,
+      paymentId: input.paymentId,
+      bookingId: input.bookingId,
+      serviceName: product?.name ?? input.productKey,
+      productKey: input.productKey,
+      providerUserId: input.agentId ?? null,
+      visaType: product?.name ?? "Visa Service",
+    });
+    if (visaCase) {
+      visaCaseId = visaCase.caseId;
+      caseNumber = visaCase.caseNumber;
+      if (input.email) {
+        const tpl = visaCaseCreatedEmail({
+          caseNumber: visaCase.caseNumber,
+          serviceName: product?.name ?? "Visa Service",
+          dashboardUrl: `${getSiteUrl()}/dashboard/customer?tab=visa-case`,
+        });
+        await sendEmail({
+          to: input.email,
+          subject: tpl.subject,
+          html: tpl.html,
+          type: "visa_case_created",
+          userId: input.userId,
+        });
+      }
+    }
   }
 
-  if (input.productKey === "premium_ai_trip_plan" || input.productKey === "family_vacation_plan") {
+  const TRIP_PLAN_PRODUCTS = new Set([
+    "premium_ai_trip_plan",
+    "family_vacation_plan",
+    "human_trip_planner",
+    "luxury_concierge_planning",
+    "honeymoon_planning",
+    "concierge_travel_planning",
+  ]);
+
+  if (TRIP_PLAN_PRODUCTS.has(input.productKey)) {
     await admin.from("trip_plans").insert({
       user_id: input.userId,
-      title: input.listingTitle ? `Premium: ${input.listingTitle}` : "Premium AI Trip Plan",
+      title: input.listingTitle ? `Premium: ${input.listingTitle}` : product?.name ?? "Trip Plan",
       destination: input.listingTitle ?? null,
       travel_style: "luxury",
       is_saved: true,
@@ -127,6 +187,8 @@ export async function activatePaidService(input: {
     return {
       entitlementId: ent.id,
       visaApplicationId: ent.visa_application_id ?? visaApplicationId,
+      visaCaseId,
+      caseNumber,
       entitlementType,
     };
   }
@@ -135,6 +197,12 @@ export async function activatePaidService(input: {
     await admin.from("visa_experts").update({ verification_status: "under_review" }).eq("user_id", input.userId);
     await admin.from("agencies").update({ verification_status: "under_review" }).eq("user_id", input.userId);
     await admin.from("tour_guides").update({ verification_status: "under_review" }).eq("user_id", input.userId);
+    await admin.from("provider_verifications").insert({
+      user_id: input.userId,
+      provider_role: "provider",
+      status: "pending",
+      notes: "Paid verified provider review",
+    });
   }
 
   if (PROVIDER_FEATURED.has(input.productKey)) {
@@ -169,12 +237,14 @@ export async function activatePaidService(input: {
     if (!isMissingTableError(entError)) {
       console.error("Entitlement insert failed:", entError.message);
     }
-    return { entitlementType, visaApplicationId };
+    return { entitlementType, visaApplicationId, visaCaseId, caseNumber };
   }
 
   return {
     entitlementId: (entitlement as { id: string }).id,
     visaApplicationId,
+    visaCaseId,
+    caseNumber,
     entitlementType,
   };
 }

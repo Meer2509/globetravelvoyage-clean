@@ -22,6 +22,7 @@ import {
 import { HomeMarketplaceSection } from "@/components/HomeMarketplaceSection";
 import { HomePropertiesSection } from "@/components/HomePropertiesSection";
 import { HomeServicesSection } from "@/components/HomeServicesSection";
+import { TrustSection } from "@/components/TrustSection";
 
 export default function Home() {
   const featuredUsa = visas.find((v) => v.slug === "usa-b1-b2")!;
@@ -476,7 +477,7 @@ export default function Home() {
           <div className="rounded-2xl border-2 border-dashed border-soft-200 bg-white py-16 text-center">
             <p className="font-bold text-navy text-lg">No platform reviews yet</p>
             <p className="mt-2 max-w-md mx-auto text-sm text-charcoal/50">
-              Authentic reviews from verified bookings will show here. Browse verified experts and agencies to get started.
+              Verified reviews will appear after completed bookings.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Link href="/agents" className="btn-primary px-5 py-2.5 text-sm">Find visa experts</Link>
@@ -674,6 +675,8 @@ export default function Home() {
           <FAQ items={faqs.slice(0, 8)} />
         </div>
       </section>
+
+      <TrustSection />
 
       {/* ── 16. CTA ── */}
       <section className="section-sm bg-hero-gradient relative overflow-hidden">

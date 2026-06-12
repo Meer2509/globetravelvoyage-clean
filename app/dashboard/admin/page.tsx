@@ -419,7 +419,7 @@ function VisaRequestsTab() {
           </div>
         )}
         <div className="border-t border-soft-200 px-5 py-3 text-xs text-charcoal/40">
-          Showing {displayed.length} of {requests.length} visa applications · Demo data only
+          Showing {displayed.length} of {requests.length} visa applications
         </div>
       </Panel>
     </div>
@@ -1062,13 +1062,12 @@ export default function AdminDashboard() {
       <div className="space-y-6">
         <DatabaseStatusBanner health={dashUser.databaseHealth} />
         {liveCounts && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-            ✓ Supabase live — {liveCounts.users} profiles · {liveCounts.visaRequests} visa requests · {liveCounts.bookingRequests} booking requests · {liveCounts.supportTickets} support tickets
+          <div className="rounded-xl border border-soft-200 bg-white px-4 py-3 text-sm text-muted">
+            Platform records — {liveCounts.users} profiles · {liveCounts.visaRequests} visa requests · {liveCounts.bookingRequests} booking requests · {liveCounts.supportTickets} support tickets
           </div>
         )}
-        {/* Platform stats */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Total users" value={liveCounts ? String(liveCounts.users) : "0"} icon="users" hint="Live from Supabase" color="blue" />
+          <StatCard label="Total users" value={liveCounts ? String(liveCounts.users) : "0"} icon="users" hint="Registered profiles" color="blue" />
           <StatCard label="Booking requests" value={liveCounts ? String(liveCounts.bookingRequests) : "0"} icon="doc" hint="Live intake table" color="gold" />
           <StatCard label="Visa requests" value={liveCounts ? String(liveCounts.visaRequests) : "0"} icon="visa" hint="Live intake table" color="green" />
           <StatCard label="Support tickets" value={liveCounts ? String(liveCounts.supportTickets) : "0"} icon="shield" hint="Live from DB" color="navy" />

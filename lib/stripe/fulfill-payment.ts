@@ -14,6 +14,14 @@ import {
 import { getCheckoutProduct } from "@/lib/stripe/products";
 
 const BOOKING_TYPE_MAP: Record<string, string> = {
+  visa_document_review: "visa_consultation",
+  visa_application_assistance: "visa_consultation",
+  premium_visa_filing_support: "visa_consultation",
+  urgent_visa_prep: "visa_consultation",
+  family_visa_package: "visa_consultation",
+  human_trip_planner: "travel_plan",
+  luxury_concierge_planning: "travel_plan",
+  honeymoon_planning: "travel_plan",
   usa_visa_consultation: "visa_consultation",
   usa_b1b2_document_review: "visa_consultation",
   full_visa_application_support: "visa_consultation",
@@ -21,7 +29,6 @@ const BOOKING_TYPE_MAP: Record<string, string> = {
   uk_visitor_visa_support: "visa_consultation",
   schengen_visa_support: "visa_consultation",
   visa_expert_consultation: "visa_consultation",
-  visa_document_review: "visa_consultation",
   visa_application_prep: "visa_consultation",
   premium_ai_trip_plan: "travel_plan",
   family_vacation_plan: "travel_plan",
@@ -53,6 +60,8 @@ export interface FulfillResult {
   bookingId?: string;
   paymentId?: string;
   visaApplicationId?: string;
+  visaCaseId?: string;
+  caseNumber?: string;
   entitlementType?: string;
   invoiceNumber?: string;
   alreadyFulfilled?: boolean;
@@ -233,6 +242,8 @@ export async function fulfillStripePaymentComplete(
   }
 
   let visaApplicationId: string | undefined;
+  let visaCaseId: string | undefined;
+  let caseNumber: string | undefined;
   let entitlementType: string | undefined;
 
   if (userId && productKey) {
@@ -247,6 +258,8 @@ export async function fulfillStripePaymentComplete(
     });
     if (activation) {
       visaApplicationId = activation.visaApplicationId;
+      visaCaseId = activation.visaCaseId;
+      caseNumber = activation.caseNumber;
       entitlementType = activation.entitlementType;
     }
   }
@@ -275,6 +288,8 @@ export async function fulfillStripePaymentComplete(
     bookingId: bookingId ?? undefined,
     paymentId,
     visaApplicationId,
+    visaCaseId,
+    caseNumber,
     entitlementType,
     invoiceNumber: payment.invoice_number ?? undefined,
   };
