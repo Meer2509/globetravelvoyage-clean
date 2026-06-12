@@ -22,7 +22,7 @@ import { fetchCustomerLeadRequests, fetchCustomerBookingRequests } from "@/lib/s
 import { submitSupportTicket } from "@/lib/supabase/actions";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DashboardProfileSection } from "@/components/DashboardProfileSection";
-import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
+import { CustomerDashboardHero } from "@/components/CustomerDashboardHero";
 import { DashboardEmpty } from "@/components/DashboardEmpty";
 import { DocumentUploadPanel } from "@/components/DocumentUploadPanel";
 import { MessagesInbox } from "@/components/MessagesInbox";
@@ -64,12 +64,12 @@ function AiPanel() {
   const [input, setInput] = useState("");
 
   const mockResponses: Record<string, string> = {
-    visa: "Check your Visa Applications tab for live status from Supabase. For new requests, use /visa/start.",
-    flight: "Submit a booking request at /booking/request for flight quotes. We connect you with verified providers.",
-    hotel: "Use /hotels to browse stays, then /booking/request for hotel help.",
-    document: "Upload visa documents in your Documents tab. Records save to Supabase.",
-    budget: "Use the AI Trip Planner at /ai-trip-planner for budget estimates (illustrative only).",
-    default: "I provide informational guidance only. Check your dashboard tabs for real requests, payments, and messages.",
+    visa: "Check your Visa Applications or My Visa Case tab for the latest status on your requests.",
+    flight: "Submit a booking request for flight quotes — we connect you with verified travel providers.",
+    hotel: "Browse hotels and stays on our marketplace, then request a quote for personalized help.",
+    document: "Upload visa documents in your Documents tab. Your files are stored securely on your account.",
+    budget: "Use the AI Trip Planner for itinerary ideas and budget guidance.",
+    default: "I provide informational travel guidance. Check your dashboard for requests, payments, and messages.",
   };
 
   const getResponse = (q: string) => {
@@ -90,7 +90,7 @@ function AiPanel() {
   };
 
   return (
-    <Panel title="AI Travel Assistant" subtitle="Powered by Globe AI · Mock responses">
+    <Panel title="AI Travel Assistant" subtitle="Your personal travel guide">
       <div className="flex flex-col gap-3 max-h-96 overflow-y-auto pr-1 mb-4">
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -184,6 +184,11 @@ function CustomerDashboardContent() {
   const bookingCount = live?.bookingRequests.length ?? 0;
   const supportCount = live?.supportTickets.length ?? 0;
 
+  const firstName =
+    user.displayName !== "Your Account"
+      ? user.displayName.split(/\s+/)[0]
+      : "Traveler";
+
   const customerTabs = tabs.map((t) => {
     if (t.key === "billing" && customerPayments.length > 0) return { ...t, badge: customerPayments.length };
     if (t.key === "visa-case" && visaCase) return { ...t, badge: "Active" };
@@ -196,7 +201,7 @@ function CustomerDashboardContent() {
   const sections: Record<string, React.ReactNode> = {
     overview: (
       <div className="space-y-6">
-        <DatabaseStatusBanner health={user.databaseHealth} />
+        <CustomerDashboardHero firstName={firstName} />
         <DashboardProfileSection user={user} />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Visa requests" value={String(visaCount)} icon="visa" hint="Your submissions" color="gold" />
@@ -205,7 +210,7 @@ function CustomerDashboardContent() {
           <StatCard label="Profile" value={`${user.completion}%`} icon="users" hint="Complete your profile" color="green" />
         </div>
 
-        <Panel title="Your recent requests" subtitle="Live from Supabase">
+        <Panel title="Your recent requests" subtitle="Latest activity on your account">
           {visaCount === 0 && bookingCount === 0 ? (
             <p className="text-sm text-charcoal/50 py-4">No requests yet. Start a visa application or booking request to see them here.</p>
           ) : (
@@ -301,7 +306,7 @@ function CustomerDashboardContent() {
             ))}
           </Panel>
         )}
-        <Panel title="Booking requests" subtitle="Free quote requests">
+        <Panel title="Quote requests" subtitle="Flights, hotels, tours and more">
           {(live?.bookingRequests.length ?? 0) === 0 ? (
             <DashboardEmpty
               title="No booking requests"
@@ -364,7 +369,7 @@ function CustomerDashboardContent() {
           <EmptyState
             emoji="💳"
             title="No payments yet"
-            description="Your Stripe checkout purchases will appear here after you complete a payment."
+            description="Your premium purchases and invoices will appear here after checkout."
             action={{ label: "Explore premium services", href: "/services#premium" }}
           />
         ) : (
@@ -406,7 +411,7 @@ function CustomerDashboardContent() {
         <Link href="/services#premium" className="btn-outline inline-flex px-4 py-2.5 text-sm">
           Browse premium services
         </Link>
-        <p className="text-xs text-muted">Secure checkout powered by Stripe. Confirmation emails sent on purchase.</p>
+        <p className="text-xs text-muted">Encrypted payments · Receipts available for every purchase</p>
       </div>
     ),
 
@@ -463,6 +468,7 @@ function CustomerDashboardContent() {
       roleColor="bg-blue/10 text-blue"
       avatarColor="bg-navy text-gold"
       defaultTab={defaultTab}
+      tabsWithoutHeader={["overview"]}
     />
   );
 }

@@ -117,8 +117,8 @@ export function ProviderServicesPanel({
     return (
       <DashboardEmpty
         title="Services table not set up"
-        message="Run supabase/migrations/005_mvp_marketplace.sql in your Supabase SQL Editor to enable service listings."
-        action={<Link href="/admin/setup" className="btn-primary px-5 py-2.5 text-sm">View setup guide</Link>}
+        message="Service listings are being prepared. Contact support if you need help listing your services."
+        action={<Link href="/contact" className="btn-primary px-5 py-2.5 text-sm">Contact support</Link>}
       />
     );
   }

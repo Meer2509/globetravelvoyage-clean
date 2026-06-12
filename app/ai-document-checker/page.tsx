@@ -430,7 +430,7 @@ export default function AIDocumentCheckerPage() {
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-bold text-navy text-sm">Upload your documents</h3>
                   <span className="rounded-full border border-gold/20 bg-gold/8 px-2 py-0.5 text-[10px] font-bold text-gold">
-                    🔧 Upload coming with Supabase storage
+                    Secure document upload coming soon
                   </span>
                 </div>
                 <div className="space-y-2">
@@ -439,7 +439,7 @@ export default function AIDocumentCheckerPage() {
                   ))}
                 </div>
                 <p className="mt-3 text-[11px] text-charcoal/35">
-                  Real file uploads will be enabled when Supabase Storage is connected. Files are stored securely and never shared.
+                  Files are stored securely on your account and never shared without your consent.
                 </p>
               </div>
 

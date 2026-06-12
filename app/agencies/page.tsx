@@ -97,7 +97,7 @@ export default function AgenciesPage() {
             Travel agencies you can trust
           </h1>
           <p className="mt-2 text-white/60 text-sm max-w-2xl">
-            Verified agencies offering packages, tickets, tours and visa support — listed from our Supabase marketplace.
+            Verified agencies offering packages, tickets, tours and visa support on our global marketplace.
           </p>
         </div>
       </div>

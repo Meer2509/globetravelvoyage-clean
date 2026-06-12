@@ -59,12 +59,12 @@ export default function CheckoutPlanPage({
 
             {!isStripeConfigured ? (
               <div className="card p-6 border border-gold/25 bg-gold/5">
-                <p className="font-bold text-navy">Stripe is not configured yet</p>
+                <p className="font-bold text-navy">Checkout temporarily unavailable</p>
                 <p className="mt-2 text-sm text-charcoal/60">
-                  Add Stripe keys in your environment to enable payments. No demo card form is shown — only real Stripe checkout is supported.
+                  Premium payments are being prepared. Please try again shortly or browse our free services.
                 </p>
-                <Link href="/admin/setup" className="btn-primary mt-4 inline-flex px-5 py-2.5 text-sm">
-                  View setup guide
+                <Link href="/services" className="btn-primary mt-4 inline-flex px-5 py-2.5 text-sm">
+                  Browse services
                 </Link>
               </div>
             ) : stripeProductKey ? (
@@ -75,7 +75,7 @@ export default function CheckoutPlanPage({
                   fullWidth
                 />
                 <p className="mt-3 text-xs text-charcoal/45">
-                  Secure checkout powered by Stripe. Payment records save to Supabase automatically.
+                  Secure encrypted checkout. Your purchase is saved to your account automatically.
                 </p>
               </div>
             ) : (

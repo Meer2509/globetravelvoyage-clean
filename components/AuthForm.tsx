@@ -81,10 +81,9 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
         {submitted && (
           <div className="mt-4 rounded-xl border border-blue/20 bg-blue/5 p-4 text-sm text-navy/75">
-            <p className="font-semibold text-navy">Demo mode</p>
+            <p className="font-semibold text-navy">Sign-in preview</p>
             <p className="mt-1">
-              Authentication isn't connected yet. Continue to your dashboard
-              preview:
+              Continue to explore your dashboard:
             </p>
             <Link href={target.href} className="btn-blue mt-3 w-full py-2.5">
               Open {target.label} dashboard

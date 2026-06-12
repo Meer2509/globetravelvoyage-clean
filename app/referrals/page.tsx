@@ -241,7 +241,7 @@ export default function ReferralsPage() {
             </div>
             <div>
               <span className="inline-flex items-center gap-2 rounded-xl bg-soft px-4 py-2 text-xs font-semibold text-charcoal/60">
-                Provider payouts coming soon — commissions track in Supabase when referrals convert
+                Provider payouts coming soon — commissions track automatically when referrals convert
               </span>
             </div>
           </div>
@@ -315,7 +315,7 @@ export default function ReferralsPage() {
 
           <div className="border-t border-soft-200 px-5 py-3 flex items-center justify-between text-xs text-charcoal/40">
             <span>Showing {filtered.length} of {referralHistory.length} referrals</span>
-            <span>Commissions appear here when referrals convert in Supabase</span>
+            <span>Commissions appear here when your referrals complete qualifying actions</span>
           </div>
         </div>
 

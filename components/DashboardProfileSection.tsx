@@ -7,13 +7,13 @@ import type { DashboardUserState } from "@/hooks/useDashboardUser";
 export function DashboardProfileSection({ user }: { user: DashboardUserState }) {
   if (user.loading) {
     return (
-      <Panel title="Your profile" subtitle="Loading account data…">
-        <div className="flex items-center gap-3 text-sm text-charcoal/50">
+      <Panel title="Your profile" subtitle="Loading your account…">
+        <div className="flex items-center gap-3 text-sm text-muted">
           <svg className="h-5 w-5 animate-spin text-blue" viewBox="0 0 24 24" fill="none">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z" />
           </svg>
-          Fetching your Supabase profile…
+          Loading your profile…
         </div>
       </Panel>
     );
@@ -25,7 +25,7 @@ export function DashboardProfileSection({ user }: { user: DashboardUserState }) 
 
   return (
     <div className="space-y-4">
-      <Panel title="Your profile" subtitle="Live data from your Globe Travel Voyage account">
+      <Panel title="Your profile" subtitle="Your Globe Travel Voyage account">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-xl bg-soft p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-charcoal/40">Full name</p>

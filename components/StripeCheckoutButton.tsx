@@ -75,10 +75,7 @@ export function StripeCheckoutButton({
           {label}
         </button>
         <p className="text-xs text-muted">
-          Stripe is not configured.{" "}
-          <Link href="/admin/setup" className="font-semibold text-blue hover:underline">
-            Add keys in setup →
-          </Link>
+          Premium checkout is temporarily unavailable. Please try again later or contact support.
         </p>
       </div>
     );

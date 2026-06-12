@@ -81,7 +81,7 @@ export default function DashboardProfilePage() {
     setSaving(false);
 
     if (!result.ok) {
-      setError(result.demo ? "Supabase is not configured. Add environment variables to save your profile." : result.error);
+      setError(result.demo ? "Your profile could not be saved right now. Please try again later." : result.error);
       return;
     }
 
@@ -139,7 +139,7 @@ export default function DashboardProfilePage() {
             )}
             {success && (
               <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                ✓ Profile saved to Supabase.
+                ✓ Profile saved successfully.
               </div>
             )}
 

@@ -128,9 +128,9 @@ export default function UpdatePasswordPage() {
         <UpdatePasswordForm />
       ) : (
         <div className="rounded-2xl border border-gold/25 bg-gold/5 p-4 text-sm text-charcoal/70">
-          Supabase is not configured.{" "}
-          <Link href="/admin/setup" className="font-semibold text-blue hover:underline">
-            View setup guide
+          Password updates are temporarily unavailable.{" "}
+          <Link href="/contact" className="font-semibold text-blue hover:underline">
+            Contact support
           </Link>
           <Link href="/login" className="btn-outline mt-4 w-full py-3 text-sm block text-center">
             Back to sign in

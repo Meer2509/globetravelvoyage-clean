@@ -35,7 +35,7 @@ export async function HomePropertiesSection() {
         <SectionHeader
           eyebrow="Property marketplace"
           title="Travel stays, rentals & investment properties"
-          subtitle="Listings shown here are loaded from Supabase. Property listings open as verified hosts complete onboarding."
+          subtitle="Handpicked stays from verified hosts on our global marketplace."
           linkHref="/properties"
           linkLabel="All properties"
         />

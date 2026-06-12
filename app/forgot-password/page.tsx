@@ -14,12 +14,13 @@ function SetupRequired() {
         <div className="flex items-start gap-3">
           <span className="text-xl">🔧</span>
           <div>
-            <p className="font-bold text-navy text-sm">Demo mode — Supabase not connected</p>
+            <p className="font-bold text-navy text-sm">Password reset temporarily unavailable</p>
             <p className="mt-1 text-xs text-charcoal/60">
-              Password reset requires Supabase.{" "}
-              <Link href="/admin/setup" className="text-blue font-semibold hover:underline">
-                View setup guide →
+              Please try again shortly or{" "}
+              <Link href="/contact" className="text-blue font-semibold hover:underline">
+                contact support
               </Link>
+              .
             </p>
           </div>
         </div>

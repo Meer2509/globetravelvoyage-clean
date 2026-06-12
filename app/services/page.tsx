@@ -5,8 +5,6 @@ import {
   ServicesPageHeader,
   StripeTrustBanner,
 } from "@/components/ServicesCatalog";
-import { isStripeConfigured } from "@/lib/stripe";
-
 export const metadata: Metadata = {
   title: "Services & Pricing — Globe Travel Voyage",
   description:
@@ -18,16 +16,6 @@ export default function ServicesPage() {
     <div className="min-h-screen bg-soft/30">
       <ServicesPageHeader />
 
-      {!isStripeConfigured && (
-        <div className="border-b border-gold/20 bg-gold/5 px-5 py-3 text-center">
-          <p className="text-sm text-muted">
-            Premium checkout unavailable until Stripe is configured.{" "}
-            <Link href="/admin/setup" className="font-semibold text-blue hover:underline">
-              View setup guide →
-            </Link>
-          </p>
-        </div>
-      )}
 
       <div className="container-px max-w-5xl py-10">
         <ServicesCatalog />

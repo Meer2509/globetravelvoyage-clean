@@ -11,8 +11,6 @@ import {
   TRAVELER_FREE_FEATURES,
 } from "@/lib/launch-pricing";
 import { SERVICES_CATALOG_KEYS } from "@/lib/stripe/products";
-import { isStripeConfigured } from "@/lib/stripe";
-
 export const metadata: Metadata = {
   title: "Pricing — Globe Travel Voyage",
   description: "Free travel tools and provider accounts at launch. Optional premium upgrades for expert help and featured visibility.",
@@ -30,17 +28,6 @@ export default function PricingPage() {
     <>
       <section className="bg-hero-gradient py-16 sm:py-20">
         <div className="container-px text-center">
-          {!isStripeConfigured && (
-            <div className="mx-auto mb-6 flex max-w-lg items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/8 px-4 py-3">
-              <span className="text-lg">🔧</span>
-              <p className="text-sm text-white/70">
-                Premium checkout unavailable until Stripe is configured.{" "}
-                <Link href="/admin/setup" className="font-semibold text-gold hover:underline">
-                  View setup guide →
-                </Link>
-              </p>
-            </div>
-          )}
           <span className="eyebrow-white mb-4">Launch pricing</span>
           <h1 className="h-hero text-white">
             Start free.{" "}

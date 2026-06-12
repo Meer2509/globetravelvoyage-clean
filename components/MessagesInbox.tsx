@@ -49,7 +49,7 @@ export function MessagesInbox({ title = "Messages" }: { title?: string }) {
 
   return (
     <div className="space-y-5">
-      <Panel title={title} subtitle="Secure messaging — saved to Supabase">
+      <Panel title={title} subtitle="Secure messaging on your account">
         {loading ? (
           <p className="text-sm text-charcoal/50 py-4">Loading messages…</p>
         ) : messages.length === 0 ? (

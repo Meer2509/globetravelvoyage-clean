@@ -34,7 +34,7 @@ export default function ContactPage() {
       <PageHeader
         eyebrow="Contact"
         title="Get in touch"
-        subtitle="We'd love to hear from you. Fill in the form and we'll get back to you as soon as possible. Messages are saved to our support system when Supabase is configured."
+        subtitle="We'd love to hear from you. Fill in the form and our team will respond within 24–48 hours."
         breadcrumbs={[{ label: "Home", href: "/" }, { label: "Contact" }]}
       />
 

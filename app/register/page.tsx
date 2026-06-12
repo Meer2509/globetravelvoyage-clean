@@ -40,13 +40,13 @@ function SetupRequired() {
         <div className="flex items-start gap-3">
           <span className="text-xl">🔧</span>
           <div>
-            <p className="font-bold text-navy text-sm">Demo mode — Supabase not connected</p>
+            <p className="font-bold text-navy text-sm">Registration temporarily unavailable</p>
             <p className="mt-1 text-xs text-charcoal/60">
-              Real registration requires Supabase. Add your keys to{" "}
-              <code className="rounded bg-navy/8 px-1 text-[11px]">.env.local</code>.{" "}
-              <Link href="/admin/setup" className="text-blue hover:underline font-semibold">
-                View setup guide →
+              New account sign-up is being prepared. Please check back shortly or{" "}
+              <Link href="/contact" className="text-blue hover:underline font-semibold">
+                contact our team
               </Link>
+              .
             </p>
           </div>
         </div>

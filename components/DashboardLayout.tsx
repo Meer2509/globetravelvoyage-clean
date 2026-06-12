@@ -28,6 +28,7 @@ export function DashboardLayout({
   roleColor = "bg-blue/10 text-blue",
   avatarColor = "bg-navy text-gold",
   defaultTab,
+  tabsWithoutHeader,
 }: {
   role: string;
   name: string;
@@ -40,6 +41,7 @@ export function DashboardLayout({
   roleColor?: string;
   avatarColor?: string;
   defaultTab?: string;
+  tabsWithoutHeader?: string[];
 }) {
   const initialTab =
     defaultTab && tabs.some((t) => t.key === defaultTab) ? defaultTab : tabs[0]?.key;
@@ -153,7 +155,7 @@ export function DashboardLayout({
           {/* ── Main content ── */}
           <main className="min-w-0">
             {/* Section header */}
-            {activeTab && (
+            {activeTab && !tabsWithoutHeader?.includes(active ?? "") && (
               <div className="mb-5 flex items-center gap-3">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy/8">
                   <Icon name={activeTab.icon} className="h-5 w-5 text-navy" />

@@ -66,7 +66,7 @@ export default function AITravelAssistantPage() {
             </div>
             <div className="flex items-center gap-3 flex-shrink-0">
               <span className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/8 px-3 py-1.5 text-xs text-white/60">
-                🔧 Demo mode — Mock AI
+                AI Travel Assistant
               </span>
             </div>
           </div>

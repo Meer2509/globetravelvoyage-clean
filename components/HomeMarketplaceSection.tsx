@@ -70,7 +70,7 @@ export async function HomeMarketplaceSection() {
         <SectionHeader
           eyebrow="Verified marketplace"
           title="Trusted visa experts, agencies & guides"
-          subtitle="Providers listed here are loaded live from Supabase. Verified provider onboarding is open now."
+          subtitle="Verified visa experts and travel agencies ready to help with your journey."
           linkHref="/agents"
           linkLabel="See all providers"
         />

@@ -69,7 +69,7 @@ export function DocumentUploadPanel({ requestId }: { requestId?: string }) {
       <Panel title="Visa documents" subtitle="Upload supporting documents for your visa request">
         {!storageReady && (
           <div className="mb-4 rounded-xl border border-gold/20 bg-gold/5 p-3 text-xs text-charcoal/65">
-            Supabase storage bucket <code>documents</code> not detected — records save without file URL until storage is configured.{" "}
+            File storage is being prepared — your document details are saved securely to your account.{" "}
             <Link href="/admin/setup" className="font-semibold text-blue hover:underline">Setup guide</Link>
           </div>
         )}

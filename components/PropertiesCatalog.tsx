@@ -124,7 +124,7 @@ export function PropertiesCatalog({
         </div>
 
         <div className="mb-5 text-sm text-muted">
-          {filtered.length} live listing{filtered.length !== 1 ? "s" : ""} from Supabase
+          {filtered.length} listing{filtered.length !== 1 ? "s" : ""} available
           {search || chips.length > 0 ? " — filtered" : ""}
         </div>
 
