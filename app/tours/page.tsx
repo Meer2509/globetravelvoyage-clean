@@ -8,7 +8,6 @@ import { CTASection } from "@/components/CTASection";
 import { ContactModal } from "@/components/ContactModal";
 import { SaveButton } from "@/components/SaveButton";
 import { Stars } from "@/components/Stars";
-import { StripeCheckoutButton } from "@/components/StripeCheckoutButton";
 import { tours, tickets } from "@/lib/data";
 
 const CATEGORY_CHIPS = ["Food", "Heritage", "Adventure", "City tour", "Half day", "Full day", "Beach", "Desert"];
@@ -140,23 +139,18 @@ export default function ToursPage() {
                             <p className="text-xs text-muted">per person · sample estimate</p>
                           </div>
                         </div>
-                        <StripeCheckoutButton
-                          productKey="tour_booking_deposit"
-                          checkoutMeta={{
-                            listingId: tour.id,
-                            listingTitle: tour.title,
-                            listingType: "tour",
-                          }}
-                          label="Pay deposit"
-                          className="btn-gold w-full py-2.5 text-sm"
-                          fullWidth
-                        />
                         <button
                           onClick={() => setModalTour(tour)}
-                          className="btn-outline w-full py-2 text-sm"
+                          className="btn-primary w-full py-2.5 text-sm"
                         >
-                          Request booking
+                          Request quote — free
                         </button>
+                        <Link
+                          href="/booking/request"
+                          className="btn-outline w-full py-2 text-sm text-center"
+                        >
+                          General booking help
+                        </Link>
                       </div>
                     </div>
                   </div>

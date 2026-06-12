@@ -32,6 +32,7 @@ const BOOKING_TYPE_MAP: Record<string, string> = {
   verified_badge_fee: "provider_service",
   property_featured_listing: "provider_service",
   guide_featured_listing: "provider_service",
+  homepage_placement: "provider_service",
   provider_subscription: "provider_service",
   provider_service: "provider_service",
 };

@@ -7,7 +7,6 @@ import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
 import { ContactModal } from "@/components/ContactModal";
 import { SaveButton } from "@/components/SaveButton";
-import { StripeCheckoutButton } from "@/components/StripeCheckoutButton";
 import type { MarketplacePropertyRow } from "@/lib/supabase/mvp-queries";
 
 const PROPERTY_EMOJI: Record<string, string> = {
@@ -191,24 +190,11 @@ export function PropertiesCatalog({
                         </p>
                         <p className="text-xs text-muted capitalize">{property.property_type}</p>
                       </div>
-                      {property.listing_type !== "sale" && (
-                        <StripeCheckoutButton
-                          productKey="property_reservation_deposit"
-                          checkoutMeta={{
-                            listingId: property.id,
-                            listingTitle: property.title,
-                            listingType: "property",
-                          }}
-                          label="Pay deposit"
-                          className="btn-gold w-full py-2.5 text-sm"
-                          fullWidth
-                        />
-                      )}
                       <button
                         onClick={() => setModal({ open: true, property })}
-                        className="btn-outline w-full py-2 text-sm"
+                        className="btn-primary w-full py-2.5 text-sm"
                       >
-                        {property.listing_type === "sale" ? "Inquire" : "Contact host"}
+                        {property.listing_type === "sale" ? "Inquire — free" : "Request quote — free"}
                       </button>
                     </div>
                   </div>

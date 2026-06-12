@@ -12,11 +12,11 @@ const nav = [
     label: "Services",
     href: "/services",
     sub: [
-      { label: "All paid services",       href: "/services",            desc: "Visa, AI plans, bookings" },
-      { label: "Visa services",           href: "/services#visa",       desc: "Consultations from $49" },
-      { label: "AI travel plans",         href: "/services#ai-travel",  desc: "Premium itineraries" },
-      { label: "Provider listings",       href: "/services#providers",  desc: "Featured marketplace" },
-      { label: "Travel requests",         href: "/services#travel-requests", desc: "Flights, hotels, tours" },
+      { label: "All services",            href: "/services",              desc: "Free tools + premium upgrades" },
+      { label: "Free for travelers",      href: "/services#free-traveler", desc: "Guides, planner, quotes" },
+      { label: "Free for providers",      href: "/services#free-provider", desc: "List & receive leads" },
+      { label: "Premium upgrades",        href: "/services#premium",      desc: "Visa help & AI plans" },
+      { label: "Featured listings",       href: "/services#featured",     desc: "Provider visibility" },
     ],
   },
   {

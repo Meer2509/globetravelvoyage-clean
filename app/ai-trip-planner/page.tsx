@@ -451,8 +451,8 @@ export default function AITripPlannerPage() {
               <StripeCheckoutButton
                 productKey="premium_ai_trip_plan"
                 checkoutMeta={{ listingTitle: result.destination }}
-                label="Purchase premium plan"
-                className="btn-gold py-3 px-6 text-sm"
+                label="Upgrade to Premium"
+                className="btn-outline py-3 px-6 text-sm"
               />
               <Link href="/agents" className="btn-outline py-3 px-6 text-sm">Book a tour guide</Link>
               <Link href="/ai-visa-assistant" className="btn-outline py-3 px-6 text-sm">Check visa requirements</Link>

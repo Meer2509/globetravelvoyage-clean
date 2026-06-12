@@ -177,8 +177,8 @@ export default function AgentsPage() {
                         agentId: agent.id,
                         listingTitle: agent.name,
                       }}
-                      label="Book consultation"
-                      className="btn-gold w-full py-2.5 text-sm"
+                      label="Premium consultation"
+                      className="btn-outline w-full py-2.5 text-sm"
                       fullWidth
                     />
                   }

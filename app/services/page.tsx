@@ -8,9 +8,9 @@ import {
 import { isStripeConfigured } from "@/lib/stripe";
 
 export const metadata: Metadata = {
-  title: "Paid Services — Globe Travel Voyage",
+  title: "Services & Pricing — Globe Travel Voyage",
   description:
-    "Book visa consultations, AI travel plans, provider listings, and travel requests with secure Stripe checkout.",
+    "Free travel tools and provider accounts at launch. Optional premium upgrades for visa consultations, AI itineraries, and featured listings.",
 };
 
 export default function ServicesPage() {
@@ -21,7 +21,7 @@ export default function ServicesPage() {
       {!isStripeConfigured && (
         <div className="border-b border-gold/20 bg-gold/5 px-5 py-3 text-center">
           <p className="text-sm text-muted">
-            Stripe keys are not configured yet.{" "}
+            Premium checkout unavailable until Stripe is configured.{" "}
             <Link href="/admin/setup" className="font-semibold text-blue hover:underline">
               View setup guide →
             </Link>
@@ -29,8 +29,7 @@ export default function ServicesPage() {
         </div>
       )}
 
-      <div className="container-px py-10 max-w-5xl">
-        <StripeTrustBanner className="mb-10" />
+      <div className="container-px max-w-5xl py-10">
         <ServicesCatalog />
         <StripeTrustBanner className="mt-10" />
       </div>

@@ -11,7 +11,7 @@ const navCols = [
   {
     title: "Visa Services",
     links: [
-      { label: "Paid Services", href: "/services" },
+      { label: "Services & Pricing", href: "/services" },
       { label: "AI Visa Assistant", href: "/visa" },
       { label: "USA Visa Guide", href: "/visa/usa" },
       { label: "USA from Pakistan 🇵🇰→🇺🇸", href: "/visa/usa-from-pakistan" },
