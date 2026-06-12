@@ -85,9 +85,9 @@ function PaymentSuccessContent() {
         <Link href="/dashboard/customer" className="btn-primary py-3 px-6">
           Open my dashboard
         </Link>
-        <Link href="/checkout" className="btn-outline py-3 px-6 text-sm">
-          Browse more services
-        </Link>
+            <Link href="/services" className="btn-outline py-3 px-6 text-sm">
+              Browse more services
+            </Link>
       </div>
     </div>
   );

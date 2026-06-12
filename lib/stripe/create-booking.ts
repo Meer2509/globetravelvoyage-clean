@@ -18,14 +18,32 @@ export interface PendingBookingInput {
 }
 
 const BOOKING_TYPE_MAP: Record<string, string> = {
+  usa_visa_consultation: "visa_consultation",
+  usa_b1b2_document_review: "visa_consultation",
+  full_visa_application_support: "visa_consultation",
+  canada_visa_consultation: "visa_consultation",
+  uk_visitor_visa_support: "visa_consultation",
+  schengen_visa_support: "visa_consultation",
   visa_expert_consultation: "visa_consultation",
   visa_document_review: "visa_consultation",
   visa_application_prep: "visa_consultation",
   premium_ai_trip_plan: "travel_plan",
+  family_vacation_plan: "travel_plan",
   concierge_travel_planning: "travel_plan",
+  flight_quote_request: "travel_request",
+  hotel_booking_help: "travel_request",
+  cruise_yacht_quote: "travel_request",
+  cruise_booking_request: "travel_request",
   tour_booking_deposit: "tour_deposit",
   tour_booking_request: "tour_deposit",
+  property_rental_inquiry: "property_deposit",
   property_reservation_deposit: "property_deposit",
+  expert_featured_listing: "provider_service",
+  agency_featured_listing: "provider_service",
+  verified_badge_fee: "provider_service",
+  property_featured_listing: "provider_service",
+  guide_featured_listing: "provider_service",
+  provider_subscription: "provider_service",
   provider_service: "provider_service",
 };
 

@@ -1,22 +1,42 @@
-import Link from "next/link";
-import { Icon } from "./Icon";
-import type { Service } from "@/lib/data";
+import { StripeCheckoutButton } from "@/components/StripeCheckoutButton";
+import {
+  formatProductPrice,
+  getCheckoutProduct,
+  type CheckoutProductKey,
+} from "@/lib/stripe/products";
 
-export function ServiceCard({ service }: { service: Service }) {
+export function ServiceCard({
+  productKey,
+  compact = false,
+}: {
+  productKey: CheckoutProductKey;
+  compact?: boolean;
+}) {
+  const product = getCheckoutProduct(productKey);
+  if (!product) return null;
+
+  const price = formatProductPrice(product);
+  const cta = product.ctaLabel ?? "Pay now";
+
   return (
-    <Link href={service.href} className="card card-hover group flex flex-col p-6">
-      <span
-        className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${service.accent} text-navy`}
-      >
-        <Icon name={service.icon} className="h-6 w-6" />
-      </span>
-      <h3 className="text-lg font-bold text-navy">{service.title}</h3>
-      <p className="mt-2 flex-1 text-sm leading-relaxed text-navy/60">
-        {service.description}
-      </p>
-      <span className="mt-4 inline-flex items-center text-sm font-semibold text-blue group-hover:gap-1.5">
-        Explore <span className="transition-all group-hover:translate-x-0.5">→</span>
-      </span>
-    </Link>
+    <div className={`card flex flex-col ${compact ? "p-4" : "p-5"}`}>
+      <div className="flex items-start gap-3">
+        <span className={compact ? "text-2xl" : "text-3xl"}>{product.emoji}</span>
+        <div className="min-w-0 flex-1">
+          <p className={`font-bold text-navy ${compact ? "text-sm" : "text-base"}`}>{product.name}</p>
+          {!compact && (
+            <p className="mt-1 text-sm text-muted leading-relaxed">{product.description}</p>
+          )}
+        </div>
+      </div>
+      <div className={`mt-auto flex items-center justify-between gap-3 border-t border-soft-200 ${compact ? "pt-3 mt-3" : "pt-4 mt-4"}`}>
+        <span className={`font-extrabold text-navy ${compact ? "text-lg" : "text-xl"}`}>{price}</span>
+        <StripeCheckoutButton
+          productKey={product.key}
+          label={cta}
+          className={compact ? "btn-gold px-4 py-2 text-xs" : "btn-gold px-5 py-2.5 text-sm"}
+        />
+      </div>
+    </div>
   );
 }

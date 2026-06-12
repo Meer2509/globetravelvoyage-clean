@@ -81,7 +81,7 @@ export default function PricingPage() {
             <div className="mx-auto mb-6 flex max-w-lg items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/8 px-4 py-3">
               <span className="text-lg">🔧</span>
               <p className="text-sm text-white/70">
-                Demo mode — Stripe not connected.{" "}
+                Stripe not connected — payments unavailable.{" "}
                 <Link href="/admin/setup" className="font-semibold text-gold hover:underline">
                   View setup guide →
                 </Link>

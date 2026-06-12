@@ -75,13 +75,13 @@ export default function CheckoutPlanPage({
                   fullWidth
                 />
                 <p className="mt-3 text-xs text-charcoal/45">
-                  Test mode: use card 4242 4242 4242 4242. Payment records save to Supabase automatically.
+                  Secure checkout powered by Stripe. Payment records save to Supabase automatically.
                 </p>
               </div>
             ) : (
               <div className="card p-6">
                 <p className="text-sm text-charcoal/60">This plan is not mapped to a Stripe product yet.</p>
-                <Link href="/checkout" className="btn-primary mt-4 inline-flex px-5 py-2.5 text-sm">
+                <Link href="/services" className="btn-primary mt-4 inline-flex px-5 py-2.5 text-sm">
                   Browse all services
                 </Link>
               </div>

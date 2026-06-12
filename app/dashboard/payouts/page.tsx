@@ -33,6 +33,14 @@ export default async function PayoutsPage() {
       </div>
 
       <div className="container-px py-8 space-y-6 max-w-4xl">
+        <div className="rounded-xl border border-gold/25 bg-gold/5 px-5 py-4 text-sm text-muted">
+          <p className="font-bold text-navy">Provider payouts coming soon</p>
+          <p className="mt-2">
+            Platform currently collects payments via secure Stripe Checkout. Automated Stripe Connect payouts to your bank account are the next phase.
+            Earnings below reflect paid services linked to your provider account.
+          </p>
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="card p-5 text-center">
             <p className="text-xs font-bold uppercase tracking-wide text-muted">Total earnings</p>

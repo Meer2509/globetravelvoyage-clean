@@ -21,6 +21,7 @@ import {
 } from "@/lib/data";
 import { HomeMarketplaceSection } from "@/components/HomeMarketplaceSection";
 import { HomePropertiesSection } from "@/components/HomePropertiesSection";
+import { HomeServicesSection } from "@/components/HomeServicesSection";
 
 export default function Home() {
   const featuredUsa = visas.find((v) => v.slug === "usa-b1-b2")!;
@@ -80,6 +81,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <HomeServicesSection />
 
       {/* ── 3. AI Travel Command Center ── */}
       <AICommandCenter />

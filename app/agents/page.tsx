@@ -172,7 +172,7 @@ export default function AgentsPage() {
                   ctaLabel="Contact expert"
                   payAction={
                     <StripeCheckoutButton
-                      productKey="visa_expert_consultation"
+                      productKey="usa_visa_consultation"
                       checkoutMeta={{
                         agentId: agent.id,
                         listingTitle: agent.name,

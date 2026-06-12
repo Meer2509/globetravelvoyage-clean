@@ -2,9 +2,9 @@ import type { CheckoutProductKey } from "./products";
 
 /** Maps /pricing plan ids to Stripe Checkout product keys */
 export const PLAN_ID_TO_CHECKOUT: Record<string, CheckoutProductKey> = {
-  "expert-consultation": "visa_expert_consultation",
-  "ai-visa-guidance": "visa_document_review",
-  "visa-application-prep": "visa_application_prep",
+  "expert-consultation": "usa_visa_consultation",
+  "ai-visa-guidance": "usa_b1b2_document_review",
+  "visa-application-prep": "full_visa_application_support",
   "ai-trip-premium": "premium_ai_trip_plan",
   "concierge-planning": "concierge_travel_planning",
   "featured-agency": "agency_featured_listing",

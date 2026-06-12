@@ -1452,6 +1452,13 @@ export default function AdminDashboard() {
           />
         </div>
 
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-xs text-muted">Secure checkout powered by Stripe.</p>
+          <Link href="/dashboard/admin/payments" className="text-sm font-semibold text-blue hover:underline">
+            Full payments page →
+          </Link>
+        </div>
+
         <Panel title="Stripe payments" subtitle="Live from Supabase payments table" noPad>
           {livePayments.length === 0 ? (
             <p className="p-8 text-center text-sm text-charcoal/50">

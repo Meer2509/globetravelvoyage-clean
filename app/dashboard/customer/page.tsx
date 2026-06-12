@@ -331,7 +331,7 @@ export default function CustomerDashboard() {
             emoji="💳"
             title="No payments yet"
             description="Your Stripe checkout purchases will appear here after you complete a payment."
-            action={{ label: "Browse checkout", href: "/checkout" }}
+            action={{ label: "Browse paid services", href: "/services" }}
           />
         ) : (
           <Panel title="Payment history" subtitle="Live from Supabase payments table">
@@ -350,9 +350,10 @@ export default function CustomerDashboard() {
           </Panel>
         )}
 
-        <Link href="/checkout" className="btn-outline inline-flex px-4 py-2.5 text-sm">
-          Make a payment
+        <Link href="/services" className="btn-primary inline-flex px-4 py-2.5 text-sm">
+          Browse paid services
         </Link>
+        <p className="text-xs text-muted">Secure checkout powered by Stripe.</p>
       </div>
     ),
 
