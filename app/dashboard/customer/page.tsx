@@ -11,15 +11,16 @@ import {
 import {
   fetchCustomerPaymentsExtended,
   fetchCustomerStripeBookings,
-  fetchCustomerVisaCase,
   fetchCustomerActiveServices,
   type PaymentRowExtended,
   type StripeBookingRow,
   type VisaCaseData,
   type ActiveServiceRow,
 } from "@/lib/supabase/payment-queries";
+import { fetchCustomerVisaCases } from "@/lib/supabase/visa-case-queries";
 import { VisaCasePanel } from "@/components/VisaCasePanel";
 import { CustomerActiveServices } from "@/components/CustomerActiveServices";
+import { VisaCaseSummaryCard } from "@/components/VisaCaseSummaryCard";
 import { formatPaymentAmount, formatPaymentDate, paymentServiceLabel } from "@/lib/payments-display";
 import { fetchCustomerLeadRequests, fetchCustomerBookingRequests } from "@/lib/supabase/mvp-queries";
 import { submitSupportTicket } from "@/lib/supabase/actions";
@@ -27,7 +28,7 @@ import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DashboardProfileSection } from "@/components/DashboardProfileSection";
 import { CustomerDashboardHero } from "@/components/CustomerDashboardHero";
 import { DashboardEmpty } from "@/components/DashboardEmpty";
-import { CaseDocumentChecklist } from "@/components/CaseDocumentChecklist";
+import { visaCaseWorkspacePath } from "@/lib/visa-case-routes";
 import { MessagesInbox } from "@/components/MessagesInbox";
 import { Disclaimer } from "@/components/Disclaimer";
 import { Stars } from "@/components/Stars";
@@ -143,6 +144,7 @@ function CustomerDashboardContent() {
   const [customerPayments, setCustomerPayments] = useState<PaymentRowExtended[]>([]);
   const [stripeBookings, setStripeBookings] = useState<StripeBookingRow[]>([]);
   const [visaCase, setVisaCase] = useState<VisaCaseData | null>(null);
+  const [visaCases, setVisaCases] = useState<VisaCaseData[]>([]);
   const [activeServices, setActiveServices] = useState<ActiveServiceRow[]>([]);
   const [supportSubject, setSupportSubject] = useState("");
   const [supportBody, setSupportBody] = useState("");
@@ -152,7 +154,10 @@ function CustomerDashboardContent() {
   function reloadPostPayment() {
     fetchCustomerPaymentsExtended().then(setCustomerPayments);
     fetchCustomerStripeBookings().then(setStripeBookings);
-    fetchCustomerVisaCase().then(setVisaCase);
+    fetchCustomerVisaCases().then((cases) => {
+      setVisaCases(cases);
+      setVisaCase(cases[0] ?? null);
+    });
     fetchCustomerActiveServices().then(setActiveServices);
   }
 
@@ -200,7 +205,7 @@ function CustomerDashboardContent() {
 
   const customerTabs = tabs.map((t) => {
     if (t.key === "billing" && customerPayments.length > 0) return { ...t, badge: customerPayments.length };
-    if (t.key === "visa-case" && visaCase) return { ...t, badge: "Active" };
+    if (t.key === "visa-case" && visaCases.length > 0) return { ...t, badge: visaCases.length };
     if (t.key === "visas" && visaCount > 0) return { ...t, badge: visaCount };
     if (t.key === "bookings" && bookingCount > 0) return { ...t, badge: bookingCount };
     if (t.key === "support" && supportCount > 0) return { ...t, badge: supportCount };
@@ -212,6 +217,51 @@ function CustomerDashboardContent() {
       <div className="space-y-6">
         <CustomerDashboardHero firstName={firstName} />
         <CustomerActiveServices services={activeServices} visaCase={visaCase} />
+
+        {visaCase && (
+          <Panel title="Required documents" subtitle="Your visa case checklist">
+            <p className="text-sm text-muted mb-4">
+              {visaCase.checklist.filter((d) => d.required !== false).length} required items ·{" "}
+              {visaCase.checklist.filter((d) => ["uploaded", "prepared", "reviewed"].includes(d.status)).length} ready
+            </p>
+            <Link href={visaCaseWorkspacePath(visaCase.id, "documents")} className="btn-gold px-5 py-2.5 text-sm">
+              Open document checklist
+            </Link>
+          </Panel>
+        )}
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Panel title="Payment history" subtitle="Recent transactions">
+            {customerPayments.length === 0 ? (
+              <p className="text-sm text-muted py-2">No payments yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {customerPayments.slice(0, 3).map((p) => (
+                  <div key={p.id} className="text-sm flex justify-between gap-2">
+                    <span className="text-navy font-medium truncate">
+                      {paymentServiceLabel(p.service_type, p.description)}
+                    </span>
+                    <span className="text-muted shrink-0">{formatPaymentAmount(Number(p.amount), p.currency)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <Link href="/dashboard/customer?tab=billing" className="mt-3 inline-block text-xs font-semibold text-blue hover:underline">
+              View all payments →
+            </Link>
+          </Panel>
+          <Panel title="Support & messages" subtitle="Get help with your case">
+            <p className="text-sm text-muted mb-3">Questions about documents, payments, or your visa case.</p>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/dashboard/customer?tab=support" className="btn-outline px-4 py-2 text-sm">
+                Support
+              </Link>
+              <Link href="/dashboard/customer?tab=messages" className="btn-outline px-4 py-2 text-sm">
+                Messages
+              </Link>
+            </div>
+          </Panel>
+        </div>
         <DashboardProfileSection user={user} />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Visa requests" value={String(visaCount)} icon="visa" hint="Your submissions" color="gold" />
@@ -245,7 +295,7 @@ function CustomerDashboardContent() {
       </div>
     ),
 
-    "visa-case": <VisaCasePanel visaCase={visaCase} onRefresh={reloadPostPayment} />,
+    "visa-case": <VisaCasePanel visaCases={visaCases} onRefresh={reloadPostPayment} />,
 
     timeline: (
       <DashboardEmpty
@@ -345,13 +395,20 @@ function CustomerDashboardContent() {
     documents: (
       <div className="space-y-5">
         {visaCase ? (
-          <Panel title="Document checklist" subtitle={`Case ${visaCase.caseNumber}`}>
-            <CaseDocumentChecklist
-              caseId={visaCase.id}
-              items={visaCase.checklist}
-              onUpdated={reloadPostPayment}
-            />
-          </Panel>
+          <>
+            <VisaCaseSummaryCard visaCase={visaCase} />
+            <Panel title="Full document checklist" subtitle={`Case ${visaCase.caseNumber}`}>
+              <p className="text-sm text-muted mb-4">
+                Upload and track all required documents in your case workspace.
+              </p>
+              <Link
+                href={visaCaseWorkspacePath(visaCase.id, "documents")}
+                className="btn-primary px-5 py-2.5 text-sm"
+              >
+                Open case workspace
+              </Link>
+            </Panel>
+          </>
         ) : (
           <EmptyState
             emoji="📁"
@@ -418,24 +475,36 @@ function CustomerDashboardContent() {
                     </span>
                   </div>
                 </div>
-                {p.status === "paid" && (
-                  <a
-                    href={`/api/receipt/${p.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 inline-block text-xs font-semibold text-blue hover:underline"
-                  >
-                    Download receipt →
-                  </a>
-                )}
+                <div className="mt-2 flex flex-wrap gap-3">
+                  {p.status === "paid" && (
+                    <a
+                      href={`/api/receipt/${p.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-semibold text-blue hover:underline"
+                    >
+                      Download receipt →
+                    </a>
+                  )}
+                  {p.status === "paid" && p.service_type?.includes("visa") && visaCase && (
+                    <Link
+                      href={visaCaseWorkspacePath(visaCase.id)}
+                      className="text-xs font-semibold text-gold hover:underline"
+                    >
+                      Open visa case →
+                    </Link>
+                  )}
+                </div>
               </div>
             ))}
           </Panel>
         )}
 
-        <Link href="/services#premium" className="btn-outline inline-flex px-4 py-2.5 text-sm">
-          Browse premium services
-        </Link>
+        {!visaCase && (
+          <Link href="/services#premium" className="btn-outline inline-flex px-4 py-2.5 text-sm">
+            Browse premium services
+          </Link>
+        )}
         <p className="text-xs text-muted">Secure checkout powered by Stripe · Receipts available for paid orders</p>
       </div>
     ),

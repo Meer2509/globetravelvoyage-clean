@@ -6,6 +6,9 @@ import { isMissingTableError } from "@/lib/supabase/profile-utils";
 import { claimPaymentsByEmail } from "@/lib/stripe/link-user";
 import { paymentServiceLabel } from "@/lib/payments-display";
 import { VISA_CASE_STATUSES, type VisaCaseStatus } from "@/lib/visa-case-constants";
+import { mapVisaCaseRow } from "@/lib/supabase/visa-case-mapper";
+import { ensureCaseChecklist, isVisaProductKey, createVisaCase } from "@/lib/visa-case";
+import { VISA_DOCUMENT_CHECKLIST } from "@/lib/visa-case-checklist";
 
 export interface PaymentRowExtended {
   id: string;
@@ -50,7 +53,14 @@ export interface VisaCaseData {
   currency: string;
   invoiceNumber: string | null;
   createdAt: string;
-  checklist: Array<{ name: string; status: string; documentId?: string }>;
+  checklist: Array<{
+    id?: string;
+    name: string;
+    status: string;
+    documentId?: string;
+    required: boolean;
+    notes?: string | null;
+  }>;
 }
 
 export interface ActiveServiceRow {
@@ -131,7 +141,7 @@ export async function fetchCustomerVisaCase(): Promise<VisaCaseData | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: visaCaseRow, error: caseError } = await supabase
+  let { data: visaCaseRow, error: caseError } = await supabase
     .from("visa_cases")
     .select("*")
     .eq("user_id", user.id)
@@ -144,8 +154,17 @@ export async function fetchCustomerVisaCase(): Promise<VisaCaseData | null> {
     console.error("[visa_cases] table missing:", caseError.message);
   }
 
+  if (!visaCaseRow) {
+    const backfilledId = await backfillVisaCaseFromPayment(user.id);
+    if (backfilledId) {
+      const { data } = await supabase.from("visa_cases").select("*").eq("id", backfilledId).maybeSingle();
+      visaCaseRow = data;
+    }
+  }
+
   if (visaCaseRow) {
-    return mapVisaCaseFromTable(visaCaseRow as Record<string, unknown>, supabase);
+    await ensureCaseChecklist((visaCaseRow as { id: string }).id, user.id);
+    return mapVisaCaseRow(visaCaseRow as Record<string, unknown>, supabase);
   }
 
   const { data: entitlement } = await supabase
@@ -216,7 +235,12 @@ export async function fetchCustomerVisaCase(): Promise<VisaCaseData | null> {
       currency: (payment.currency as string) ?? "USD",
       invoiceNumber: (payment.invoice_number as string) ?? null,
       createdAt: new Date().toISOString(),
-      checklist: [],
+      checklist: VISA_DOCUMENT_CHECKLIST.map((item) => ({
+        name: item.documentType,
+        status: "pending",
+        required: item.required,
+        notes: null,
+      })),
     };
   }
 
@@ -224,59 +248,46 @@ export async function fetchCustomerVisaCase(): Promise<VisaCaseData | null> {
   return mapLegacyVisaCase(visaApp, payment);
 }
 
-async function mapVisaCaseFromTable(
-  row: Record<string, unknown>,
-  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>
-): Promise<VisaCaseData> {
-  const caseId = row.id as string;
-  let payment: Record<string, unknown> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type UntypedDb = { from: (table: string) => any };
 
-  if (row.payment_id && supabase) {
-    const { data } = await supabase
-      .from("payments")
-      .select("status, amount, currency, invoice_number, service_type")
-      .eq("id", row.payment_id as string)
+async function backfillVisaCaseFromPayment(userId: string): Promise<string | null> {
+  const admin = createAdminClient() as UntypedDb | null;
+  if (!admin) return null;
+
+  const { data: payments } = await admin
+    .from("payments")
+    .select("id, service_type, description, booking_id, status")
+    .eq("user_id", userId)
+    .eq("status", "paid")
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  for (const p of payments ?? []) {
+    const row = p as { id: string; service_type: string | null; description: string | null; booking_id: string | null };
+    const key = row.service_type ?? "";
+    if (!isVisaProductKey(key)) continue;
+
+    const { data: existing } = await admin
+      .from("visa_cases")
+      .select("id")
+      .eq("payment_id", row.id)
       .maybeSingle();
-    payment = data as Record<string, unknown> | null;
-  }
 
-  let checklist: VisaCaseData["checklist"] = [];
-  if (supabase) {
-    const { data: docs } = await supabase
-      .from("case_documents")
-      .select("id, document_type, file_name, status")
-      .eq("case_id", caseId)
-      .order("created_at", { ascending: true });
-    checklist = (docs ?? []).map((d) => {
-      const doc = d as { id: string; document_type: string; file_name: string | null; status: string };
-      return {
-        name: doc.document_type,
-        status: doc.status ?? "pending",
-        documentId: doc.id,
-      };
+    if (existing) return (existing as { id: string }).id;
+
+    const created = await createVisaCase({
+      userId,
+      paymentId: row.id,
+      bookingId: row.booking_id,
+      serviceName: row.description ?? key,
+      productKey: key,
     });
+
+    if (created && "caseId" in created) return created.caseId;
   }
 
-  const status = (row.status as string) ?? "intake_started";
-
-  return {
-    id: caseId,
-    caseNumber: (row.case_number as string) ?? caseId.slice(0, 12),
-    visaType: (row.visa_type as string) ?? (row.service_name as string) ?? "Visa Service",
-    destinationCountry: (row.visa_country as string) ?? "—",
-    status,
-    progressPercent: (row.progress_percent as number) ?? 10,
-    currentStep: (row.current_step as string) ?? status,
-    assignedExpert: row.provider_user_id ? "Expert assigned" : null,
-    serviceProductKey: (payment?.service_type as string) ?? null,
-    serviceName: (row.service_name as string) ?? null,
-    paymentStatus: (payment?.status as string) ?? "paid",
-    amount: payment?.amount != null ? Number(payment.amount) : null,
-    currency: (payment?.currency as string) ?? "USD",
-    invoiceNumber: (payment?.invoice_number as string) ?? null,
-    createdAt: (row.created_at as string) ?? new Date().toISOString(),
-    checklist,
-  };
+  return null;
 }
 
 function mapLegacyVisaCase(
@@ -287,8 +298,15 @@ function mapLegacyVisaCase(
     ? (visaApp.ai_checklist as Array<{ name: string; status: string }>).map((d) => ({
         name: d.name,
         status: d.status,
+        required: true,
+        notes: null as string | null,
       }))
-    : [];
+    : VISA_DOCUMENT_CHECKLIST.map((item) => ({
+        name: item.documentType,
+        status: "pending",
+        required: item.required,
+        notes: null as string | null,
+      }));
 
   const legacyStatus = (visaApp.status as string) ?? "submitted";
   const mappedStatus: VisaCaseStatus = VISA_CASE_STATUSES.includes(legacyStatus as VisaCaseStatus)

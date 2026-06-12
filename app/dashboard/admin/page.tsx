@@ -1548,7 +1548,12 @@ export default function AdminDashboard() {
                   <div>
                     <p className="font-bold text-navy">{c.service_name}</p>
                     <p className="text-sm text-charcoal/55 font-mono">{c.case_number}</p>
-                    <p className="text-xs text-charcoal/40">{formatPaymentDate(c.created_at)} · {c.progress_percent}%</p>
+                    <p className="text-xs text-charcoal/40">
+                      {formatPaymentDate(c.created_at)} · {c.progress_percent}%
+                      {c.documents_total != null
+                        ? ` · ${c.documents_uploaded ?? 0} uploaded · ${c.documents_prepared ?? 0} prepared · ${c.documents_reviewed ?? 0} reviewed`
+                        : ""}
+                    </p>
                   </div>
                   <span className="chip text-xs bg-gold/15 text-navy capitalize">{c.status.replace(/_/g, " ")}</span>
                 </div>

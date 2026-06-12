@@ -143,7 +143,7 @@ export async function activatePaidService(input: {
         const tpl = visaCaseCreatedEmail({
           caseNumber: visaCase.caseNumber,
           serviceName: product?.name ?? "Visa Service",
-          dashboardUrl: `${getSiteUrl()}/dashboard/customer?tab=visa-case`,
+          dashboardUrl: `${getSiteUrl()}/dashboard/visa-cases/${visaCase.caseId}`,
         });
         await sendEmail({
           to: input.email,

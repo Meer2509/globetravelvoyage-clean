@@ -55,9 +55,11 @@ export async function sendCustomerPaymentConfirmation(
   const amountStr = formatPaymentAmount(payload.amount, payload.currency);
   const receiptUrl = `${siteUrl}/api/receipt/${payload.paymentId}`;
   const dashboardUrl = `${siteUrl}/dashboard/customer?tab=billing`;
-  const visaCaseUrl = payload.visaCaseId || payload.visaApplicationId
-    ? `${siteUrl}/dashboard/customer?tab=visa-case`
-    : dashboardUrl;
+  const visaCaseUrl = payload.visaCaseId
+    ? `${siteUrl}/dashboard/visa-cases/${payload.visaCaseId}`
+    : payload.visaApplicationId
+      ? `${siteUrl}/dashboard/customer?tab=visa-case`
+      : dashboardUrl;
 
   const html = luxuryEmailShell(`
     <p style="color:#c9a227;font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 16px;">Order Confirmed</p>

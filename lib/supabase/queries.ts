@@ -508,6 +508,10 @@ export interface AdminVisaCaseRow {
   payment_id: string | null;
   booking_id: string | null;
   created_at: string;
+  documents_total?: number;
+  documents_uploaded?: number;
+  documents_prepared?: number;
+  documents_reviewed?: number;
 }
 
 export interface AdminEmailLogRow {
@@ -552,7 +556,27 @@ export async function fetchAdminVisaCases(): Promise<{
     }
     return { cases: [], error: error.message };
   }
-  return { cases: (data ?? []) as AdminVisaCaseRow[] };
+
+  const cases = (data ?? []) as AdminVisaCaseRow[];
+  const enriched: AdminVisaCaseRow[] = [];
+
+  for (const c of cases) {
+    const { data: docs } = await admin
+      .from("case_documents")
+      .select("status")
+      .eq("case_id", c.id);
+
+    const statuses = (docs ?? []).map((d) => (d as { status: string }).status);
+    enriched.push({
+      ...c,
+      documents_total: statuses.length,
+      documents_uploaded: statuses.filter((s) => s === "uploaded").length,
+      documents_prepared: statuses.filter((s) => s === "prepared").length,
+      documents_reviewed: statuses.filter((s) => s === "reviewed").length,
+    });
+  }
+
+  return { cases: enriched };
 }
 
 export async function fetchAdminStripeBookings(): Promise<{

@@ -2,8 +2,10 @@
 
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { isStripeConfigured } from "@/lib/stripe";
+import { VISA_DOCUMENT_CHECKLIST } from "@/lib/visa-case-checklist";
+import { visaCaseWorkspacePath } from "@/lib/visa-case-routes";
 
 interface VerifyData {
   paid?: boolean;
@@ -22,6 +24,7 @@ interface VerifyData {
 }
 
 function PaymentSuccessContent() {
+  const router = useRouter();
   const params = useSearchParams();
   const sessionId = params.get("session_id");
   const [loading, setLoading] = useState(Boolean(sessionId && isStripeConfigured));
@@ -48,6 +51,14 @@ function PaymentSuccessContent() {
       .finally(() => setLoading(false));
   }, [sessionId]);
 
+  useEffect(() => {
+    if (!data?.paid || !data.visaCaseId) return;
+    const timer = setTimeout(() => {
+      router.replace(visaCaseWorkspacePath(data.visaCaseId!));
+    }, 3500);
+    return () => clearTimeout(timer);
+  }, [data, router]);
+
   const formattedAmount =
     data?.amount != null
       ? new Intl.NumberFormat("en-US", {
@@ -55,6 +66,11 @@ function PaymentSuccessContent() {
           currency: data.currency ?? "USD",
         }).format(data.amount)
       : null;
+
+  const caseWorkspace = data?.visaCaseId ? visaCaseWorkspacePath(data.visaCaseId) : null;
+  const documentsWorkspace = data?.visaCaseId
+    ? visaCaseWorkspacePath(data.visaCaseId, "documents")
+    : null;
 
   const steps = [
     { label: "Payment confirmed — receipt saved to your account", done: data?.paid },
@@ -107,6 +123,11 @@ function PaymentSuccessContent() {
                 {formattedAmount && (
                   <p className="mt-3 text-2xl font-extrabold text-navy">{formattedAmount}</p>
                 )}
+                {data.visaCaseId && (
+                  <p className="mt-3 text-sm text-muted">
+                    Opening your visa case workspace in a few seconds…
+                  </p>
+                )}
               </>
             ) : (
               <h2 className="text-xl font-bold text-navy">Awaiting confirmation</h2>
@@ -157,6 +178,22 @@ function PaymentSuccessContent() {
                 </div>
               </div>
 
+              {data.isVisaService && (
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-muted mb-3">Required documents</p>
+                  <ul className="rounded-xl border border-soft-200 bg-white p-4 text-sm space-y-2">
+                    {VISA_DOCUMENT_CHECKLIST.map((item) => (
+                      <li key={item.documentType} className="flex items-center justify-between gap-2">
+                        <span className="text-navy">{item.documentType}</span>
+                        <span className="text-xs font-semibold text-muted">
+                          {item.required ? "Required" : "Optional"}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-muted mb-4">Next steps</p>
                 <ul className="space-y-3">
@@ -180,14 +217,17 @@ function PaymentSuccessContent() {
               </p>
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <Link
-                  href={data.hasVisaCase ? "/dashboard/customer?tab=visa-case" : "/dashboard/customer"}
-                  className="btn-primary py-3.5 text-center text-sm"
-                >
-                  Go to dashboard
-                </Link>
-                {data.hasVisaCase && (
-                  <Link href="/dashboard/customer?tab=visa-case" className="btn-gold py-3.5 text-center text-sm">
+                {caseWorkspace ? (
+                  <Link href={caseWorkspace} className="btn-primary py-3.5 text-center text-sm">
+                    Open visa case
+                  </Link>
+                ) : (
+                  <Link href="/dashboard/customer" className="btn-primary py-3.5 text-center text-sm">
+                    Go to dashboard
+                  </Link>
+                )}
+                {documentsWorkspace && (
+                  <Link href={documentsWorkspace} className="btn-gold py-3.5 text-center text-sm">
                     Upload documents
                   </Link>
                 )}

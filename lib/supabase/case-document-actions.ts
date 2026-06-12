@@ -12,7 +12,7 @@ export async function uploadCaseDocument(input: {
   documentType: string;
   fileName: string;
   file?: File;
-}): Promise<{ ok: boolean; error?: string; fileUrl?: string }> {
+}): Promise<{ ok: boolean; error?: string; fileUrl?: string; storageUnavailable?: boolean }> {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return { ok: false, error: "Sign in to upload documents." };
 
@@ -20,16 +20,24 @@ export async function uploadCaseDocument(input: {
   if (!user) return { ok: false, error: "Sign in to upload documents." };
 
   let fileUrl: string | undefined;
+  let storageUnavailable = false;
 
   if (input.file) {
-    const path = `${user.id}/${input.caseId}/${Date.now()}-${input.fileName}`;
-    const { data, error: uploadError } = await supabase.storage
-      .from("documents")
-      .upload(path, input.file);
+    const { error: bucketError } = await supabase.storage.from("documents").list("", { limit: 1 });
+    if (bucketError) {
+      storageUnavailable = true;
+    } else {
+      const path = `${user.id}/${input.caseId}/${Date.now()}-${input.fileName}`;
+      const { data, error: uploadError } = await supabase.storage
+        .from("documents")
+        .upload(path, input.file);
 
-    if (!uploadError && data) {
-      const { data: urlData } = supabase.storage.from("documents").getPublicUrl(data.path);
-      fileUrl = urlData.publicUrl;
+      if (!uploadError && data) {
+        const { data: urlData } = supabase.storage.from("documents").getPublicUrl(data.path);
+        fileUrl = urlData.publicUrl;
+      } else if (uploadError) {
+        storageUnavailable = true;
+      }
     }
   }
 
@@ -74,7 +82,64 @@ export async function uploadCaseDocument(input: {
     }
   }
 
-  return { ok: true, fileUrl };
+  return { ok: true, fileUrl, storageUnavailable: storageUnavailable && !fileUrl };
+}
+
+export async function saveCaseDocumentNotes(input: {
+  caseId: string;
+  documentType: string;
+  documentId?: string;
+  notes: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return { ok: false, error: "Sign in to save notes." };
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Sign in to save notes." };
+
+  const admin = createAdminClient() as UntypedDb | null;
+  if (!admin) return { ok: true };
+
+  const query = admin.from("case_documents");
+  const payload = { notes: input.notes.trim() || null };
+
+  if (input.documentId) {
+    const { error } = await query.update(payload).eq("id", input.documentId).eq("user_id", user.id);
+    if (error) {
+      if (isMissingTableError(error)) return { ok: true };
+      return { ok: false, error: error.message };
+    }
+    return { ok: true };
+  }
+
+  const { data: existing } = await query
+    .select("id")
+    .eq("case_id", input.caseId)
+    .eq("document_type", input.documentType)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await query.update(payload).eq("id", (existing as { id: string }).id);
+    if (error) {
+      if (isMissingTableError(error)) return { ok: true };
+      return { ok: false, error: error.message };
+    }
+  } else {
+    const { error } = await query.insert({
+      case_id: input.caseId,
+      user_id: user.id,
+      document_type: input.documentType,
+      status: "pending",
+      ...payload,
+    });
+    if (error) {
+      if (isMissingTableError(error)) return { ok: true };
+      return { ok: false, error: error.message };
+    }
+  }
+
+  return { ok: true };
 }
 
 export async function markCaseDocumentPrepared(input: {

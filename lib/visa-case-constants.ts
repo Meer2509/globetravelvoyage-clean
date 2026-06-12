@@ -14,12 +14,7 @@ export const VISA_CASE_STATUSES = [
 
 export type VisaCaseStatus = (typeof VISA_CASE_STATUSES)[number];
 
-export const CASE_DOCUMENT_TYPES = [
-  "Passport",
-  "Photo",
-  "Bank statement",
-  "Employment letter",
-  "Travel itinerary",
-  "Invitation letter if applicable",
-  "Previous visas if any",
-] as const;
+import { VISA_DOCUMENT_CHECKLIST } from "@/lib/visa-case-checklist";
+
+/** @deprecated Use VISA_DOCUMENT_CHECKLIST from visa-case-checklist.ts */
+export const CASE_DOCUMENT_TYPES = VISA_DOCUMENT_CHECKLIST.map((i) => i.documentType);

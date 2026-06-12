@@ -1,10 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/profile-utils";
 import {
-  CASE_DOCUMENT_TYPES,
   VISA_INITIAL_STEP,
   type VisaCaseStatus,
 } from "@/lib/visa-case-constants";
+import { VISA_DOCUMENT_CHECKLIST } from "@/lib/visa-case-checklist";
 
 export { VISA_CASE_STATUSES, CASE_DOCUMENT_TYPES, type VisaCaseStatus } from "@/lib/visa-case-constants";
 
@@ -113,12 +113,13 @@ export async function createVisaCase(input: {
 
   const row = visaCase as { id: string; case_number: string };
 
-  for (const docType of CASE_DOCUMENT_TYPES) {
+  for (const item of VISA_DOCUMENT_CHECKLIST) {
     const { error: docError } = await admin.from("case_documents").insert({
       case_id: row.id,
       user_id: input.userId,
-      document_type: docType,
+      document_type: item.documentType,
       status: "pending",
+      is_required: item.required,
     });
     if (docError && isMissingTableError(docError)) {
       console.error("[case_documents] table missing:", docError.message);
@@ -127,4 +128,35 @@ export async function createVisaCase(input: {
   }
 
   return { caseId: row.id, caseNumber: row.case_number };
+}
+
+export async function ensureCaseChecklist(caseId: string, userId: string): Promise<void> {
+  const admin = createAdminClient();
+  if (!admin) return;
+
+  const { data: existing, error } = await admin
+    .from("case_documents")
+    .select("document_type")
+    .eq("case_id", caseId);
+
+  if (error) {
+    if (isMissingTableError(error)) return;
+    return;
+  }
+
+  const existingTypes = new Set(
+    (existing ?? []).map((d) => (d as { document_type: string }).document_type)
+  );
+
+  for (const item of VISA_DOCUMENT_CHECKLIST) {
+    if (existingTypes.has(item.documentType)) continue;
+    const { error: docError } = await admin.from("case_documents").insert({
+      case_id: caseId,
+      user_id: userId,
+      document_type: item.documentType,
+      status: "pending",
+      is_required: item.required,
+    });
+    if (docError && isMissingTableError(docError)) break;
+  }
 }
