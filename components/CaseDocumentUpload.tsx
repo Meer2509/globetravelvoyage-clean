@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { uploadCaseDocument } from "@/lib/supabase/case-document-actions";
+import { uploadCaseDocument } from "@/lib/visa-case-document-client";
 
 export function CaseDocumentUpload({ caseId }: { caseId: string }) {
   const [uploading, setUploading] = useState(false);

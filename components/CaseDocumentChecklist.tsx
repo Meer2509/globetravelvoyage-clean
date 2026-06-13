@@ -7,8 +7,8 @@ import {
   markCaseDocumentPrepared,
   uploadCaseDocument,
   saveCaseDocumentNotes,
-  type DocumentActionResult,
-} from "@/lib/supabase/case-document-actions";
+  type DocumentClientResult,
+} from "@/lib/visa-case-document-client";
 
 export type ChecklistItem = {
   name: string;
@@ -19,7 +19,7 @@ export type ChecklistItem = {
   notes?: string | null;
 };
 
-type ProgressUpdate = DocumentActionResult["progress"];
+type ProgressUpdate = DocumentClientResult["progress"];
 
 export function CaseDocumentChecklist({
   caseId,
@@ -76,9 +76,15 @@ export function CaseDocumentChecklist({
 
     if (!result.ok) {
       patchItem(doc.name, { status: doc.status });
-      setError(result.error ?? "Could not save. Please try again.");
+      console.error("[visa-case] mark prepared failed:", result.error);
+      setError(result.error ?? "Could not save. Please refresh and try again.");
       return;
     }
+
+    patchItem(doc.name, {
+      status: result.status ?? "prepared",
+      documentId: result.documentId ?? doc.documentId ?? doc.id,
+    });
 
     setMessage(`${doc.name} marked as prepared.`);
     if (result.progress) onProgress?.(result.progress);
@@ -100,6 +106,7 @@ export function CaseDocumentChecklist({
     const result = await uploadCaseDocument({
       caseId,
       documentType: doc.name,
+      documentId: doc.documentId ?? doc.id,
       fileName: file.name,
       file,
     });
@@ -111,12 +118,16 @@ export function CaseDocumentChecklist({
           "Secure file upload is being activated. You can mark this document as prepared for now."
         );
       } else {
-        setError(result.error ?? "Upload failed. Please try again.");
+        console.error("[visa-case] upload failed:", result.error);
+        setError(result.error ?? "Could not save. Please refresh and try again.");
       }
       return;
     }
 
-    patchItem(doc.name, { status: "uploaded" });
+    patchItem(doc.name, {
+      status: result.status ?? "uploaded",
+      documentId: result.documentId ?? doc.documentId ?? doc.id,
+    });
     setMessage(`${doc.name} uploaded successfully.`);
     if (result.progress) onProgress?.(result.progress);
     onUpdated?.();
@@ -137,11 +148,15 @@ export function CaseDocumentChecklist({
     setBusy(null);
 
     if (!result.ok) {
-      setError(result.error ?? "Could not save notes.");
+      console.error("[visa-case] save notes failed:", result.error);
+      setError(result.error ?? "Could not save. Please refresh and try again.");
       return;
     }
 
-    patchItem(doc.name, { notes });
+    patchItem(doc.name, {
+      notes: result.notes ?? notes,
+      documentId: result.documentId ?? doc.documentId ?? doc.id,
+    });
     setSavedNotes((prev) => ({ ...prev, [doc.name]: true }));
     setMessage(`Notes saved for ${doc.name}.`);
     setTimeout(() => setSavedNotes((prev) => ({ ...prev, [doc.name]: false })), 2500);
