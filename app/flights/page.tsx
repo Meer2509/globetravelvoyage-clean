@@ -10,6 +10,7 @@ import { ContactModal } from "@/components/ContactModal";
 import { Icon } from "@/components/Icon";
 import { flights, cheapRoutes, usaRoutes } from "@/lib/data";
 import { SampleCatalogBanner } from "@/components/SampleCatalogBanner";
+import { SamplePrice } from "@/components/PriceEstimateLabel";
 
 type Flight = (typeof flights)[0];
 type Route  = (typeof cheapRoutes)[0];
@@ -61,7 +62,7 @@ export default function FlightsPage() {
       </div>
 
       <div className="container-px space-y-4">
-        <SampleCatalogBanner label="Example routes" />
+        <SampleCatalogBanner />
         <FilterBar
           fields={[
             { key: "from",     placeholder: "From (city or airport)" },
@@ -134,7 +135,7 @@ export default function FlightsPage() {
                   </div>
 
                   <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
-                    <p className="text-xl font-extrabold text-navy">{f.price}</p>
+                    <SamplePrice value={f.price} size="md" />
                     <button
                       onClick={() => setSelectedFlight(f)}
                       className="btn-blue px-5 py-2 text-sm"
@@ -216,7 +217,12 @@ export default function FlightsPage() {
         </div>
       </section>
 
-      <CTASection />
+      <CTASection
+        title="Become one of the first verified providers."
+        subtitle="Travel agencies and visa experts can list services and receive verified leads from travelers."
+        primary={{ label: "Start provider onboarding", href: "/register?role=agent" }}
+        secondary={{ label: "Request a flight quote", href: "/booking/request" }}
+      />
 
       {/* Flight request modal */}
       <ContactModal

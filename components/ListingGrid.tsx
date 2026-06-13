@@ -1,6 +1,7 @@
 "use client";
 
 import { Stars } from "./Stars";
+import { PriceEstimateLabel } from "./PriceEstimateLabel";
 import { SaveButton } from "./SaveButton";
 
 export interface ListingItem {
@@ -81,10 +82,13 @@ function ListingCard({
         <div className="mt-5 flex items-end justify-between border-t border-soft-200 pt-4">
           <div>
             {item.price && (
-              <p className="text-lg font-extrabold text-navy">{item.price}</p>
+              <>
+                <p className="text-lg font-extrabold text-navy">{item.price}</p>
+                <PriceEstimateLabel />
+              </>
             )}
             {item.priceNote && (
-              <p className="text-xs text-navy/45">{item.priceNote}</p>
+              <p className="text-xs text-navy/45 mt-1">{item.priceNote}</p>
             )}
           </div>
           <button

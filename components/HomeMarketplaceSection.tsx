@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { Stars } from "@/components/Stars";
 import { SectionHeader } from "@/components/SectionHeader";
+import { PROVIDER_ONBOARDING_HEADLINE } from "@/lib/launch-trust";
 import { fetchMarketplaceExperts } from "@/lib/supabase/mvp-queries";
 import { fetchMarketplaceAgencies } from "@/lib/supabase/mvp-queries";
 
@@ -76,14 +77,18 @@ export async function HomeMarketplaceSection() {
         />
 
         {providers.length === 0 ? (
-          <div className="rounded-2xl border-2 border-dashed border-soft-200 py-16 text-center">
-            <p className="font-bold text-navy text-lg">Verified providers are being onboarded now.</p>
-            <p className="mt-2 max-w-md mx-auto text-sm text-muted">
-              Our admin team reviews every provider profile before it goes live. Join the marketplace as a verified expert or agency.
-            </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <Link href="/register?role=agent" className="btn-primary px-5 py-2.5 text-sm">Become a provider</Link>
-              <Link href="/register?role=agent" className="btn-outline px-5 py-2.5 text-sm">Join as visa expert</Link>
+          <div className="rounded-3xl border border-soft-200 bg-white py-16 text-center shadow-[var(--shadow-premium)] overflow-hidden">
+            <div className="h-1.5 w-full bg-hero-gradient" />
+            <div className="px-6 pt-12">
+              <p className="text-xs font-bold uppercase tracking-widest text-gold">{PROVIDER_ONBOARDING_HEADLINE}</p>
+              <p className="mt-3 font-bold text-navy text-lg">Verified providers are being onboarded now.</p>
+              <p className="mt-2 max-w-md mx-auto text-sm text-muted">
+                Our admin team reviews every provider profile before it goes live. Join the marketplace as a verified expert or agency.
+              </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-3 pb-12">
+                <Link href="/register?role=agent" className="btn-primary px-5 py-2.5 text-sm">Become a visa expert</Link>
+                <Link href="/register?role=agency" className="btn-outline px-5 py-2.5 text-sm">Register your agency</Link>
+              </div>
             </div>
           </div>
         ) : (

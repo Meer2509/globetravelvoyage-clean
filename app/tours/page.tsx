@@ -7,6 +7,9 @@ import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
 import { ContactModal } from "@/components/ContactModal";
 import { SaveButton } from "@/components/SaveButton";
+import { SampleCatalogBanner } from "@/components/SampleCatalogBanner";
+import { ProviderOnboardingCta } from "@/components/ProviderOnboardingCta";
+import { SamplePrice } from "@/components/PriceEstimateLabel";
 import { tours, tickets } from "@/lib/data";
 
 const CATEGORY_CHIPS = ["Food", "Heritage", "Adventure", "City tour", "Half day", "Full day", "Beach", "Desert"];
@@ -60,6 +63,10 @@ export default function ToursPage() {
             Discover cities, food, heritage and adventure with identity-checked local guides — plus attraction tickets.
           </p>
         </div>
+      </div>
+
+      <div className="container-px pt-6">
+        <SampleCatalogBanner />
       </div>
 
       <div className="container-px">
@@ -134,8 +141,8 @@ export default function ToursPage() {
                       <div className="mt-5 border-t border-soft-200 pt-4 space-y-2">
                         <div className="flex items-end justify-between">
                           <div>
-                            <p className="text-lg font-extrabold text-navy">{tour.price}</p>
-                            <p className="text-xs text-muted">per person · sample estimate</p>
+                            <SamplePrice value={tour.price} size="md" />
+                            <p className="text-xs text-muted">per person</p>
                           </div>
                         </div>
                         <button
@@ -187,7 +194,7 @@ export default function ToursPage() {
                   <p className="text-xs text-charcoal/55">{ticket.city} · {ticket.category}</p>
                   <div className="mt-4 flex items-center justify-between border-t border-soft-200 pt-3">
                     <div>
-                      <p className="font-extrabold text-navy">{ticket.price}</p>
+                      <SamplePrice value={ticket.price} size="sm" />
                       <p className="text-[10px] text-charcoal/45">per ticket</p>
                     </div>
                     <button
@@ -208,11 +215,17 @@ export default function ToursPage() {
       </section>
 
       <CTASection
-        title="Are you a local tour guide?"
+        title="Become one of the first verified providers."
         subtitle="List your tours, set pricing and availability, and grow your reviews on Globe Travel Voyage."
         primary={{ label: "Become a guide", href: "/register?role=guide" }}
         secondary={{ label: "View tour guides", href: "/guides" }}
       />
+
+      <section className="section-sm bg-soft/50">
+        <div className="container-px">
+          <ProviderOnboardingCta compact />
+        </div>
+      </section>
 
       <ContactModal
         open={!!modalTour}

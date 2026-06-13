@@ -7,8 +7,10 @@ import { FilterBar } from "@/components/FilterBar";
 import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
 import { ContactModal } from "@/components/ContactModal";
-import { isSupabaseConfigured } from "@/lib/auth";
+import { PremiumMarketplaceEmpty } from "@/components/PremiumMarketplaceEmpty";
+import { ProviderOnboardingCta } from "@/components/ProviderOnboardingCta";
 import { fetchMarketplaceAgencies, type MarketplaceAgencyRow } from "@/lib/supabase/mvp-queries";
+import { isSupabaseConfigured } from "@/lib/auth";
 
 type AgencyCard = {
   id: string;
@@ -117,16 +119,7 @@ export default function AgenciesPage() {
           </p>
 
           {loaded && agencyList.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-soft-200 py-16 text-center">
-              <span className="text-4xl mb-3">🏢</span>
-              <p className="font-semibold text-navy">No agencies listed yet</p>
-              <p className="mt-1 max-w-md text-sm text-charcoal/45">
-                Travel agencies appear here after they register and add services in the agency dashboard.
-              </p>
-              <Link href="/register?role=agency" className="btn-primary mt-5 px-5 py-2.5 text-sm">
-                Register your agency
-              </Link>
-            </div>
+            <PremiumMarketplaceEmpty variant="agencies" />
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {filteredAgencies.map((a) => (
@@ -185,11 +178,17 @@ export default function AgenciesPage() {
       </section>
 
       <CTASection
-        title="Grow your travel agency with us"
+        title="Become one of the first verified providers."
         subtitle="List packages, tickets and tours, manage leads and bookings, and earn a verification badge."
         primary={{ label: "Register your agency", href: "/register?role=agency" }}
         secondary={{ label: "Open agency dashboard", href: "/dashboard/agency" }}
       />
+
+      <section className="section-sm bg-soft/50">
+        <div className="container-px">
+          <ProviderOnboardingCta compact />
+        </div>
+      </section>
 
       <ContactModal
         open={modal.open}

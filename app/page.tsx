@@ -23,6 +23,9 @@ import { HomeMarketplaceSection } from "@/components/HomeMarketplaceSection";
 import { HomePropertiesSection } from "@/components/HomePropertiesSection";
 import { HomeServicesSection } from "@/components/HomeServicesSection";
 import { TrustSection } from "@/components/TrustSection";
+import { ProviderOnboardingCta } from "@/components/ProviderOnboardingCta";
+import { PriceEstimateLabel } from "@/components/PriceEstimateLabel";
+import { areReferralRewardsLive, REFERRAL_LAUNCHING_SOON } from "@/lib/launch-trust";
 import { visaHubHref, destinationHref, guideHref } from "@/lib/marketplace-routes";
 
 export default function Home() {
@@ -328,6 +331,7 @@ export default function Home() {
                     <p className="text-xs text-charcoal/50">from</p>
                     <p className="text-xl font-extrabold text-navy">{r.priceFrom}</p>
                     <p className="text-xs text-charcoal/40">up to {r.priceTo}</p>
+                    <PriceEstimateLabel className="mt-1" />
                   </div>
                   <Link href="/flights" className="btn-blue px-4 py-2 text-xs">
                     Search
@@ -383,6 +387,7 @@ export default function Home() {
                       <p className="text-xs text-charcoal/45">from</p>
                       <p className="text-xl font-extrabold text-navy">{s.pricePerNight}</p>
                       <p className="text-[10px] text-charcoal/45">per night</p>
+                      <PriceEstimateLabel className="mt-1" />
                     </div>
                     <span className="text-xs font-semibold text-blue opacity-0 group-hover:opacity-100 transition-opacity">
                       View →
@@ -448,6 +453,7 @@ export default function Home() {
                     <span className="text-white/50">Budget</span>
                     <span className="font-bold text-gold">{dest.budget}</span>
                   </div>
+                  <p className="mt-1 text-[9px] text-white/40">Sample estimate — confirm before booking.</p>
                   <div className="mt-1 flex justify-between text-[11px]">
                     <span className="text-white/50">Best time</span>
                     <span className="text-white/70">{dest.season}</span>
@@ -465,6 +471,12 @@ export default function Home() {
       <HomeMarketplaceSection />
 
       <HomePropertiesSection />
+
+      <section className="section-sm">
+        <div className="container-px">
+          <ProviderOnboardingCta />
+        </div>
+      </section>
 
       {/* ── 11. Social Proof ── */}
       <section className="section">
@@ -493,12 +505,22 @@ export default function Home() {
         <div className="container-px">
           <SectionHeader
             eyebrow="Referral program"
-            title="Earn while you explore"
-            subtitle="Share Globe Travel Voyage with your network and earn rewards for every traveler you bring. Three luxury tiers with increasing benefits."
+            title={areReferralRewardsLive() ? "Earn while you explore" : REFERRAL_LAUNCHING_SOON}
+            subtitle={
+              areReferralRewardsLive()
+                ? "Share Globe Travel Voyage with your network and earn rewards for every traveler you bring."
+                : "We are preparing referral rewards for early members. Sign up now to be notified when payouts go live."
+            }
             center
           />
+          {!areReferralRewardsLive() && (
+            <div className="mb-8 rounded-2xl border border-gold/25 bg-gold/5 px-5 py-4 text-center text-sm text-muted">
+              <p className="font-bold text-navy">{REFERRAL_LAUNCHING_SOON}</p>
+              <p className="mt-1">Referral tracking is in development. Commission payouts will open after launch verification.</p>
+            </div>
+          )}
           <div className="grid gap-5 sm:grid-cols-3">
-            {referralTiers.map((tier, i) => (
+            {referralTiers.map((tier) => (
               <div
                 key={tier.name}
                 className={`card overflow-hidden relative ${tier.highlight ? "border-gold ring-2 ring-gold/20 shadow-[var(--shadow-gold)]" : ""}`}
@@ -529,17 +551,23 @@ export default function Home() {
                     ))}
                   </ul>
                   <Link href="/referrals" className={`mt-5 w-full py-2.5 text-sm inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-all duration-200 ${tier.highlight ? "btn-gold" : "btn-outline"}`}>
-                    Start earning
+                    {areReferralRewardsLive() ? "Start earning" : "Get notified"}
                   </Link>
                 </div>
               </div>
             ))}
           </div>
           <div className="mt-8 rounded-2xl bg-navy p-6 text-center">
-            <p className="text-base font-bold text-white">Your referral link is waiting</p>
-            <p className="mt-1 text-sm text-white/60">Sign up to get your unique referral code and start earning with every friend you invite.</p>
+            <p className="text-base font-bold text-white">
+              {areReferralRewardsLive() ? "Your referral link is waiting" : REFERRAL_LAUNCHING_SOON}
+            </p>
+            <p className="mt-1 text-sm text-white/60">
+              {areReferralRewardsLive()
+                ? "Sign up to get your unique referral code and start earning with every friend you invite."
+                : "Create a free account to reserve your place. We will email you when referral rewards open."}
+            </p>
             <Link href="/register" className="btn-gold mt-4 px-8 py-3">
-              Join the referral program
+              {areReferralRewardsLive() ? "Join the referral program" : "Join the waitlist"}
             </Link>
           </div>
         </div>

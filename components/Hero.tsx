@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Icon } from "./Icon";
 import { aiPrompts } from "@/lib/data";
 import { bookingRequestPath, rentalsBrowseHref } from "@/lib/marketplace-routes";
+import { PRICE_ESTIMATE_LABEL } from "@/lib/launch-trust";
+import { SamplePrice } from "@/components/PriceEstimateLabel";
 import type { ReactNode } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -173,9 +175,8 @@ function getAiResponse(q: string): string {
 
 function ResultDisclaimer() {
   return (
-    <p className="mt-2 text-center text-[10px] text-charcoal/40 leading-relaxed">
-      Sample prices shown for guidance only. Prices, availability and visa outcomes are not guaranteed.
-      Globe Travel Voyage is not an airline, hotel, immigration authority, or official visa body.
+    <p className="mt-2 px-4 pb-2 text-center text-[10px] text-charcoal/40 leading-relaxed">
+      {PRICE_ESTIMATE_LABEL} Globe Travel Voyage is not an airline, hotel, immigration authority, or official visa body.
     </p>
   );
 }
@@ -285,7 +286,7 @@ function FlightsForm() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <p className="font-extrabold text-navy">{f.price}</p>
+                  <SamplePrice value={f.price} size="sm" />
                   <Link
                     href={bookingRequestPath({
                       service: "flight",
@@ -391,7 +392,7 @@ function HotelsForm() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <p className="font-extrabold text-navy text-sm">{h.price}</p>
+                  <SamplePrice value={h.price} size="sm" />
                   <Link
                     href={bookingRequestPath({
                       service: "hotel",
@@ -577,7 +578,7 @@ function CruisesForm() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <p className="font-extrabold text-navy text-sm">{c.price}</p>
+                  <SamplePrice value={c.price} size="sm" />
                   <Link
                     href={bookingRequestPath({
                       service: "cruise",
@@ -670,7 +671,7 @@ function ToursForm() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <p className="font-extrabold text-navy text-sm">{t.price}</p>
+                  <SamplePrice value={t.price} size="sm" />
                   <Link
                     href={bookingRequestPath({
                       service: "tour",
@@ -768,7 +769,7 @@ function RentalsForm() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <p className="font-extrabold text-navy text-sm">{r.price}</p>
+                  <SamplePrice value={r.price} size="sm" />
                   <Link
                     href={bookingRequestPath({
                       service: r.type === "Car" ? "car_rental" : "property",

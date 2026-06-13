@@ -6,6 +6,7 @@ import { referralTiers } from "@/lib/data";
 import { commissionRates } from "@/lib/pricing";
 import { Icon } from "@/components/Icon";
 import { Disclaimer } from "@/components/Disclaimer";
+import { areReferralRewardsLive, REFERRAL_LAUNCHING_SOON } from "@/lib/launch-trust";
 import { submitReferralSignup } from "@/lib/supabase/actions";
 
 type CommissionStatus = "pending" | "approved" | "paid";
@@ -111,10 +112,16 @@ export default function ReferralsPage() {
           </Link>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <span className="eyebrow-white mb-3">Earn with Globe Travel Voyage</span>
-              <h1 className="h-section text-white">Referral program & commissions</h1>
+              <span className="eyebrow-white mb-3">
+                {areReferralRewardsLive() ? "Earn with Globe Travel Voyage" : REFERRAL_LAUNCHING_SOON}
+              </span>
+              <h1 className="h-section text-white">
+                {areReferralRewardsLive() ? "Referral program & commissions" : "Referral program preview"}
+              </h1>
               <p className="mt-2 text-white/60 text-sm max-w-xl">
-                Share your unique link. Earn commission when friends and partners sign up and take qualifying actions.
+                {areReferralRewardsLive()
+                  ? "Share your unique link. Earn commission when friends and partners sign up and take qualifying actions."
+                  : "Referral tracking is in development. Sign up to reserve your place — rewards open after launch verification."}
               </p>
             </div>
             <div className="flex items-center gap-3 flex-shrink-0">
@@ -130,6 +137,13 @@ export default function ReferralsPage() {
       </div>
 
       <div className="container-px py-8 space-y-6">
+
+        {!areReferralRewardsLive() && (
+          <div className="rounded-2xl border border-gold/25 bg-gold/5 px-5 py-4 text-sm text-muted">
+            <p className="font-bold text-navy">{REFERRAL_LAUNCHING_SOON}</p>
+            <p className="mt-1">Commission payouts are not live yet. You can still sign up to receive your referral code when rewards open.</p>
+          </div>
+        )}
 
         {/* ── Referral signup ── */}
         {!signupDone ? (
@@ -241,7 +255,9 @@ export default function ReferralsPage() {
             </div>
             <div>
               <span className="inline-flex items-center gap-2 rounded-xl bg-soft px-4 py-2 text-xs font-semibold text-charcoal/60">
-                Provider payouts coming soon — commissions track automatically when referrals convert
+                {areReferralRewardsLive()
+                  ? "Commissions track automatically when referrals convert"
+                  : `${REFERRAL_LAUNCHING_SOON} — commissions track automatically when payouts go live`}
               </span>
             </div>
           </div>

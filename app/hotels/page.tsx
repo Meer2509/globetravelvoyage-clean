@@ -8,6 +8,7 @@ import { CTASection } from "@/components/CTASection";
 import { ContactModal } from "@/components/ContactModal";
 import { SaveButton } from "@/components/SaveButton";
 import { SampleCatalogBanner } from "@/components/SampleCatalogBanner";
+import { SamplePrice } from "@/components/PriceEstimateLabel";
 import { stays } from "@/lib/data";
 
 const CITY_CHIPS  = [...new Set(stays.map((s) => s.city))];
@@ -80,7 +81,7 @@ export default function HotelsPage() {
       </div>
 
       <div className="container-px pb-2">
-        <SampleCatalogBanner label="Sample hotel listings" />
+        <SampleCatalogBanner />
       </div>
 
       <section className="section">
@@ -148,7 +149,7 @@ export default function HotelsPage() {
                     </div>
                     <div className="mt-5 flex items-end justify-between border-t border-soft-200 pt-4">
                       <div>
-                        <p className="text-lg font-extrabold text-navy">{stay.pricePerNight}</p>
+                        <SamplePrice value={stay.pricePerNight} size="md" />
                         <p className="text-xs text-charcoal/45">per night</p>
                       </div>
                       <button
@@ -170,9 +171,9 @@ export default function HotelsPage() {
       </section>
 
       <CTASection
-        title="Host your property on Globe Travel Voyage"
+        title="Become one of the first verified providers."
         subtitle="List houses, apartments and travel stays, capture leads and manage bookings from your host dashboard."
-        primary={{ label: "Become a host", href: "/register?role=host" }}
+        primary={{ label: "Become a property host", href: "/register?role=host" }}
         secondary={{ label: "Browse properties", href: "/properties" }}
       />
 

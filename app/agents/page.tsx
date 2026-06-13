@@ -12,6 +12,8 @@ import { StripeCheckoutButton } from "@/components/StripeCheckoutButton";
 import { trustItems } from "@/lib/data";
 import { fetchMarketplaceExperts, type MarketplaceExpertRow } from "@/lib/supabase/mvp-queries";
 import { isSupabaseConfigured } from "@/lib/auth";
+import { PremiumMarketplaceEmpty } from "@/components/PremiumMarketplaceEmpty";
+import { ProviderOnboardingCta } from "@/components/ProviderOnboardingCta";
 
 type AgentCard = {
   id: string;
@@ -137,16 +139,7 @@ export default function AgentsPage() {
           />
 
           {filtered.length === 0 ? (
-            <div className="card py-16 text-center">
-              <p className="text-4xl mb-3">👔</p>
-              <p className="font-bold text-navy">No experts listed yet</p>
-              <p className="mt-2 text-sm text-charcoal/55 max-w-md mx-auto">
-                Visa experts who complete onboarding appear here automatically.
-              </p>
-              <Link href="/onboarding/agent" className="btn-primary mt-6 inline-flex px-6 py-3 text-sm">
-                Become a visa expert
-              </Link>
-            </div>
+            <PremiumMarketplaceEmpty variant="agents" />
           ) : (
             <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((agent) => (
@@ -197,11 +190,17 @@ export default function AgentsPage() {
       </section>
 
       <CTASection
-        title="Are you a visa expert?"
+        title="Become one of the first verified providers."
         subtitle="Join the marketplace, set your services, and receive real leads from travelers."
-        primary={{ label: "Become an expert", href: "/onboarding/agent" }}
+        primary={{ label: "Start provider onboarding", href: "/onboarding/agent" }}
         secondary={{ label: "View pricing", href: "/pricing" }}
       />
+
+      <section className="section-sm bg-soft/50">
+        <div className="container-px">
+          <ProviderOnboardingCta compact />
+        </div>
+      </section>
 
       <ContactModal
         open={modal.open}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PropertiesCatalog } from "@/components/PropertiesCatalog";
+import { ProviderOnboardingCta } from "@/components/ProviderOnboardingCta";
 import { fetchMarketplaceProperties } from "@/lib/supabase/mvp-queries";
 import { fetchUserSavedIds } from "@/lib/supabase/saved-actions";
 
@@ -28,6 +29,12 @@ export default async function PropertiesPage() {
       </div>
 
       <PropertiesCatalog properties={properties} savedIds={savedIds} />
+
+      <section className="section-sm bg-soft/50">
+        <div className="container-px max-w-4xl">
+          <ProviderOnboardingCta compact />
+        </div>
+      </section>
     </>
   );
 }

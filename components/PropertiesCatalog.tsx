@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
+import { PremiumMarketplaceEmpty } from "@/components/PremiumMarketplaceEmpty";
 import { FilterBar } from "@/components/FilterBar";
 import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
 import { ContactModal } from "@/components/ContactModal";
 import { SaveButton } from "@/components/SaveButton";
+import { PROVIDER_ONBOARDING_HEADLINE } from "@/lib/launch-trust";
 import type { MarketplacePropertyRow } from "@/lib/supabase/mvp-queries";
 
 const PROPERTY_EMOJI: Record<string, string> = {
@@ -129,16 +130,7 @@ export function PropertiesCatalog({
         </div>
 
         {properties.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-soft-200 bg-white py-16 text-center">
-            <span className="text-4xl mb-3">🏠</span>
-            <p className="font-semibold text-navy text-lg">Property listings opening soon.</p>
-            <p className="mt-2 max-w-md text-sm text-muted">
-              Verified hosts are being onboarded. Submit your listing to be reviewed by our team.
-            </p>
-            <Link href="/properties/post" className="btn-primary mt-6 px-6 py-2.5 text-sm">
-              Post a property listing
-            </Link>
-          </div>
+          <PremiumMarketplaceEmpty variant="properties" />
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-soft-200 py-16 text-center">
             <span className="text-4xl mb-3">🔍</span>
@@ -214,9 +206,9 @@ export function PropertiesCatalog({
 
       <div className="mt-8">
         <CTASection
-          title="List your property for rent or sale"
+          title={PROVIDER_ONBOARDING_HEADLINE}
           subtitle="Create a host account to publish listings, capture leads and manage inquiries."
-          primary={{ label: "Become a host", href: "/register?role=host" }}
+          primary={{ label: "Become a property host", href: "/register?role=host" }}
           secondary={{ label: "Open host dashboard", href: "/dashboard/host" }}
         />
       </div>
