@@ -6,6 +6,8 @@ import { getCheckoutProduct } from "@/lib/stripe/products";
 import { getStripe, isStripeServerConfigured } from "@/lib/stripe/server";
 import { createPaymentRecord } from "@/lib/stripe/payment-records";
 import { createPendingBooking } from "@/lib/stripe/create-booking";
+import { applicationFeeCents } from "@/lib/stripe/commission";
+import { fetchConnectReadyAccount } from "@/lib/stripe/connect-accounts";
 
 interface CheckoutBody {
   productKey?: string;
@@ -114,8 +116,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid service price." }, { status: 400 });
   }
 
+  const providerUserId = metadata.provider_user_id?.trim() || null;
+  let connectDestination: string | null = null;
+  let transferStatus: string | null = null;
+
+  if (providerUserId) {
+    const ready = await fetchConnectReadyAccount(providerUserId);
+    if (ready) {
+      connectDestination = ready.stripeAccountId;
+      transferStatus = "pending";
+      metadata.connect_destination = connectDestination;
+      metadata.connect_split = "true";
+    } else {
+      transferStatus = "pending_setup";
+      metadata.connect_split = "false";
+    }
+  }
+
   try {
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: Parameters<typeof stripe.checkout.sessions.create>[0] = {
       mode: "payment",
       payment_method_types: ["card"],
       line_items: [
@@ -136,7 +155,21 @@ export async function POST(request: Request) {
       cancel_url: `${siteUrl}/payment-cancelled?product_key=${encodeURIComponent(productKey)}`,
       customer_email: userEmail,
       metadata,
-    });
+    };
+
+    if (connectDestination) {
+      sessionParams.payment_intent_data = {
+        application_fee_amount: applicationFeeCents(amountCents),
+        transfer_data: { destination: connectDestination },
+        metadata: {
+          connect_destination: connectDestination,
+          provider_user_id: providerUserId ?? "",
+          product_key: productKey,
+        },
+      };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     if (typeof session.payment_intent === "string") {
       await stripe.paymentIntents.update(session.payment_intent, {
@@ -159,6 +192,7 @@ export async function POST(request: Request) {
       stripeSessionId: session.id,
       providerUserId: metadata.provider_user_id || null,
       providerServiceId: metadata.provider_service_id || null,
+      transferStatus,
     });
 
     if (!record.ok) {

@@ -17,6 +17,7 @@ export interface CreatePaymentInput {
   providerUserId?: string | null;
   providerServiceId?: string | null;
   customerName?: string | null;
+  transferStatus?: string | null;
 }
 
 export interface FulfillPaymentInput {
@@ -48,6 +49,7 @@ type PaymentInsert = {
   provider_service_id?: string | null;
   platform_fee?: number | null;
   provider_amount?: number | null;
+  transfer_status?: string | null;
 };
 
 type PaymentUpdate = {
@@ -88,6 +90,7 @@ export async function createPaymentRecord(
     provider_service_id: input.providerServiceId ?? null,
     platform_fee: split?.platformFee ?? null,
     provider_amount: split?.providerAmount ?? null,
+    transfer_status: input.transferStatus ?? null,
   };
 
   const { data, error } = await admin.from("payments").insert(row).select("id").single();

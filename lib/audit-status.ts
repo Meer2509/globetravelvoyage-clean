@@ -207,8 +207,10 @@ export async function getProductionAuditReport(): Promise<ProductionAuditReport>
   checks.push({
     id: "stripe_connect",
     label: "Stripe Connect payouts",
-    status: "info",
-    detail: "Not active — provider payouts at /dashboard/payouts labeled as coming soon",
+    status: isStripeServerConfigured() ? "pass" : "info",
+    detail: isStripeServerConfigured()
+      ? "Express Connect onboarding at /dashboard/payouts with destination charge splits"
+      : "Add STRIPE_SECRET_KEY to enable provider payout onboarding",
   });
 
   const resendConfigured = Boolean(process.env.RESEND_API_KEY?.trim());

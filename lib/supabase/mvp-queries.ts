@@ -45,9 +45,11 @@ export interface DocumentRow {
 export interface PayoutAccountRow {
   id: string;
   user_id: string;
+  provider_role: string | null;
   stripe_account_id: string | null;
   charges_enabled: boolean;
   payouts_enabled: boolean;
+  details_submitted: boolean;
   onboarding_status: string;
 }
 

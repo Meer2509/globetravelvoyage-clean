@@ -20,6 +20,12 @@ import {
   type AdminEmailLogRow,
 } from "@/lib/supabase/queries";
 import { fetchAdminProviders, fetchAdminProviderServices } from "@/lib/supabase/mvp-queries";
+import {
+  fetchAdminConnectStats,
+  fetchAdminConnectProviders,
+  type AdminConnectStats,
+  type AdminConnectProviderRow,
+} from "@/lib/supabase/connect-queries";
 import { updateIntakeStatus } from "@/lib/supabase/mvp-actions";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
@@ -1006,6 +1012,8 @@ export default function AdminDashboard() {
   const [liveVisaCases, setLiveVisaCases] = useState<AdminVisaCaseRow[]>([]);
   const [liveStripeBookings, setLiveStripeBookings] = useState<AdminStripeBookingRow[]>([]);
   const [liveEmailLogs, setLiveEmailLogs] = useState<AdminEmailLogRow[]>([]);
+  const [liveConnectStats, setLiveConnectStats] = useState<AdminConnectStats | null>(null);
+  const [liveConnectProviders, setLiveConnectProviders] = useState<AdminConnectProviderRow[]>([]);
   const [dbWarnings, setDbWarnings] = useState<string[]>([]);
 
   useEffect(() => {
@@ -1037,6 +1045,8 @@ export default function AdminDashboard() {
         if (!res.tableMissing) setLiveEmailLogs(res.logs);
         else if (res.error) warnings.push(res.error);
       }),
+      fetchAdminConnectStats().then(setLiveConnectStats),
+      fetchAdminConnectProviders().then(setLiveConnectProviders),
     ]).then(() => setDbWarnings([...warnings]));
   }, []);
   const [usersData, setUsersData]   = useState(allUsers.map((u) => ({ ...u })));
@@ -1498,6 +1508,91 @@ export default function AdminDashboard() {
             Full payments page →
           </Link>
         </div>
+
+        {liveConnectStats && (
+          <>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <StatCard
+                label="Connected providers"
+                value={String(liveConnectStats.connectedProviders)}
+                icon="agent"
+                hint="Stripe Connect accounts"
+                color="blue"
+              />
+              <StatCard
+                label="Payout-ready"
+                value={String(liveConnectStats.payoutReadyProviders)}
+                icon="check"
+                hint="Charges & payouts enabled"
+                color="green"
+              />
+              <StatCard
+                label="Pending setup"
+                value={String(liveConnectStats.pendingSetupProviders)}
+                icon="doc"
+                hint="Onboarding incomplete"
+                color="gold"
+              />
+              <StatCard
+                label="Platform fees"
+                value={new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
+                  liveConnectStats.totalPlatformFees
+                )}
+                icon="star"
+                hint="Collected on paid bookings"
+                color="navy"
+              />
+            </div>
+
+            <Panel title="Stripe Connect" subtitle="Provider payout accounts and payment split status" noPad>
+              <div className="px-5 py-3 border-b border-soft-200 text-xs text-muted flex flex-wrap gap-4">
+                <span>
+                  Split transfers: <strong className="text-navy">{liveConnectStats.paymentsWithSplit}</strong>
+                </span>
+                <span>
+                  Pending provider setup: <strong className="text-navy">{liveConnectStats.paymentsPendingSetup}</strong>
+                </span>
+              </div>
+              {liveConnectProviders.length === 0 ? (
+                <p className="p-8 text-center text-sm text-charcoal/50">
+                  No provider Connect accounts yet.
+                </p>
+              ) : (
+                <div className="divide-y divide-soft-200">
+                  {liveConnectProviders.map((p) => (
+                    <div key={p.user_id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 text-sm">
+                      <div>
+                        <p className="font-semibold text-navy capitalize">
+                          {(p.provider_role ?? "provider").replace(/_/g, " ")}
+                        </p>
+                        <p className="text-xs text-muted truncate max-w-xs">
+                          {p.stripe_account_id ?? "No Stripe account"}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className={`chip text-xs ${
+                            p.charges_enabled && p.payouts_enabled
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-gold/15 text-navy"
+                          }`}
+                        >
+                          {p.charges_enabled && p.payouts_enabled
+                            ? "Payout ready"
+                            : p.onboarding_status.replace(/_/g, " ")}
+                        </span>
+                        <span className="text-xs text-muted">
+                          {p.charges_enabled ? "Charges on" : "Charges off"} ·{" "}
+                          {p.payouts_enabled ? "Payouts on" : "Payouts off"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Panel>
+          </>
+        )}
 
         <Panel title="Stripe payments" subtitle="Payment records from Supabase" noPad>
           {livePayments.length === 0 ? (

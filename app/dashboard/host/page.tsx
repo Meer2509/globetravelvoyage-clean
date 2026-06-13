@@ -12,6 +12,7 @@ import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
 import { DashboardEmpty } from "@/components/DashboardEmpty";
 import { ProviderServicesPanel } from "@/components/ProviderServicesPanel";
 import { PayoutSetupPanel } from "@/components/PayoutSetupPanel";
+import { ProviderEarningsSummary } from "@/components/ProviderEarningsSummary";
 import { MessagesInbox } from "@/components/MessagesInbox";
 import { Disclaimer } from "@/components/Disclaimer";
 import { formatPaymentAmount } from "@/lib/payments-display";
@@ -150,6 +151,7 @@ export default function HostDashboard() {
 
     revenue: (
       <div className="space-y-5">
+        <ProviderEarningsSummary compact />
         <StatCard label="Total paid" value={formatPaymentAmount(paidTotal)} icon="star" color="gold" />
         <PayoutSetupPanel />
         <Disclaimer>We do not guarantee rental outcomes, tenant quality, or property valuations.</Disclaimer>

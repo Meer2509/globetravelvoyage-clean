@@ -12,6 +12,7 @@ import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
 import { DashboardEmpty } from "@/components/DashboardEmpty";
 import { ProviderServicesPanel } from "@/components/ProviderServicesPanel";
 import { PayoutSetupPanel } from "@/components/PayoutSetupPanel";
+import { ProviderEarningsSummary } from "@/components/ProviderEarningsSummary";
 import { MessagesInbox } from "@/components/MessagesInbox";
 import { formatPaymentAmount } from "@/lib/payments-display";
 import {
@@ -130,6 +131,7 @@ export default function GuideDashboard() {
 
     earnings: (
       <div className="space-y-5">
+        <ProviderEarningsSummary compact />
         <StatCard label="Total earnings" value={formatPaymentAmount(paidTotal)} icon="star" hint={`${payments.filter((p) => p.status === "paid").length} paid`} color="gold" />
         <PayoutSetupPanel />
         {payments.length > 0 ? (

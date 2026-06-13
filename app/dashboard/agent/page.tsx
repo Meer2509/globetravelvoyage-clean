@@ -16,6 +16,7 @@ import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
 import { DashboardEmpty } from "@/components/DashboardEmpty";
 import { ProviderServicesPanel } from "@/components/ProviderServicesPanel";
 import { PayoutSetupPanel } from "@/components/PayoutSetupPanel";
+import { ProviderEarningsSummary } from "@/components/ProviderEarningsSummary";
 import { MessagesInbox } from "@/components/MessagesInbox";
 import { joinCommaList } from "@/lib/supabase/profile-utils";
 import { parseExpertServices } from "@/lib/expert-services";
@@ -452,6 +453,7 @@ export default function AgentDashboard() {
 
     earnings: (
       <div className="space-y-5">
+        <ProviderEarningsSummary compact />
         <div className="grid gap-4 sm:grid-cols-2">
           <StatCard
             label="Total earnings"

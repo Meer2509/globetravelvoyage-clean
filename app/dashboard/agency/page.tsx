@@ -11,6 +11,7 @@ import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
 import { DashboardEmpty } from "@/components/DashboardEmpty";
 import { ProviderServicesPanel } from "@/components/ProviderServicesPanel";
 import { PayoutSetupPanel } from "@/components/PayoutSetupPanel";
+import { ProviderEarningsSummary } from "@/components/ProviderEarningsSummary";
 import { MessagesInbox } from "@/components/MessagesInbox";
 import { Disclaimer } from "@/components/Disclaimer";
 import { Icon } from "@/components/Icon";
@@ -170,6 +171,7 @@ export default function AgencyDashboard() {
 
     revenue: (
       <div className="space-y-5">
+        <ProviderEarningsSummary compact />
         <div className="grid gap-4 sm:grid-cols-3">
           <StatCard label="Total paid" value={formatPaymentAmount(paidTotal)} icon="star" color="gold" />
           <StatCard label="Transactions" value={String(payments.length)} icon="doc" color="blue" />

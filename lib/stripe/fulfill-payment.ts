@@ -138,6 +138,20 @@ export async function fulfillStripePaymentComplete(
   const providerUserId = meta.provider_user_id || null;
   const split = providerUserId ? splitPaymentAmount(amount) : null;
 
+  const transferStatus =
+    meta.connect_split === "true"
+      ? "transferred"
+      : providerUserId
+        ? "pending_setup"
+        : null;
+
+  if (transferStatus) {
+    await admin
+      .from("payments")
+      .update({ transfer_status: transferStatus })
+      .eq("id", paymentId);
+  }
+
   const { data: paymentRow } = await admin
     .from("payments")
     .select("id, booking_id, invoice_number, description, service_type")

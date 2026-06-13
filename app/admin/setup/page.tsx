@@ -117,6 +117,8 @@ export default async function AdminSetupPage() {
   const hasStripeSecret   = Boolean(process.env.STRIPE_SECRET_KEY);
   const hasStripePublic   = Boolean(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
   const hasStripeWebhook  = Boolean(process.env.STRIPE_WEBHOOK_SECRET);
+  const hasStripeConnect  = Boolean(process.env.STRIPE_CONNECT_CLIENT_ID);
+  const hasPlatformFee    = Boolean(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENT?.trim());
   const hasEmailKey       = Boolean(process.env.RESEND_API_KEY);
   const hasOpenAI         = Boolean(process.env.OPENAI_API_KEY);
   const hasAnalytics      = Boolean(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID) ||
@@ -409,6 +411,28 @@ export default async function AdminSetupPage() {
                 : "Run: npm install stripe",
               status: supabaseStatus.hasStripe ? "done" : "todo",
               docsUrl: "https://stripe.com/docs/stripe-js",
+            },
+            {
+              label: "STRIPE_CONNECT_CLIENT_ID",
+              detail: hasStripeConnect
+                ? "Connect client id configured — marketplace OAuth reference"
+                : "Optional for Express Connect; add from Stripe Dashboard → Connect settings",
+              status: hasStripeConnect ? "done" : "todo",
+              docsUrl: "https://stripe.com/docs/connect",
+            },
+            {
+              label: "NEXT_PUBLIC_PLATFORM_FEE_PERCENT",
+              detail: hasPlatformFee
+                ? `Platform fee set to ${process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENT}% per provider booking`
+                : "Defaults to 15% when unset",
+              status: hasPlatformFee ? "done" : "partial",
+            },
+            {
+              label: "Stripe Connect API routes",
+              detail: hasStripeSecret
+                ? "/api/stripe/connect/create-account · account-link · status · /dashboard/payouts"
+                : "Requires STRIPE_SECRET_KEY for Express Connect onboarding",
+              status: hasStripeSecret ? "done" : "todo",
             },
           ]}
         />

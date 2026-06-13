@@ -1,17 +1,48 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { PayoutSetupPanel } from "@/components/PayoutSetupPanel";
+import { ProviderEarningsSummary } from "@/components/ProviderEarningsSummary";
 import {
   fetchProviderPayoutSummary,
   fetchProviderBookingsList,
   fetchProviderTransactionsList,
 } from "@/lib/supabase/payout-queries";
+import { getPlatformFeePercent } from "@/lib/stripe/connect-config";
 import { formatPaymentAmount } from "@/lib/payments-display";
 
 function formatMoney(amount: number, currency = "USD") {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
 }
 
-export default async function PayoutsPage() {
+function PayoutRefreshNotice({
+  refresh,
+  success,
+}: {
+  refresh?: string;
+  success?: string;
+}) {
+  if (!refresh && !success) return null;
+  return (
+    <div
+      className={`rounded-xl px-5 py-4 text-sm ${
+        success
+          ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
+          : "border border-gold/25 bg-gold/5 text-navy"
+      }`}
+    >
+      {success
+        ? "Stripe onboarding submitted. Your payout status will update shortly."
+        : "Stripe session expired — continue setup below to finish connecting your account."}
+    </div>
+  );
+}
+
+export default async function PayoutsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ refresh?: string; success?: string }>;
+}) {
+  const params = await searchParams;
   const [summary, bookings, transactions] = await Promise.all([
     fetchProviderPayoutSummary(),
     fetchProviderBookingsList(),
@@ -19,6 +50,7 @@ export default async function PayoutsPage() {
   ]);
 
   const currency = summary?.currency ?? "USD";
+  const feePercent = getPlatformFeePercent();
 
   return (
     <div className="min-h-screen bg-soft/30">
@@ -27,17 +59,24 @@ export default async function PayoutsPage() {
           <Link href="/dashboard" className="text-xs text-muted-dark hover:text-white transition-colors">
             ← Dashboard
           </Link>
-          <h1 className="mt-3 text-2xl font-extrabold text-white">Provider payouts</h1>
-          <p className="mt-1 text-sm text-muted-dark">Earnings from Stripe payments and booked services</p>
+          <h1 className="mt-3 text-2xl font-extrabold text-white sm:text-3xl">Provider payouts</h1>
+          <p className="mt-1 text-sm text-muted-dark">
+            Stripe Connect earnings and payout status for your provider account
+          </p>
         </div>
       </div>
 
       <div className="container-px py-8 space-y-6 max-w-4xl">
-        <div className="rounded-xl border border-gold/25 bg-gold/5 px-5 py-4 text-sm text-muted">
-          <p className="font-bold text-navy">Provider payouts coming soon</p>
-          <p className="mt-2">
-            Platform currently collects payments via secure Stripe Checkout. Automated Stripe Connect payouts to your bank account are the next phase.
-            Earnings below reflect paid services linked to your provider account.
+        <Suspense fallback={null}>
+          <PayoutRefreshNotice refresh={params.refresh} success={params.success} />
+        </Suspense>
+
+        <div className="rounded-xl border border-gold/25 bg-gold/5 px-5 py-4 text-sm text-muted space-y-2">
+          <p className="font-bold text-navy">
+            Stripe Connect payouts are being activated for verified providers.
+          </p>
+          <p>
+            Platform fee: <strong>{feePercent}%</strong> per paid booking. Provider receives remaining balance after Stripe fees and platform fee.
           </p>
         </div>
 
@@ -66,7 +105,8 @@ export default async function PayoutsPage() {
           </div>
         </div>
 
-        <PayoutSetupPanel />
+        <ProviderEarningsSummary />
+        <PayoutSetupPanel showFullActions />
 
         <div className="card overflow-hidden">
           <div className="border-b border-soft-200 px-5 py-4">
@@ -81,7 +121,9 @@ export default async function PayoutsPage() {
                 <div key={b.id} className="flex items-center justify-between gap-4 px-5 py-4 text-sm">
                   <div>
                     <p className="font-semibold text-navy">{b.listing_title ?? b.booking_type}</p>
-                    <p className="text-xs text-muted capitalize">{b.booking_type.replace(/_/g, " ")} · {b.status}</p>
+                    <p className="text-xs text-muted capitalize">
+                      {b.booking_type.replace(/_/g, " ")} · {b.status}
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-navy">
@@ -126,9 +168,9 @@ export default async function PayoutsPage() {
           <p className="font-bold text-navy">How payouts work</p>
           <ul className="list-disc pl-5 space-y-1">
             <li>Customers pay via secure Stripe Checkout for consultations, plans, tours, and properties.</li>
-            <li>Payments, bookings, and transactions are saved in Supabase automatically.</li>
-            <li>Provider earnings show your share after the 15% platform fee on marketplace services.</li>
-            <li>Automated Stripe Connect payouts will transfer pending balances to your bank account.</li>
+            <li>When your Stripe account is connected, {feePercent}% stays with the platform and the remainder transfers to you.</li>
+            <li>Without Connect setup, payments are recorded and show as pending until onboarding is complete.</li>
+            <li>Stripe handles bank payouts to your account on their standard schedule once enabled.</li>
           </ul>
           <Link href="/legal/payment-terms" className="inline-block mt-2 text-blue font-semibold hover:underline text-sm">
             Read payment terms →

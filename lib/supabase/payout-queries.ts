@@ -46,7 +46,7 @@ export async function fetchProviderPayoutSummary(): Promise<ProviderPayoutSummar
   const [paymentsRes, bookingsRes, transactionsRes] = await Promise.all([
     admin
       .from("payments")
-      .select("amount, provider_amount, status, currency")
+      .select("amount, provider_amount, platform_fee, status, currency, transfer_status")
       .eq("provider_user_id", user.id)
       .eq("status", "paid"),
     admin
@@ -64,8 +64,10 @@ export async function fetchProviderPayoutSummary(): Promise<ProviderPayoutSummar
   const payments = (paymentsRes.data ?? []) as Array<{
     amount: number;
     provider_amount: number | null;
+    platform_fee: number | null;
     status: string;
     currency: string;
+    transfer_status: string | null;
   }>;
 
   const totalEarnings = payments.reduce(
@@ -73,7 +75,9 @@ export async function fetchProviderPayoutSummary(): Promise<ProviderPayoutSummar
     0
   );
 
-  const completedPayouts = 0;
+  const completedPayouts = payments
+    .filter((p) => p.transfer_status === "transferred")
+    .reduce((sum, p) => sum + Number(p.provider_amount ?? 0), 0);
   const pendingPayouts = totalEarnings - completedPayouts;
 
   return {

@@ -8,4 +8,10 @@ export const STRIPE_PUBLISHABLE_KEY =
 /** Browser-safe: publishable key present */
 export const isStripeConfigured = Boolean(STRIPE_PUBLISHABLE_KEY);
 
+export {
+  getPlatformFeePercent,
+  isStripeConnectConfigured,
+  PROVIDER_PAYOUT_ROLES,
+} from "./stripe/connect-config";
+
 export { STRIPE_PRICE_IDS, type StripePriceKey } from "./stripe/legacy-prices";
