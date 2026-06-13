@@ -443,7 +443,7 @@ function CustomerDashboardContent() {
                   </div>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-3">
-                  {p.status === "paid" && (
+                  {p.status === "paid" ? (
                     <a
                       href={`/api/receipt/${p.id}`}
                       target="_blank"
@@ -452,6 +452,8 @@ function CustomerDashboardContent() {
                     >
                       Download receipt →
                     </a>
+                  ) : (
+                    <span className="text-xs text-muted">Receipt available when payment completes</span>
                   )}
                   {p.status === "paid" && p.service_type?.includes("visa") && visaCase && (
                     <Link

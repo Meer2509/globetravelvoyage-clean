@@ -6,12 +6,10 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { VisaWizard } from "@/components/VisaWizard";
 import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
-import { MarketplaceCard } from "@/components/MarketplaceCard";
 import { ContactModal } from "@/components/ContactModal";
 import { PageHeader } from "@/components/PageHeader";
-import { visas, visaCountries, agents } from "@/lib/data";
-
-type Agent = (typeof agents)[0];
+import { VisaAgentsSection } from "@/components/VisaAgentsSection";
+import { visas, visaCountries } from "@/lib/data";
 
 const DIFFICULTY_COLOR: Record<string, string> = {
   Easy:     "bg-emerald-50 text-emerald-700 border-emerald-100",
@@ -20,7 +18,6 @@ const DIFFICULTY_COLOR: Record<string, string> = {
 };
 
 export default function VisaPageClient() {
-  const [agentModal, setAgentModal]   = useState<{ open: boolean; agent: Agent | null }>({ open: false, agent: null });
   const [visaLeadOpen, setVisaLeadOpen] = useState(false);
   const [selectedVisa, setSelectedVisa] = useState<string>("");
 
@@ -122,25 +119,7 @@ export default function VisaPageClient() {
             linkHref="/agents"
             linkLabel="View all agents"
           />
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {agents.map((a) => (
-              <MarketplaceCard
-                key={a.id}
-                id={a.id}
-                initials={a.initials}
-                name={a.name}
-                subtitle={a.title}
-                rating={a.rating}
-                reviews={a.reviews}
-                verified={a.verified}
-                tags={a.specialties}
-                meta={`${a.cases.toLocaleString()} cases handled`}
-                responseTime={a.responseTime}
-                ctaLabel="Contact expert"
-                onContact={() => setAgentModal({ open: true, agent: a })}
-              />
-            ))}
-          </div>
+          <VisaAgentsSection />
         </div>
       </section>
 
@@ -172,14 +151,6 @@ export default function VisaPageClient() {
       />
 
       {/* Modals */}
-      <ContactModal
-        open={agentModal.open}
-        onClose={() => setAgentModal({ open: false, agent: null })}
-        mode="contact_expert"
-        subjectName={agentModal.agent?.name}
-        subjectMeta={agentModal.agent ? `${agentModal.agent.specialties[0]} · ${agentModal.agent.location}` : undefined}
-      />
-
       <ContactModal
         open={visaLeadOpen}
         onClose={() => { setVisaLeadOpen(false); setSelectedVisa(""); }}

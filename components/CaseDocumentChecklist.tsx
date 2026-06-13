@@ -253,7 +253,7 @@ export function CaseDocumentChecklist({
     <div className="space-y-3">
       {!storageReady && (
         <p className="text-xs rounded-lg border border-gold/30 bg-gold/5 px-3 py-2 text-navy">
-          Secure file storage is not active yet. You can mark documents as prepared and add notes until file storage is enabled.
+          Secure file storage is not active yet. You can mark prepared for now.
         </p>
       )}
       <ul className="space-y-3">

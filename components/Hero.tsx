@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Icon } from "./Icon";
 import { aiPrompts } from "@/lib/data";
+import { bookingRequestPath, rentalsBrowseHref } from "@/lib/marketplace-routes";
 import type { ReactNode } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -126,11 +127,11 @@ const MOCK_CRUISES = [
 ];
 
 const MOCK_TOURS = [
-  { title: "Old Dubai Heritage Walk",     city: "Dubai",     price: "$45/pp",  duration: "4 hrs",  rating: "4.9" },
-  { title: "Desert Safari & BBQ",         city: "Dubai",     price: "$55/pp",  duration: "6 hrs",  rating: "4.8" },
-  { title: "Bosphorus Sunset Cruise",     city: "Istanbul",  price: "$38/pp",  duration: "2 hrs",  rating: "4.7" },
-  { title: "Hunza Valley Day Trip",       city: "Islamabad", price: "$65/pp",  duration: "Full day", rating: "4.9" },
-  { title: "Taal Volcano Boat Tour",      city: "Manila",    price: "$30/pp",  duration: "5 hrs",  rating: "4.6" },
+  { title: "Old Dubai Heritage Walk",     city: "Dubai",     price: "$45/pp",  duration: "4 hrs",  tag: "Heritage" },
+  { title: "Desert Safari & BBQ",         city: "Dubai",     price: "$55/pp",  duration: "6 hrs",  tag: "Adventure" },
+  { title: "Bosphorus Sunset Cruise",     city: "Istanbul",  price: "$38/pp",  duration: "2 hrs",  tag: "Cruise" },
+  { title: "Hunza Valley Day Trip",       city: "Islamabad", price: "$65/pp",  duration: "Full day", tag: "Nature" },
+  { title: "Taal Volcano Boat Tour",      city: "Manila",    price: "$30/pp",  duration: "5 hrs",  tag: "Boat tour" },
 ];
 
 const MOCK_RENTALS = [
@@ -285,7 +286,17 @@ function FlightsForm() {
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <p className="font-extrabold text-navy">{f.price}</p>
-                  <Link href="/booking/request" className="btn-blue px-3 py-1.5 text-xs">Book</Link>
+                  <Link
+                    href={bookingRequestPath({
+                      service: "flight",
+                      subject: `${f.airline} ${f.from} → ${f.to}`,
+                      from: from || f.from,
+                      to: to || f.to,
+                    })}
+                    className="btn-blue px-3 py-1.5 text-xs"
+                  >
+                    Request quote
+                  </Link>
                 </div>
               </div>
             ))}
@@ -381,7 +392,16 @@ function HotelsForm() {
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <p className="font-extrabold text-navy text-sm">{h.price}</p>
-                  <Link href="/booking/request" className="btn-blue px-3 py-1.5 text-xs">Book</Link>
+                  <Link
+                    href={bookingRequestPath({
+                      service: "hotel",
+                      subject: h.name,
+                      destination: dest || h.city,
+                    })}
+                    className="btn-blue px-3 py-1.5 text-xs"
+                  >
+                    Request quote
+                  </Link>
                 </div>
               </div>
             ))}
@@ -558,7 +578,16 @@ function CruisesForm() {
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <p className="font-extrabold text-navy text-sm">{c.price}</p>
-                  <Link href="/booking/request" className="btn-blue px-3 py-1.5 text-xs">Book</Link>
+                  <Link
+                    href={bookingRequestPath({
+                      service: "cruise",
+                      subject: c.name,
+                      destination: c.region,
+                    })}
+                    className="btn-blue px-3 py-1.5 text-xs"
+                  >
+                    Request quote
+                  </Link>
                 </div>
               </div>
             ))}
@@ -637,12 +666,21 @@ function ToursForm() {
                   <span className="text-xl">🗺️</span>
                   <div className="min-w-0">
                     <p className="font-bold text-navy text-sm">{t.title}</p>
-                    <p className="text-xs text-charcoal/50">{t.city} · {t.duration} · ⭐ {t.rating}</p>
+                    <p className="text-xs text-charcoal/50">{t.city} · {t.duration} · {t.tag}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <p className="font-extrabold text-navy text-sm">{t.price}</p>
-                  <Link href="/booking/request" className="btn-blue px-3 py-1.5 text-xs">Book</Link>
+                  <Link
+                    href={bookingRequestPath({
+                      service: "tour",
+                      subject: t.title,
+                      destination: dest || t.city,
+                    })}
+                    className="btn-blue px-3 py-1.5 text-xs"
+                  >
+                    Request quote
+                  </Link>
                 </div>
               </div>
             ))}
@@ -710,7 +748,7 @@ function RentalsForm() {
       </div>
       <form onSubmit={search} className="flex gap-2">
         <button type="submit" className="btn-primary flex-1 py-3">Search Rentals & Stays</button>
-        <Link href="/properties" className="btn-outline px-5 py-3">Browse all →</Link>
+        <Link href={rentalsBrowseHref(rentalType)} className="btn-outline px-5 py-3">Browse all →</Link>
       </form>
 
       {results && (
@@ -731,14 +769,25 @@ function RentalsForm() {
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <p className="font-extrabold text-navy text-sm">{r.price}</p>
-                  <Link href="/booking/request" className="btn-blue px-3 py-1.5 text-xs">Book</Link>
+                  <Link
+                    href={bookingRequestPath({
+                      service: r.type === "Car" ? "car_rental" : "property",
+                      subject: r.title,
+                      destination: location || r.city,
+                    })}
+                    className="btn-blue px-3 py-1.5 text-xs"
+                  >
+                    Request quote
+                  </Link>
                 </div>
               </div>
             ))}
           </div>
           <ResultDisclaimer />
           <div className="p-3 text-center border-t border-soft-200">
-            <Link href="/properties" className="text-xs font-semibold text-blue hover:underline">View all properties & rentals →</Link>
+            <Link href={rentalsBrowseHref(rentalType)} className="text-xs font-semibold text-blue hover:underline">
+              View all properties & rentals →
+            </Link>
           </div>
         </div>
       )}
@@ -903,7 +952,7 @@ const tabs: { id: TabId; label: string; emoji: string }[] = [
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
 export function Hero({ statsBar }: { statsBar?: ReactNode }) {
-  const [activeTab, setActiveTab] = useState<TabId>("ai");
+  const [activeTab, setActiveTab] = useState<TabId>("flights");
 
   const FormComponents: Record<TabId, React.ReactNode> = {
     flights: <FlightsForm />,
@@ -970,7 +1019,7 @@ export function Hero({ statsBar }: { statsBar?: ReactNode }) {
                 }`}
               >
                 <span>{tab.emoji}</span>
-                <span className="hidden sm:block">{tab.label}</span>
+                <span className="text-[10px] sm:text-xs">{tab.label}</span>
               </button>
             ))}
           </div>
@@ -1003,9 +1052,9 @@ export function Hero({ statsBar }: { statsBar?: ReactNode }) {
         {/* Trust indicators */}
         <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-white/45">
           {[
-            { icon: "shield"   as const, label: "Verified providers" },
+            { icon: "shield"   as const, label: "Provider review process" },
             { icon: "check"    as const, label: "No visa approval guarantee" },
-            { icon: "globe"    as const, label: "190+ countries" },
+            { icon: "globe"    as const, label: "Global destinations" },
             { icon: "sparkles" as const, label: "AI-powered guidance" },
           ].map((item, i) => (
             <span key={item.label} className="flex items-center gap-1.5">

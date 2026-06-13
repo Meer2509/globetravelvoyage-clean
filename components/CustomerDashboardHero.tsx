@@ -3,7 +3,7 @@
 const TRUST_BADGES = [
   "Secure account",
   "Encrypted payments",
-  "Verified travel support",
+  "Expert-reviewed support",
 ] as const;
 
 export function CustomerDashboardHero({ firstName }: { firstName: string }) {

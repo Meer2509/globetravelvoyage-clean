@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { guideHref } from "@/lib/marketplace-routes";
 import { PageHeader } from "@/components/PageHeader";
 import { SectionHeader } from "@/components/SectionHeader";
 import { CTASection } from "@/components/CTASection";
@@ -44,9 +45,9 @@ export default function GuidesPage() {
                   </div>
                   <h3 className="mt-3 text-lg font-bold text-navy leading-snug">{g.title}</h3>
                   <p className="mt-2 flex-1 text-sm text-charcoal/65">{g.excerpt}</p>
-                  <button className="btn-primary mt-5 w-full py-2.5 text-sm">
+                  <Link href={guideHref(g)} className="btn-primary mt-5 w-full py-2.5 text-sm text-center block">
                     Read guide
-                  </button>
+                  </Link>
                 </div>
               </div>
             ))}
@@ -140,18 +141,12 @@ export default function GuidesPage() {
               by our AI and verified by travel experts.
             </p>
             <div className="mx-auto mt-6 flex max-w-md flex-col gap-2 sm:flex-row">
-              <input
-                type="email"
-                placeholder="your@email.com"
-                className="input flex-1"
-              />
-              <button className="btn-primary px-6 py-3 shrink-0">
-                <Icon name="sparkles" className="h-4 w-4" />
-                Subscribe
-              </button>
+              <Link href="/lead/contact" className="btn-primary px-6 py-3 shrink-0 text-center">
+                Request guide updates
+              </Link>
             </div>
             <p className="mt-3 text-xs text-charcoal/40">
-              Free forever. Unsubscribe anytime. No spam.
+              Newsletter signup opens soon. Contact us to request destination guides.
             </p>
           </div>
         </div>

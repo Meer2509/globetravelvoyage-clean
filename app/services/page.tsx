@@ -3,6 +3,7 @@ import Link from "next/link";
 import {
   ServicesCatalog,
   ServicesPageHeader,
+  ServicesLaunchTrustBar,
   StripeTrustBanner,
 } from "@/components/ServicesCatalog";
 import { TrustSection } from "@/components/TrustSection";
@@ -19,6 +20,7 @@ export default function ServicesPage() {
 
 
       <div className="container-px max-w-5xl py-10">
+        <ServicesLaunchTrustBar />
         <ServicesCatalog />
         <StripeTrustBanner className="mt-10" />
       </div>

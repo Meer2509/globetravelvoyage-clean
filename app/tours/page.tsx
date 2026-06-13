@@ -7,7 +7,6 @@ import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
 import { ContactModal } from "@/components/ContactModal";
 import { SaveButton } from "@/components/SaveButton";
-import { Stars } from "@/components/Stars";
 import { tours, tickets } from "@/lib/data";
 
 const CATEGORY_CHIPS = ["Food", "Heritage", "Adventure", "City tour", "Half day", "Full day", "Beach", "Desert"];
@@ -124,7 +123,7 @@ export default function ToursPage() {
                           <h3 className="font-bold text-navy">{tour.title}</h3>
                           <p className="text-sm text-charcoal/55">{tour.city}, {tour.country}</p>
                         </div>
-                        <Stars rating={tour.rating} reviews={tour.reviews} />
+                      <span className="text-xs font-semibold text-muted">{tour.duration}</span>
                       </div>
                       <div className="mt-3 flex items-center gap-2 text-xs text-charcoal/50">
                         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-navy text-white text-[10px] font-bold">
@@ -212,7 +211,7 @@ export default function ToursPage() {
         title="Are you a local tour guide?"
         subtitle="List your tours, set pricing and availability, and grow your reviews on Globe Travel Voyage."
         primary={{ label: "Become a guide", href: "/register?role=guide" }}
-        secondary={{ label: "View verified guides", href: "/agents" }}
+        secondary={{ label: "View tour guides", href: "/guides" }}
       />
 
       <ContactModal

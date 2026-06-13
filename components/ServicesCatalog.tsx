@@ -87,6 +87,29 @@ export function ServicesCatalog({ keys }: { keys?: CheckoutProductKey[] }) {
   );
 }
 
+export function ServicesLaunchTrustBar() {
+  const items = [
+    "Secure checkout powered by Stripe",
+    "Case tracking for paid visa services",
+    "Provider review process",
+    "No visa approval guarantee",
+    "Transparent pricing",
+  ];
+  return (
+    <div className="mb-8 rounded-xl border border-gold/25 bg-gradient-to-r from-navy/5 via-white to-gold/5 px-4 py-4">
+      <p className="text-xs font-bold uppercase tracking-wide text-navy mb-3">Trust at launch</p>
+      <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-charcoal/75">
+        {items.map((item) => (
+          <li key={item} className="flex items-center gap-1.5">
+            <span className="text-gold" aria-hidden>✓</span>
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function StripeTrustBanner({ className = "" }: { className?: string }) {
   return (
     <div className={`rounded-xl border border-soft-200 bg-white px-4 py-3 text-center text-sm text-muted ${className}`}>

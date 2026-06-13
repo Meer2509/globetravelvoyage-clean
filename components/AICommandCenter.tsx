@@ -62,7 +62,7 @@ function generatePlan(dest: string, days: number, budget: number, travelers: num
         { category: "Contingency", amount: `$${Math.round(perPerson * 0.02).toLocaleString()}`, pct: 2, emoji: "💰" },
       ],
       tips: ["UAE e-Visa costs ~AED 250 (most nationalities)", "Metro is cheapest for Downtown/Mall", "Dubai Mall free entry — just buy parking", "Best exchange rates at Gold Souk money changers"],
-      visaNote: "UAE e-Visa required for most nationalities — 24–72h processing, very high approval rate.",
+      visaNote: "UAE e-Visa required for most nationalities — typical processing 24–72 hours. Approval is decided by UAE authorities only.",
     };
   }
 

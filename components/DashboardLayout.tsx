@@ -102,7 +102,7 @@ function DashboardLayoutFrame({
             </div>
 
             {/* Navigation */}
-            <nav className="card overflow-hidden p-2">
+            <nav className="card overflow-hidden p-2 max-h-[70vh] overflow-y-auto lg:max-h-none">
               {tabs.map((t) => (
                 <button
                   key={t.key}

@@ -7,7 +7,7 @@ import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
 import { ContactModal } from "@/components/ContactModal";
 import { SaveButton } from "@/components/SaveButton";
-import { Stars } from "@/components/Stars";
+import { SampleCatalogBanner } from "@/components/SampleCatalogBanner";
 import { stays } from "@/lib/data";
 
 const CITY_CHIPS  = [...new Set(stays.map((s) => s.city))];
@@ -79,6 +79,10 @@ export default function HotelsPage() {
         />
       </div>
 
+      <div className="container-px pb-2">
+        <SampleCatalogBanner label="Sample hotel listings" />
+      </div>
+
       <section className="section">
         <div className="container-px">
           <div className="mb-5 flex items-center justify-between">
@@ -132,7 +136,7 @@ export default function HotelsPage() {
                         <h3 className="font-bold text-navy">{stay.name}</h3>
                         <p className="text-sm text-charcoal/55">{stay.city}, {stay.country}</p>
                       </div>
-                      <Stars rating={stay.rating} reviews={stay.reviews} />
+                      <span className="text-xs font-semibold text-gold">{"★".repeat(stay.stars ?? 5)}</span>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {stay.amenities.slice(0, 3).map((a) => (

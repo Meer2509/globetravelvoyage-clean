@@ -23,6 +23,7 @@ import { HomeMarketplaceSection } from "@/components/HomeMarketplaceSection";
 import { HomePropertiesSection } from "@/components/HomePropertiesSection";
 import { HomeServicesSection } from "@/components/HomeServicesSection";
 import { TrustSection } from "@/components/TrustSection";
+import { visaHubHref, destinationHref, guideHref } from "@/lib/marketplace-routes";
 
 export default function Home() {
   const featuredUsa = visas.find((v) => v.slug === "usa-b1-b2")!;
@@ -175,7 +176,7 @@ export default function Home() {
             {visaHubCards.slice(0, 8).map((v) => (
               <Link
                 key={v.slug}
-                href="/visa"
+                href={visaHubHref(v.slug)}
                 className="card card-hover group flex flex-col p-5 overflow-hidden relative"
               >
                 {/* Difficulty accent */}
@@ -250,8 +251,8 @@ export default function Home() {
         <div className="container-px">
           <SectionHeader
             eyebrow="Smart ticket marketplace"
-            title="Cheapest ticket routes — AI price tracking"
-            subtitle="Compare airlines, track price trends and book the cheapest flights on the most popular Middle East & Pakistan routes. Sample estimates — confirm before booking."
+            title="Cheapest ticket routes — sample estimates"
+            subtitle="Compare airlines on popular Middle East and Pakistan routes. Sample estimates only — submit a request for live quotes."
             linkHref="/flights"
             linkLabel="View all routes"
           />
@@ -424,7 +425,7 @@ export default function Home() {
               { name: "Canada", country: "Canada", flag: "🇨🇦", emoji: "🍁", budget: "from $1,800", season: "Jun–Aug", visa: "TRV required", gradient: "from-red-700/30 to-navy/80", tag: "" },
               { name: "Pakistan", country: "Pakistan", flag: "🇵🇰", emoji: "🏔️", budget: "from $300", season: "Oct–Mar", visa: "eVisa (175+ nations)", gradient: "from-green-700/30 to-navy/80", tag: "🌟 Hidden gem" },
             ].map((dest) => (
-              <Link key={dest.name} href={`/destinations`} className="group relative overflow-hidden rounded-2xl cursor-pointer">
+              <Link key={dest.name} href={destinationHref(dest.name)} className="group relative overflow-hidden rounded-2xl cursor-pointer">
                 {/* Gradient background */}
                 <div className={`h-40 bg-gradient-to-b ${dest.gradient} flex items-end justify-start p-4`}>
                   <div className="absolute inset-0 flex items-center justify-center opacity-30 text-6xl">
@@ -645,7 +646,7 @@ export default function Home() {
           />
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {travelGuides.slice(0, 3).map((g) => (
-              <Link key={g.id} href="/guides" className="card card-hover group overflow-hidden flex flex-col">
+              <Link key={g.id} href={guideHref(g)} className="card card-hover group overflow-hidden flex flex-col">
                 <div className="h-40 bg-gradient-to-br from-navy to-blue/80 flex items-end p-5">
                   <span className="eyebrow-white text-[10px]">{g.category}</span>
                 </div>

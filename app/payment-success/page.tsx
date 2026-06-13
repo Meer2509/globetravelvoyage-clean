@@ -150,6 +150,10 @@ function PaymentSuccessContent() {
                     <span className="text-muted shrink-0">Service</span>
                     <span className="font-semibold text-navy text-right">{data.productName}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted">Payment status</span>
+                    <span className="font-semibold text-emerald-600 capitalize">Paid</span>
+                  </div>
                   {formattedAmount && (
                     <div className="flex justify-between">
                       <span className="text-muted">Amount paid</span>
@@ -223,7 +227,7 @@ function PaymentSuccessContent() {
                     Open visa case
                   </Link>
                 ) : (
-                  <Link href="/dashboard/customer" className="btn-primary py-3.5 text-center text-sm">
+                  <Link href={customerDashboardPath()} className="btn-primary py-3.5 text-center text-sm">
                     Go to dashboard
                   </Link>
                 )}
