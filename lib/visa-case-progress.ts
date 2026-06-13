@@ -2,12 +2,46 @@ import type { VisaCaseData } from "@/lib/supabase/payment-queries";
 
 const DONE_STATUSES = new Set(["prepared", "uploaded", "reviewed"]);
 
+function hasStoredFile(item: VisaCaseData["checklist"][number]): boolean {
+  return Boolean(item.storagePath || item.fileUrl || item.fileName);
+}
+
+export function summarizeChecklistStatus(checklist: VisaCaseData["checklist"]) {
+  const required = checklist.filter((d) => d.required !== false);
+  const pool = required.length > 0 ? required : checklist;
+
+  let pending = 0;
+  let preparedOnly = 0;
+  let uploaded = 0;
+  let reviewed = 0;
+
+  for (const item of pool) {
+    if (item.status === "reviewed") {
+      reviewed += 1;
+      continue;
+    }
+    if (hasStoredFile(item) || item.status === "uploaded") {
+      uploaded += 1;
+      continue;
+    }
+    if (item.status === "prepared") {
+      preparedOnly += 1;
+      continue;
+    }
+    pending += 1;
+  }
+
+  return { pending, preparedOnly, uploaded, reviewed, total: pool.length };
+}
+
 export function computeCaseProgress(checklist: VisaCaseData["checklist"]) {
   const required = checklist.filter((d) => d.required !== false);
   const pool = required.length > 0 ? required : checklist;
   const total = pool.length || 1;
   const done = pool.filter((d) => DONE_STATUSES.has(d.status)).length;
-  const uploaded = pool.filter((d) => d.status === "uploaded" || d.status === "reviewed").length;
+  const uploaded = pool.filter(
+    (d) => d.status === "reviewed" || (d.status === "uploaded" && hasStoredFile(d)) || hasStoredFile(d)
+  ).length;
 
   let progressPercent = 15;
   if (total > 0) {

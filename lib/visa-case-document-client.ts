@@ -5,6 +5,10 @@ export type DocumentClientResult = {
   error?: string;
   storageUnavailable?: boolean;
   fileUrl?: string;
+  fileName?: string | null;
+  storagePath?: string | null;
+  uploadedAt?: string | null;
+  viewUrl?: string;
   documentId?: string;
   status?: string;
   notes?: string | null;
@@ -89,6 +93,8 @@ export async function uploadCaseDocument(input: {
   documentId?: string;
   fileName: string;
   file: File;
+  notes?: string;
+  replace?: boolean;
 }): Promise<DocumentClientResult> {
   const id = requireDocumentId(input.documentId);
   if (!id) {
@@ -97,12 +103,42 @@ export async function uploadCaseDocument(input: {
 
   const formData = new FormData();
   formData.append("file", input.file, input.fileName);
+  if (input.notes?.trim()) formData.append("notes", input.notes.trim());
+  if (input.replace) formData.append("replace", "1");
 
   const res = await fetch(`/api/cases/${input.caseId}/documents/${id}/upload`, {
     method: "POST",
     credentials: "include",
     body: formData,
   });
+  return parseApiResponse(res);
+}
+
+export async function fetchCaseDocumentFileUrl(input: {
+  caseId: string;
+  documentId: string;
+  download?: boolean;
+}): Promise<{ ok: boolean; url?: string; error?: string }> {
+  const qs = input.download ? "?download=1" : "";
+  const res = await fetch(
+    `/api/cases/${input.caseId}/documents/${input.documentId}/file${qs}`,
+    { credentials: "include" }
+  );
+  const json = (await res.json()) as { ok: boolean; url?: string; error?: string };
+  if (!res.ok || !json.ok) {
+    return { ok: false, error: json.error ?? "Could not open file." };
+  }
+  return { ok: true, url: json.url };
+}
+
+export async function removeCaseDocumentFile(input: {
+  caseId: string;
+  documentId: string;
+}): Promise<DocumentClientResult> {
+  const res = await fetch(
+    `/api/cases/${input.caseId}/documents/${input.documentId}/remove-file`,
+    { method: "DELETE", credentials: "include" }
+  );
   return parseApiResponse(res);
 }
 

@@ -61,6 +61,10 @@ export interface VisaCaseData {
     documentId?: string;
     required: boolean;
     notes?: string | null;
+    fileName?: string | null;
+    fileUrl?: string | null;
+    storagePath?: string | null;
+    uploadedAt?: string | null;
   }>;
 }
 

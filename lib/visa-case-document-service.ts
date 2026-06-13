@@ -2,6 +2,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isMissingTableError } from "@/lib/supabase/profile-utils";
 import { computeCaseProgress } from "@/lib/visa-case-progress";
+import {
+  createCaseDocumentSignedUrl,
+  removeCaseDocumentFile,
+  uploadCaseDocumentFile,
+} from "@/lib/document-storage";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type UntypedDb = { from: (table: string) => any };
@@ -12,7 +17,11 @@ export type DocumentWriteResult = {
   documentId?: string;
   status?: string;
   notes?: string | null;
+  fileName?: string | null;
   fileUrl?: string;
+  storagePath?: string | null;
+  uploadedAt?: string | null;
+  viewUrl?: string;
   storageUnavailable?: boolean;
   progress?: {
     progressPercent: number;
@@ -168,7 +177,7 @@ async function writeDocument(
       .update(input.payload)
       .eq("id", existing.id)
       .eq("user_id", input.userId)
-      .select("id, status, notes, file_name, file_url")
+      .select("id, status, notes, file_name, file_url, storage_path, uploaded_at")
       .maybeSingle();
 
     if (error) {
@@ -196,7 +205,7 @@ async function writeDocument(
       status: "pending",
       ...input.payload,
     })
-    .select("id, status, notes, file_name, file_url")
+    .select("id, status, notes, file_name, file_url, storage_path, uploaded_at")
     .single();
 
   if (error) {
@@ -282,68 +291,70 @@ export async function uploadDocumentFile(input: {
   fileName: string;
   fileBytes: ArrayBuffer;
   contentType: string;
+  notes?: string;
+  replace?: boolean;
 }): Promise<DocumentWriteResult> {
   const owned = await verifyCaseOwnership(input.caseId, input.userId);
   if (!owned.ok) return { ok: false, error: owned.error };
 
-  const supabase = await createServerSupabaseClient();
-  if (!supabase) return { ok: false, error: "Sign in required." };
+  const docId = input.documentId;
+  if (!docId) return { ok: false, error: "Document not found." };
 
-  let fileUrl: string | undefined;
-  let storageUnavailable = false;
+  const uploaded = await uploadCaseDocumentFile({
+    userId: input.userId,
+    caseId: input.caseId,
+    documentId: docId,
+    fileName: input.fileName,
+    fileBytes: input.fileBytes,
+    contentType: input.contentType,
+    replace: input.replace,
+  });
 
-  const { error: bucketError } = await supabase.storage.from("documents").list("", { limit: 1 });
-  if (bucketError) {
-    storageUnavailable = true;
-  } else {
-    const path = `${input.userId}/${input.caseId}/${Date.now()}-${input.fileName}`;
-    const blob = new Blob([input.fileBytes], { type: input.contentType });
-    const { data, error: uploadError } = await supabase.storage
-      .from("documents")
-      .upload(path, blob, { contentType: input.contentType, upsert: false });
-
-    if (!uploadError && data) {
-      const { data: urlData } = supabase.storage.from("documents").getPublicUrl(data.path);
-      fileUrl = urlData.publicUrl;
-    } else {
-      console.error("[visa-case] storage upload failed:", uploadError?.message);
-      storageUnavailable = true;
+  if (!uploaded.ok) {
+    if ("storageUnavailable" in uploaded && uploaded.storageUnavailable) {
+      return {
+        ok: false,
+        storageUnavailable: true,
+        error: uploaded.error,
+      };
     }
-  }
-
-  if (storageUnavailable) {
-    return {
-      ok: false,
-      storageUnavailable: true,
-      error:
-        "Secure file upload is being activated. You can mark this document as prepared for now.",
-    };
+    return { ok: false, error: uploaded.error };
   }
 
   const svc = getServiceDb();
   if ("error" in svc) return { ok: false, error: svc.error };
 
+  const now = new Date().toISOString();
+  const payload: Record<string, unknown> = {
+    file_name: input.fileName,
+    storage_path: uploaded.storagePath,
+    file_url: uploaded.storagePath,
+    status: "uploaded",
+    uploaded_at: now,
+  };
+  if (input.notes?.trim()) payload.notes = input.notes.trim();
+
   const written = await writeDocument(svc.db, {
     caseId: input.caseId,
     userId: input.userId,
     documentType: input.documentType,
-    documentId: input.documentId,
-    payload: {
-      file_name: input.fileName,
-      file_url: fileUrl ?? null,
-      status: "uploaded",
-    },
+    documentId: docId,
+    payload,
   });
 
   if (!written.ok) return { ok: false, error: written.error };
 
   const progress = await syncCaseProgressForUser(input.caseId, input.userId);
+  const signed = await createCaseDocumentSignedUrl(uploaded.storagePath);
 
   return {
     ok: true,
     documentId: written.documentId,
     status: "uploaded",
-    fileUrl,
+    fileName: input.fileName,
+    storagePath: uploaded.storagePath,
+    uploadedAt: now,
+    viewUrl: signed.ok ? signed.url : undefined,
     progress,
   };
 }
@@ -450,6 +461,8 @@ export async function uploadDocumentFileById(input: {
   fileName: string;
   fileBytes: ArrayBuffer;
   contentType: string;
+  notes?: string;
+  replace?: boolean;
 }): Promise<DocumentWriteResult> {
   const svc = getServiceDb();
   if ("error" in svc) return { ok: false, error: svc.error };
@@ -465,7 +478,100 @@ export async function uploadDocumentFileById(input: {
     fileName: input.fileName,
     fileBytes: input.fileBytes,
     contentType: input.contentType,
+    notes: input.notes,
+    replace: input.replace,
   });
+}
+
+export async function getDocumentFileAccess(input: {
+  caseId: string;
+  userId: string;
+  documentId: string;
+  download?: boolean;
+}): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  const owned = await verifyCaseOwnership(input.caseId, input.userId);
+  if (!owned.ok) return { ok: false, error: owned.error ?? "Access denied." };
+
+  const svc = getServiceDb();
+  if ("error" in svc) return { ok: false, error: svc.error };
+
+  const { data, error } = await svc.db
+    .from("case_documents")
+    .select("storage_path, file_url")
+    .eq("id", input.documentId)
+    .eq("case_id", input.caseId)
+    .eq("user_id", input.userId)
+    .maybeSingle();
+
+  if (error || !data) return { ok: false, error: "Document not found." };
+
+  const row = data as { storage_path: string | null; file_url: string | null };
+  const storagePath = row.storage_path ?? row.file_url;
+  if (!storagePath) return { ok: false, error: "No file uploaded for this document." };
+
+  return createCaseDocumentSignedUrl(storagePath, Boolean(input.download));
+}
+
+export async function removeDocumentFileById(input: {
+  caseId: string;
+  userId: string;
+  documentId: string;
+}): Promise<DocumentWriteResult> {
+  const owned = await verifyCaseOwnership(input.caseId, input.userId);
+  if (!owned.ok) return { ok: false, error: owned.error };
+
+  const svc = getServiceDb();
+  if ("error" in svc) return { ok: false, error: svc.error };
+
+  const { data, error } = await svc.db
+    .from("case_documents")
+    .select("id, status, storage_path, file_url")
+    .eq("id", input.documentId)
+    .eq("case_id", input.caseId)
+    .eq("user_id", input.userId)
+    .maybeSingle();
+
+  if (error || !data) return { ok: false, error: "Document not found." };
+
+  const row = data as {
+    id: string;
+    status: string;
+    storage_path: string | null;
+    file_url: string | null;
+  };
+
+  const storagePath = row.storage_path ?? row.file_url;
+  if (storagePath) {
+    await removeCaseDocumentFile(storagePath);
+  }
+
+  const nextStatus = row.status === "reviewed" ? "prepared" : "prepared";
+
+  const { data: updated, error: updateError } = await svc.db
+    .from("case_documents")
+    .update({
+      file_name: null,
+      file_url: null,
+      storage_path: null,
+      uploaded_at: null,
+      status: nextStatus,
+    })
+    .eq("id", input.documentId)
+    .eq("user_id", input.userId)
+    .select("id, status")
+    .maybeSingle();
+
+  if (updateError || !updated) {
+    return { ok: false, error: "Could not remove file." };
+  }
+
+  const progress = await syncCaseProgressForUser(input.caseId, input.userId);
+  return {
+    ok: true,
+    documentId: input.documentId,
+    status: (updated as { status: string }).status,
+    progress,
+  };
 }
 
 export async function submitCaseSupport(input: {

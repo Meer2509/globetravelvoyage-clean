@@ -26,6 +26,9 @@ export async function POST(
     return NextResponse.json({ ok: false, error: "Please choose a file to upload." }, { status: 400 });
   }
 
+  const notes = formData.get("notes");
+  const replace = formData.get("replace") === "1";
+
   const result = await uploadDocumentFileById({
     caseId,
     userId: session.user.id,
@@ -33,6 +36,8 @@ export async function POST(
     fileName: file.name,
     fileBytes: await file.arrayBuffer(),
     contentType: file.type || "application/octet-stream",
+    notes: typeof notes === "string" ? notes : undefined,
+    replace,
   });
 
   if (!result.ok) {

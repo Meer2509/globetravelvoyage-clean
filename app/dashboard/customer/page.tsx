@@ -30,6 +30,7 @@ import { CustomerDashboardHero } from "@/components/CustomerDashboardHero";
 import { DashboardEmpty } from "@/components/DashboardEmpty";
 import { visaCaseWorkspacePath, dashboardPaymentsPath, dashboardSupportPath } from "@/lib/visa-case-routes";
 import { customerDashboardPath, hashToCustomerTab, normalizeCustomerTab } from "@/lib/dashboard-routes";
+import { summarizeChecklistStatus } from "@/lib/visa-case-progress";
 import { CaseDocumentChecklist } from "@/components/CaseDocumentChecklist";
 import { Disclaimer } from "@/components/Disclaimer";
 import { Stars } from "@/components/Stars";
@@ -223,10 +224,15 @@ function CustomerDashboardContent() {
 
         {visaCase && (
           <Panel title="Required documents" subtitle="Your visa case checklist">
-            <p className="text-sm text-muted mb-4">
-              {visaCase.checklist.filter((d) => d.required !== false).length} required items ·{" "}
-              {visaCase.checklist.filter((d) => ["uploaded", "prepared", "reviewed"].includes(d.status)).length} ready
-            </p>
+            {(() => {
+              const counts = summarizeChecklistStatus(visaCase.checklist);
+              return (
+                <p className="text-sm text-muted mb-4">
+                  {counts.total} required · {counts.pending} pending · {counts.preparedOnly} prepared only ·{" "}
+                  {counts.uploaded} uploaded · {counts.reviewed} reviewed
+                </p>
+              );
+            })()}
             <Link href={customerDashboardPath("documents")} className="btn-gold px-5 py-2.5 text-sm">
               Open document checklist
             </Link>

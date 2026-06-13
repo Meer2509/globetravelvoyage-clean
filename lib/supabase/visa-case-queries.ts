@@ -10,11 +10,10 @@ import { mapVisaCaseRow } from "@/lib/supabase/visa-case-mapper";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type UntypedDb = { from: (table: string) => any };
 
+import { isDocumentsBucketReady } from "@/lib/document-storage";
+
 export async function checkDocumentsStorageReady(): Promise<boolean> {
-  const supabase = await createServerSupabaseClient();
-  if (!supabase) return false;
-  const { error } = await supabase.storage.from("documents").list("", { limit: 1 });
-  return !error;
+  return isDocumentsBucketReady();
 }
 
 async function backfillVisaCaseFromPayment(userId: string): Promise<string | null> {

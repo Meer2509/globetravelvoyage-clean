@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ProgressBar } from "@/components/DashboardLayout";
 import { formatPaymentAmount, paymentServiceLabel } from "@/lib/payments-display";
 import type { VisaCaseData } from "@/lib/supabase/payment-queries";
+import { summarizeChecklistStatus } from "@/lib/visa-case-progress";
 import { visaCaseWorkspacePath } from "@/lib/visa-case-routes";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -21,10 +22,7 @@ const STATUS_LABELS: Record<string, string> = {
 export function VisaCaseSummaryCard({ visaCase }: { visaCase: VisaCaseData }) {
   const progressPct = visaCase.progressPercent ?? 15;
   const stepLabel = STATUS_LABELS[visaCase.currentStep] ?? visaCase.currentStep;
-  const requiredCount = visaCase.checklist.filter((d) => d.required !== false).length;
-  const doneCount = visaCase.checklist.filter((d) =>
-    ["uploaded", "prepared", "reviewed"].includes(d.status)
-  ).length;
+  const counts = summarizeChecklistStatus(visaCase.checklist);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-soft-200 bg-white shadow-[var(--shadow-premium)]">
@@ -62,7 +60,7 @@ export function VisaCaseSummaryCard({ visaCase }: { visaCase: VisaCaseData }) {
         </div>
         <ProgressBar
           pct={progressPct}
-          label={`${doneCount}/${requiredCount || visaCase.checklist.length} documents ready · ${progressPct}%`}
+          label={`${counts.uploaded + counts.reviewed}/${counts.total} uploaded · ${counts.preparedOnly} prepared only · ${progressPct}%`}
           color="gold"
         />
         <div className="flex flex-wrap gap-3">

@@ -24,7 +24,7 @@ export async function mapVisaCaseRow(
 
   const { data: docs } = await supabase
     .from("case_documents")
-    .select("id, document_type, file_name, file_url, status, is_required, notes")
+    .select("id, document_type, file_name, file_url, storage_path, uploaded_at, status, is_required, notes")
     .eq("case_id", caseId)
     .order("created_at", { ascending: true });
 
@@ -32,17 +32,33 @@ export async function mapVisaCaseRow(
     const doc = d as {
       id: string;
       document_type: string;
+      file_name: string | null;
+      file_url: string | null;
+      storage_path: string | null;
+      uploaded_at: string | null;
       status: string;
       is_required: boolean | null;
       notes: string | null;
     };
+    const hasFile = Boolean(doc.storage_path || doc.file_url);
+    const status =
+      doc.status === "prepared" && hasFile
+        ? "uploaded"
+        : doc.status === "uploaded" && !hasFile
+          ? "prepared"
+          : doc.status ?? "pending";
+
     return {
       id: doc.id,
       name: doc.document_type,
-      status: doc.status ?? "pending",
+      status,
       documentId: doc.id,
       required: doc.is_required ?? true,
       notes: doc.notes,
+      fileName: doc.file_name,
+      fileUrl: doc.file_url,
+      storagePath: doc.storage_path,
+      uploadedAt: doc.uploaded_at,
     };
   });
 

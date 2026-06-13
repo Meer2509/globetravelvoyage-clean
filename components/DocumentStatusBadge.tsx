@@ -1,6 +1,7 @@
 export function DocumentStatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     pending: "bg-soft text-muted border-soft-200",
+    "prepared-only": "bg-gold/10 text-navy border-gold/30",
     prepared: "bg-gold/10 text-navy border-gold/30",
     uploaded: "bg-emerald-50 text-emerald-700 border-emerald-200",
     reviewed: "bg-navy/5 text-navy border-navy/15",
@@ -8,7 +9,8 @@ export function DocumentStatusBadge({ status }: { status: string }) {
 
   const labels: Record<string, string> = {
     pending: "Pending",
-    prepared: "Prepared",
+    "prepared-only": "Prepared only",
+    prepared: "Prepared only",
     uploaded: "Uploaded",
     reviewed: "Reviewed",
   };
