@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
       { source: "/legal/refund-policy", destination: "/legal/refund", permanent: true },
       { source: "/legal/cancellation-policy", destination: "/legal/cancellation", permanent: true },
       { source: "/legal/cookie-policy", destination: "/legal/cookies", permanent: true },
+      { source: "/signup", destination: "/register", permanent: true },
+      { source: "/ai-planner", destination: "/trip-planner", permanent: true },
     ];
   },
 };

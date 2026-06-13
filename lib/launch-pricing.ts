@@ -17,7 +17,7 @@ export interface LaunchFeature {
 /** Free for travelers at launch */
 export const TRAVELER_FREE_FEATURES: LaunchFeature[] = [
   { title: "Create your account", description: "Sign up free and access your personal travel dashboard.", emoji: "👤", href: "/register", tier: "free", audience: "traveler" },
-  { title: "Save trips", description: "Bookmark itineraries, properties, and destinations to your account.", emoji: "⭐", href: "/dashboard/customer?tab=saved", tier: "free", audience: "traveler" },
+  { title: "Save trips", description: "Bookmark itineraries, properties, and destinations to your account.", emoji: "⭐", href: "/saved", tier: "free", audience: "traveler" },
   { title: "Basic AI planner", description: "Generate trip ideas and day-by-day outlines at no cost.", emoji: "🤖", href: "/trip-planner", tier: "free", audience: "traveler" },
   { title: "Visa guides", description: "Country-specific visa guides and embassy fee references.", emoji: "🛂", href: "/visa", tier: "free", audience: "traveler" },
   { title: "Basic visa checklist", description: "Document checklist for popular visa types — free to use.", emoji: "📋", href: "/visa/start", tier: "free", audience: "traveler" },

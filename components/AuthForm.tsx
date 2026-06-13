@@ -9,7 +9,7 @@ const accountTypes: { key: string; label: string; icon: IconName; href: string }
   { key: "customer", label: "Traveler", icon: "users", href: "/dashboard/customer" },
   { key: "agent", label: "Visa Agent", icon: "agent", href: "/dashboard/agent" },
   { key: "agency", label: "Travel Agency", icon: "agency", href: "/dashboard/agency" },
-  { key: "host", label: "Property Host", icon: "property", href: "/dashboard/agency" },
+  { key: "host", label: "Property Host", icon: "property", href: "/dashboard/host" },
 ];
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {

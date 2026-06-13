@@ -43,9 +43,34 @@ const ROLE_DASHBOARD: Record<string, string> = {
   admin:          "/dashboard/admin",
 };
 
+/** Paths each role may visit under /dashboard (beyond the primary home route). */
+const ROLE_DASHBOARD_PREFIXES: Record<UserRole, string[]> = {
+  customer: [
+    "/dashboard/customer",
+    "/dashboard/visa-cases",
+    "/dashboard/billing",
+    "/dashboard/support",
+    "/dashboard/documents",
+    "/dashboard/profile",
+  ],
+  visa_agent: ["/dashboard/agent", "/dashboard/profile", "/dashboard/payouts"],
+  travel_agency: ["/dashboard/agency", "/dashboard/profile", "/dashboard/payouts"],
+  tour_guide: ["/dashboard/guide", "/dashboard/profile", "/dashboard/payouts"],
+  property_host: ["/dashboard/host", "/dashboard/profile", "/dashboard/payouts"],
+  admin: ["/dashboard"],
+};
+
 function getDashboardForRole(role: UserRole | string | undefined): string {
   const normalized = normalizeUserRole(role);
   return ROLE_DASHBOARD[normalized] ?? ROLE_DASHBOARD[role ?? ""] ?? "/dashboard";
+}
+
+function isDashboardPathAllowed(pathname: string, role: UserRole): boolean {
+  if (role === "admin") return true;
+  const prefixes = ROLE_DASHBOARD_PREFIXES[role] ?? [getDashboardForRole(role)];
+  return prefixes.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
 }
 
 async function getPrimaryRoleFromDb(userId: string): Promise<UserRole | undefined> {
@@ -124,13 +149,12 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  // Role-specific dashboard must match signup role
+  // Role-specific dashboard — redirect only when path is not allowed for this role
   if (user && pathname.startsWith("/dashboard/")) {
     const dbRole = await getPrimaryRoleFromDb(user.id);
     const role = dbRole ?? normalizeUserRole(user.user_metadata?.role as string | undefined);
-    const expected = getDashboardForRole(role);
-    if (pathname !== expected && pathname !== "/dashboard/profile" && role !== "admin") {
-      return NextResponse.redirect(new URL(expected, request.url));
+    if (!isDashboardPathAllowed(pathname, role)) {
+      return NextResponse.redirect(new URL(getDashboardForRole(role), request.url));
     }
   }
 
