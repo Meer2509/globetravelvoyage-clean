@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { submitCaseSupportMessage } from "@/lib/supabase/case-document-actions";
+import { submitCaseSupportMessage } from "@/lib/visa-case-document-client";
 
 export function CaseSupportForm({
   caseId,
-  caseNumber,
+  caseNumber: _caseNumber,
 }: {
   caseId: string;
   caseNumber: string;
@@ -19,7 +19,7 @@ export function CaseSupportForm({
     setBusy(true);
     setFeedback(null);
 
-    const result = await submitCaseSupportMessage({ caseId, caseNumber, message });
+    const result = await submitCaseSupportMessage({ caseId, message });
     setBusy(false);
 
     if (!result.ok) {

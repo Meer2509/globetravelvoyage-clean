@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { VisaCaseWorkspace } from "@/components/VisaCaseWorkspace";
 import { loadVisaCaseWorkspace } from "@/lib/supabase/visa-case-queries";
@@ -16,13 +17,15 @@ export default async function VisaCasePage({
     if (latestId && latestId !== caseId) {
       redirect(`/dashboard/visa-cases/${latestId}`);
     }
-    redirect("/dashboard/customer?tab=visa-case");
+    redirect("/dashboard/customer?tab=visa-cases");
   }
 
   return (
-    <VisaCaseWorkspace
-      initialCase={workspace.case}
-      storageReady={workspace.storageReady}
-    />
+    <Suspense fallback={<div className="min-h-screen bg-soft flex items-center justify-center"><div className="skeleton h-64 w-full max-w-4xl rounded-2xl" /></div>}>
+      <VisaCaseWorkspace
+        initialCase={workspace.case}
+        storageReady={workspace.storageReady}
+      />
+    </Suspense>
   );
 }

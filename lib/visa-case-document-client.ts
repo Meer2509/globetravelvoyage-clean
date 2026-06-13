@@ -36,20 +36,29 @@ async function parseApiResponse(res: Response): Promise<DocumentClientResult> {
   return json;
 }
 
+function requireDocumentId(documentId?: string): string | null {
+  if (!documentId) {
+    console.error("[visa-case] missing documentId — refresh the page to load checklist rows");
+    return null;
+  }
+  return documentId;
+}
+
 export async function markCaseDocumentPrepared(input: {
   caseId: string;
   documentType: string;
   documentId?: string;
 }): Promise<DocumentClientResult> {
-  const res = await fetch(`/api/visa-cases/${input.caseId}/documents/update`, {
+  const id = requireDocumentId(input.documentId);
+  if (!id) {
+    return { ok: false, error: "Could not save. Please refresh and try again." };
+  }
+
+  const res = await fetch(`/api/cases/${input.caseId}/documents/${id}/mark-prepared`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({
-      action: "prepared",
-      documentType: input.documentType,
-      documentId: input.documentId,
-    }),
+    body: JSON.stringify({}),
   });
   return parseApiResponse(res);
 }
@@ -60,16 +69,16 @@ export async function saveCaseDocumentNotes(input: {
   documentId?: string;
   notes: string;
 }): Promise<DocumentClientResult> {
-  const res = await fetch(`/api/visa-cases/${input.caseId}/documents/update`, {
+  const id = requireDocumentId(input.documentId);
+  if (!id) {
+    return { ok: false, error: "Could not save. Please refresh and try again." };
+  }
+
+  const res = await fetch(`/api/cases/${input.caseId}/documents/${id}/save-notes`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({
-      action: "notes",
-      documentType: input.documentType,
-      documentId: input.documentId,
-      notes: input.notes,
-    }),
+    body: JSON.stringify({ notes: input.notes }),
   });
   return parseApiResponse(res);
 }
@@ -81,12 +90,15 @@ export async function uploadCaseDocument(input: {
   fileName: string;
   file: File;
 }): Promise<DocumentClientResult> {
+  const id = requireDocumentId(input.documentId);
+  if (!id) {
+    return { ok: false, error: "Could not save. Please refresh and try again." };
+  }
+
   const formData = new FormData();
-  formData.append("documentType", input.documentType);
-  if (input.documentId) formData.append("documentId", input.documentId);
   formData.append("file", input.file, input.fileName);
 
-  const res = await fetch(`/api/visa-cases/${input.caseId}/documents/upload`, {
+  const res = await fetch(`/api/cases/${input.caseId}/documents/${id}/upload`, {
     method: "POST",
     credentials: "include",
     body: formData,
@@ -94,10 +106,24 @@ export async function uploadCaseDocument(input: {
   return parseApiResponse(res);
 }
 
-export async function syncCaseProgress(caseId: string): Promise<DocumentClientResult> {
-  const res = await fetch(`/api/visa-cases/${caseId}/progress/update`, {
+export async function submitCaseSupportMessage(input: {
+  caseId: string;
+  message: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`/api/cases/${input.caseId}/support`, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
     credentials: "include",
+    body: JSON.stringify({ message: input.message }),
   });
-  return parseApiResponse(res);
+  const json = (await res.json()) as { ok: boolean; error?: string };
+  if (!res.ok || !json.ok) {
+    console.error("[visa-case] support failed:", json.error);
+    return { ok: false, error: json.error ?? "Could not send your message." };
+  }
+  return { ok: true };
+}
+
+export function downloadChecklistUrl(caseId: string): string {
+  return `/api/cases/${caseId}/download-checklist`;
 }

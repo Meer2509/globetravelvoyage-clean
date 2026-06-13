@@ -56,6 +56,10 @@ async function backfillVisaCaseFromPayment(userId: string): Promise<string | nul
   return null;
 }
 
+export async function repairMissingVisaCaseForUser(userId: string): Promise<string | null> {
+  return backfillVisaCaseFromPayment(userId);
+}
+
 export async function fetchCustomerVisaCases(): Promise<VisaCaseData[]> {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return [];

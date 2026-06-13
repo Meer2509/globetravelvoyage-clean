@@ -347,3 +347,175 @@ export async function uploadDocumentFile(input: {
     progress,
   };
 }
+
+async function getDocumentMeta(
+  db: UntypedDb,
+  caseId: string,
+  userId: string,
+  documentId: string
+): Promise<{ id: string; document_type: string } | null> {
+  const { data, error } = await db
+    .from("case_documents")
+    .select("id, document_type")
+    .eq("id", documentId)
+    .eq("case_id", caseId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as { id: string; document_type: string };
+}
+
+export async function markDocumentPreparedById(input: {
+  caseId: string;
+  userId: string;
+  documentId: string;
+  notes?: string;
+}): Promise<DocumentWriteResult> {
+  const owned = await verifyCaseOwnership(input.caseId, input.userId);
+  if (!owned.ok) return { ok: false, error: owned.error };
+
+  const svc = getServiceDb();
+  if ("error" in svc) return { ok: false, error: svc.error };
+
+  const meta = await getDocumentMeta(svc.db, input.caseId, input.userId, input.documentId);
+  if (!meta) return { ok: false, error: "Document not found." };
+
+  const payload: Record<string, unknown> = { status: "prepared" };
+  if (input.notes?.trim()) payload.notes = input.notes.trim();
+
+  const { data, error } = await svc.db
+    .from("case_documents")
+    .update(payload)
+    .eq("id", input.documentId)
+    .eq("user_id", input.userId)
+    .select("id, status, notes")
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error("[visa-case] mark prepared by id failed:", error?.message);
+    return { ok: false, error: "Could not save. Please refresh and try again." };
+  }
+
+  const progress = await syncCaseProgressForUser(input.caseId, input.userId);
+  const row = data as { status: string; notes: string | null };
+  return {
+    ok: true,
+    documentId: input.documentId,
+    status: row.status,
+    notes: row.notes,
+    progress,
+  };
+}
+
+export async function saveDocumentNotesById(input: {
+  caseId: string;
+  userId: string;
+  documentId: string;
+  notes: string;
+}): Promise<DocumentWriteResult> {
+  const owned = await verifyCaseOwnership(input.caseId, input.userId);
+  if (!owned.ok) return { ok: false, error: owned.error };
+
+  const svc = getServiceDb();
+  if ("error" in svc) return { ok: false, error: svc.error };
+
+  const meta = await getDocumentMeta(svc.db, input.caseId, input.userId, input.documentId);
+  if (!meta) return { ok: false, error: "Document not found." };
+
+  const { data, error } = await svc.db
+    .from("case_documents")
+    .update({ notes: input.notes.trim() || null })
+    .eq("id", input.documentId)
+    .eq("user_id", input.userId)
+    .select("id, notes")
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error("[visa-case] save notes by id failed:", error?.message);
+    return { ok: false, error: "Could not save. Please refresh and try again." };
+  }
+
+  return {
+    ok: true,
+    documentId: input.documentId,
+    notes: (data as { notes: string | null }).notes,
+  };
+}
+
+export async function uploadDocumentFileById(input: {
+  caseId: string;
+  userId: string;
+  documentId: string;
+  fileName: string;
+  fileBytes: ArrayBuffer;
+  contentType: string;
+}): Promise<DocumentWriteResult> {
+  const svc = getServiceDb();
+  if ("error" in svc) return { ok: false, error: svc.error };
+
+  const meta = await getDocumentMeta(svc.db, input.caseId, input.userId, input.documentId);
+  if (!meta) return { ok: false, error: "Document not found." };
+
+  return uploadDocumentFile({
+    caseId: input.caseId,
+    userId: input.userId,
+    documentType: meta.document_type,
+    documentId: input.documentId,
+    fileName: input.fileName,
+    fileBytes: input.fileBytes,
+    contentType: input.contentType,
+  });
+}
+
+export async function submitCaseSupport(input: {
+  caseId: string;
+  userId: string;
+  caseNumber: string;
+  message: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  const owned = await verifyCaseOwnership(input.caseId, input.userId);
+  if (!owned.ok) return { ok: false, error: owned.error };
+
+  const body = input.message.trim();
+  if (!body) return { ok: false, error: "Please enter a message." };
+
+  const svc = getServiceDb();
+  if ("error" in svc) return { ok: false, error: svc.error };
+
+  const subject = `Visa case ${input.caseNumber}`;
+  const { error: ticketError } = await svc.db.from("support_tickets").insert({
+    user_id: input.userId,
+    subject,
+    message: body,
+    status: "open",
+  });
+
+  if (!ticketError) return { ok: true };
+
+  if (!isMissingTableError(ticketError)) {
+    console.error("[visa-case] support_tickets failed:", ticketError.message);
+    const { error: msgError } = await svc.db.from("messages").insert({
+      sender_id: input.userId,
+      receiver_id: null,
+      case_id: input.caseId,
+      body,
+    });
+    if (!msgError) return { ok: true };
+    return { ok: false, error: "Could not send your message. Please try again." };
+  }
+
+  const { error: legacyError } = await svc.db.from("support_messages").insert({
+    user_id: input.userId,
+    subject,
+    body,
+    category: "visa_case",
+    status: "open",
+  });
+
+  if (legacyError) {
+    console.error("[visa-case] support_messages failed:", legacyError.message);
+    return { ok: false, error: "Could not send your message. Please try again." };
+  }
+  return { ok: true };
+}

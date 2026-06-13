@@ -91,7 +91,7 @@ export async function GET(
     </div>
     <div class="footer">
       Paid via secure Stripe Checkout. Globe Travel Voyage is an independent marketplace — not a government agency.<br>
-      <a href="${siteUrl}/dashboard/customer?tab=billing">View billing history</a>
+      <a href="${siteUrl}/dashboard/customer?tab=payments">View payment history</a>
     </div>
   </div>
   <script>window.onload = function() { /* user can Ctrl+P to print */ }</script>

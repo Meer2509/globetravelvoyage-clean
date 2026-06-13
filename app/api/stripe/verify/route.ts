@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getStripe, isStripeServerConfigured } from "@/lib/stripe/server";
 import { fulfillStripeCheckoutSession } from "@/lib/stripe/fulfill-session";
 import { getCheckoutProduct } from "@/lib/stripe/products";
+import { repairMissingVisaCaseForUser } from "@/lib/supabase/visa-case-queries";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(request: Request) {
   if (!isStripeServerConfigured()) {
@@ -59,6 +61,25 @@ export async function GET(request: Request) {
       productKey.includes("visa") ||
       productKey === "full_visa_application_support" ||
       entitlementType?.includes("visa");
+
+    if (paid && isVisaService && !visaCaseId) {
+      const userId = session.metadata?.user_id?.trim();
+      if (userId) {
+        const repairedId = await repairMissingVisaCaseForUser(userId);
+        if (repairedId) {
+          visaCaseId = repairedId;
+          const admin = createAdminClient();
+          if (admin) {
+            const { data: caseRow } = await admin
+              .from("visa_cases")
+              .select("case_number")
+              .eq("id", repairedId)
+              .maybeSingle();
+            caseNumber = (caseRow as { case_number?: string } | null)?.case_number ?? caseNumber;
+          }
+        }
+      }
+    }
 
     return NextResponse.json({
       ok: true,

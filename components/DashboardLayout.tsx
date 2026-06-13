@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Icon } from "./Icon";
 import { LogoutButton } from "./LogoutButton";
 import type { IconName } from "@/lib/data";
+import { customerDashboardPath, normalizeCustomerTab } from "@/lib/dashboard-routes";
 
 export interface DashboardTab {
   key: string;
@@ -16,20 +18,7 @@ export interface DashboardTab {
 
 // ─── Main DashboardLayout ─────────────────────────────────────────────────────
 
-export function DashboardLayout({
-  role,
-  name,
-  initials,
-  email,
-  profileCompletion,
-  tabs,
-  sections,
-  verified,
-  roleColor = "bg-blue/10 text-blue",
-  avatarColor = "bg-navy text-gold",
-  defaultTab,
-  tabsWithoutHeader,
-}: {
+type DashboardLayoutProps = {
   role: string;
   name: string;
   initials: string;
@@ -42,11 +31,29 @@ export function DashboardLayout({
   avatarColor?: string;
   defaultTab?: string;
   tabsWithoutHeader?: string[];
-}) {
-  const initialTab =
-    defaultTab && tabs.some((t) => t.key === defaultTab) ? defaultTab : tabs[0]?.key;
-  const [active, setActive] = useState(initialTab);
+  /** When set, sidebar tabs sync to ?tab= query (e.g. /dashboard/customer) */
+  urlTabBase?: string;
+};
 
+function DashboardLayoutFrame({
+  role,
+  name,
+  initials,
+  email,
+  profileCompletion,
+  tabs,
+  sections,
+  verified,
+  roleColor = "bg-blue/10 text-blue",
+  avatarColor = "bg-navy text-gold",
+  tabsWithoutHeader,
+  urlTabBase,
+  active,
+  onSelectTab,
+}: DashboardLayoutProps & {
+  active: string | undefined;
+  onSelectTab: (key: string) => void;
+}) {
   const activeTab = tabs.find((t) => t.key === active);
 
   return (
@@ -99,7 +106,7 @@ export function DashboardLayout({
               {tabs.map((t) => (
                 <button
                   key={t.key}
-                  onClick={() => setActive(t.key)}
+                  onClick={() => onSelectTab(t.key)}
                   className={`flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all duration-150 ${
                     active === t.key
                       ? "bg-navy text-white shadow-[0_4px_12px_-4px_rgba(8,28,58,0.4)]"
@@ -128,14 +135,14 @@ export function DashboardLayout({
             {/* Back to site + logout */}
             <div className="card overflow-hidden p-1.5 space-y-0.5">
               <Link
-                href="/dashboard/profile"
+                href={urlTabBase ? customerDashboardPath("settings") : "/dashboard/profile"}
                 className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium text-charcoal/50 hover:bg-soft hover:text-navy transition-colors"
               >
                 <Icon name="agent" className="h-4 w-4" />
                 Edit profile
               </Link>
               <Link
-                href="/dashboard/profile"
+                href={urlTabBase ? customerDashboardPath("settings") : "/dashboard/profile"}
                 className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium text-charcoal/50 hover:bg-soft hover:text-navy transition-colors"
               >
                 <Icon name="doc" className="h-4 w-4" />
@@ -168,6 +175,74 @@ export function DashboardLayout({
         </div>
       </div>
     </div>
+  );
+}
+
+function resolveDashboardTab(
+  tabs: DashboardTab[],
+  defaultTab: string | undefined,
+  urlTab: string | null
+) {
+  if (urlTab && tabs.some((t) => t.key === urlTab)) return urlTab;
+  if (defaultTab) {
+    const normalized = normalizeCustomerTab(defaultTab);
+    if (tabs.some((t) => t.key === normalized)) return normalized;
+    if (tabs.some((t) => t.key === defaultTab)) return defaultTab;
+  }
+  return tabs[0]?.key;
+}
+
+function DashboardLayoutUrlTabs(props: DashboardLayoutProps & { urlTabBase: string }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlTab = normalizeCustomerTab(searchParams.get("tab"));
+  const initial = resolveDashboardTab(props.tabs, props.defaultTab, urlTab);
+  const [active, setActive] = useState(initial);
+
+  useEffect(() => {
+    const next = resolveDashboardTab(props.tabs, props.defaultTab, urlTab);
+    if (next && next !== active) setActive(next);
+  }, [urlTab, props.tabs, props.defaultTab, active]);
+
+  const onSelectTab = useCallback(
+    (key: string) => {
+      setActive(key);
+      router.push(customerDashboardPath(key));
+    },
+    [router]
+  );
+
+  return <DashboardLayoutFrame {...props} active={active} onSelectTab={onSelectTab} />;
+}
+
+export function DashboardLayout(props: DashboardLayoutProps) {
+  if (props.urlTabBase) {
+    const fallbackTab = resolveDashboardTab(props.tabs, props.defaultTab, null);
+    return (
+      <Suspense
+        fallback={
+          <DashboardLayoutFrame
+            {...props}
+            active={fallbackTab}
+            onSelectTab={() => {}}
+          />
+        }
+      >
+        <DashboardLayoutUrlTabs {...props} urlTabBase={props.urlTabBase} />
+      </Suspense>
+    );
+  }
+
+  const [active, setActive] = useState(() =>
+    resolveDashboardTab(props.tabs, props.defaultTab, null)
+  );
+
+  return (
+    <DashboardLayoutFrame
+      {...props}
+      active={active}
+      onSelectTab={setActive}
+    />
   );
 }
 

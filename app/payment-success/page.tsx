@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { isStripeConfigured } from "@/lib/stripe";
 import { VISA_DOCUMENT_CHECKLIST } from "@/lib/visa-case-checklist";
+import { customerDashboardPath } from "@/lib/dashboard-routes";
 import { visaCaseWorkspacePath } from "@/lib/visa-case-routes";
 
 interface VerifyData {
@@ -255,8 +256,8 @@ function PaymentSuccessContent() {
           {!loading && !data?.paid && !sessionId && (
             <div className="px-8 py-8 text-center">
               <p className="text-sm text-muted mb-4">No payment session found.</p>
-              <Link href="/dashboard/customer?tab=billing" className="btn-primary px-6 py-3 text-sm">
-                View billing
+              <Link href="/dashboard/customer?tab=payments" className="btn-primary px-6 py-3 text-sm">
+                View payments
               </Link>
             </div>
           )}

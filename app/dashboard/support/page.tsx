@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
+import { customerDashboardPath } from "@/lib/dashboard-routes";
 
 export default function DashboardSupportPage() {
-  redirect("/dashboard/customer?tab=support");
+  redirect(customerDashboardPath("support"));
 }

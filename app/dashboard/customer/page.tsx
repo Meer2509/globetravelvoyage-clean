@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/auth";
 import {
@@ -28,8 +28,9 @@ import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DashboardProfileSection } from "@/components/DashboardProfileSection";
 import { CustomerDashboardHero } from "@/components/CustomerDashboardHero";
 import { DashboardEmpty } from "@/components/DashboardEmpty";
-import { visaCaseWorkspacePath, dashboardBillingPath, dashboardDocumentsPath, dashboardSupportPath } from "@/lib/visa-case-routes";
-import { MessagesInbox } from "@/components/MessagesInbox";
+import { visaCaseWorkspacePath, dashboardPaymentsPath, dashboardSupportPath } from "@/lib/visa-case-routes";
+import { customerDashboardPath, hashToCustomerTab, normalizeCustomerTab } from "@/lib/dashboard-routes";
+import { CaseDocumentChecklist } from "@/components/CaseDocumentChecklist";
 import { Disclaimer } from "@/components/Disclaimer";
 import { Stars } from "@/components/Stars";
 import { Icon } from "@/components/Icon";
@@ -46,17 +47,12 @@ import {
 
 const tabs: DashboardTab[] = [
   { key: "overview", label: "Overview", icon: "globe" },
-  { key: "visa-case", label: "My Visa Cases", icon: "visa" },
-  { key: "timeline", label: "Trip Timeline", icon: "planner" },
-  { key: "visas", label: "Visa Applications", icon: "visa" },
-  { key: "saved", label: "Saved Trips", icon: "star" },
-  { key: "bookings", label: "Bookings", icon: "doc" },
-  { key: "billing", label: "Billing & Payments", icon: "star" },
+  { key: "visa-cases", label: "My Visa Cases", icon: "visa" },
   { key: "documents", label: "Documents", icon: "doc" },
-  { key: "referrals", label: "Referrals", icon: "users" },
+  { key: "payments", label: "Payments", icon: "star" },
+  { key: "bookings", label: "Bookings", icon: "doc" },
   { key: "support", label: "Support", icon: "shield" },
-  { key: "messages", label: "Messages", icon: "agent" },
-  { key: "ai", label: "AI Assistant", icon: "agent" },
+  { key: "settings", label: "Settings", icon: "agent" },
 ];
 
 // ─── AI Chat State ─────────────────────────────────────────────────────────
@@ -137,8 +133,9 @@ function AiPanel() {
 // ─── Page Component ───────────────────────────────────────────────────────────
 
 function CustomerDashboardContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const defaultTab = searchParams.get("tab") ?? undefined;
+  const defaultTab = normalizeCustomerTab(searchParams.get("tab"));
   const user = useDashboardUser();
   const [live, setLive] = useState<CustomerDashboardData | null>(null);
   const [customerPayments, setCustomerPayments] = useState<PaymentRowExtended[]>([]);
@@ -168,6 +165,13 @@ function CustomerDashboardContent() {
     });
     reloadPostPayment();
   }, []);
+
+  useEffect(() => {
+    const tabFromHash = hashToCustomerTab(window.location.hash);
+    if (tabFromHash) {
+      router.replace(customerDashboardPath(tabFromHash));
+    }
+  }, [router]);
 
   async function handleSupportSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -204,9 +208,8 @@ function CustomerDashboardContent() {
       : "Traveler";
 
   const customerTabs = tabs.map((t) => {
-    if (t.key === "billing" && customerPayments.length > 0) return { ...t, badge: customerPayments.length };
-    if (t.key === "visa-case" && visaCases.length > 0) return { ...t, badge: visaCases.length };
-    if (t.key === "visas" && visaCount > 0) return { ...t, badge: visaCount };
+    if (t.key === "payments" && customerPayments.length > 0) return { ...t, badge: customerPayments.length };
+    if (t.key === "visa-cases" && visaCases.length > 0) return { ...t, badge: visaCases.length };
     if (t.key === "bookings" && bookingCount > 0) return { ...t, badge: bookingCount };
     if (t.key === "support" && supportCount > 0) return { ...t, badge: supportCount };
     return t;
@@ -224,7 +227,7 @@ function CustomerDashboardContent() {
               {visaCase.checklist.filter((d) => d.required !== false).length} required items ·{" "}
               {visaCase.checklist.filter((d) => ["uploaded", "prepared", "reviewed"].includes(d.status)).length} ready
             </p>
-            <Link href={dashboardDocumentsPath(visaCase.id)} className="btn-gold px-5 py-2.5 text-sm">
+            <Link href={customerDashboardPath("documents")} className="btn-gold px-5 py-2.5 text-sm">
               Open document checklist
             </Link>
           </Panel>
@@ -246,18 +249,18 @@ function CustomerDashboardContent() {
                 ))}
               </div>
             )}
-            <Link href={dashboardBillingPath()} className="mt-3 inline-block text-xs font-semibold text-blue hover:underline">
+            <Link href={dashboardPaymentsPath()} className="mt-3 inline-block text-xs font-semibold text-blue hover:underline">
               View all payments →
             </Link>
           </Panel>
           <Panel title="Support & messages" subtitle="Get help with your case">
             <p className="text-sm text-muted mb-3">Questions about documents, payments, or your visa case.</p>
             <div className="flex flex-wrap gap-2">
-              <Link href={dashboardSupportPath(visaCase?.id)} className="btn-outline px-4 py-2 text-sm">
+              <Link href={dashboardSupportPath()} className="btn-outline px-4 py-2 text-sm">
                 Support
               </Link>
-              <Link href="/dashboard/customer?tab=messages" className="btn-outline px-4 py-2 text-sm">
-                Messages
+              <Link href={customerDashboardPath("settings")} className="btn-outline px-4 py-2 text-sm">
+                Settings
               </Link>
             </div>
           </Panel>
@@ -295,57 +298,15 @@ function CustomerDashboardContent() {
       </div>
     ),
 
-    "visa-case": <VisaCasePanel visaCases={visaCases} onRefresh={reloadPostPayment} />,
-
-    timeline: (
-      <DashboardEmpty
-        title="No trip timeline yet"
-        message="Build an AI trip plan or submit booking requests — milestones will appear here as your journey progresses."
-        action={<Link href="/ai-trip-planner" className="btn-primary px-5 py-2.5 text-sm">Plan a trip</Link>}
-      />
-    ),
-
-    visas: (
+    "visa-cases": (
       <div className="space-y-5">
-        <Disclaimer>
-          Globe Travel Voyage assists with preparation only. Visa decisions are made solely by the relevant embassy or government authority. No approval is guaranteed.
-        </Disclaimer>
-        {live?.visaRequests.map((v) => (
-          <Panel key={v.id} title={v.destination} subtitle={`Submitted ${new Date(v.created_at).toLocaleDateString()}`}>
-            <div className="grid gap-3 sm:grid-cols-3 text-sm">
-              <div className="rounded-xl bg-soft p-3">
-                <p className="text-xs text-charcoal/50">Purpose</p>
-                <p className="font-semibold text-navy">{v.purpose ?? "—"}</p>
-              </div>
-              <div className="rounded-xl bg-soft p-3">
-                <p className="text-xs text-charcoal/50">Status</p>
-                <p className="font-semibold text-navy capitalize">{v.status}</p>
-              </div>
-              <div className="rounded-xl bg-soft p-3">
-                <p className="text-xs text-charcoal/50">Request ID</p>
-                <p className="font-semibold text-navy font-mono text-xs">{v.id.slice(0, 8)}…</p>
-              </div>
-            </div>
-            <div className="mt-4 flex gap-2">
-              <Link href="/visa/start" className="btn-outline px-4 py-2 text-sm">New request</Link>
-            </div>
-          </Panel>
-        ))}
-        {(live?.visaRequests.length ?? 0) === 0 && (
-          <p className="text-sm text-charcoal/50">No visa applications yet. <Link href="/visa/start" className="text-blue font-semibold hover:underline">Start one now</Link>.</p>
+        <VisaCasePanel visaCases={visaCases} onRefresh={reloadPostPayment} />
+        {visaCases.length > 0 && (
+          <Link href="/dashboard/visa-cases" className="btn-outline inline-flex px-5 py-2.5 text-sm">
+            View all cases
+          </Link>
         )}
-        <Link href="/visa" className="inline-block text-sm font-semibold text-blue hover:underline">
-          + Start new visa application
-        </Link>
       </div>
-    ),
-
-    saved: (
-      <DashboardEmpty
-        title="No saved trips"
-        message="Save destinations, experts, and listings from the marketplace to see them here."
-        action={<Link href="/saved" className="btn-primary px-5 py-2.5 text-sm">Open saved items</Link>}
-      />
     ),
 
     bookings: (
@@ -397,39 +358,39 @@ function CustomerDashboardContent() {
         {visaCase ? (
           <>
             <VisaCaseSummaryCard visaCase={visaCase} />
-            <Panel title="Full document checklist" subtitle={`Case ${visaCase.caseNumber}`}>
-              <p className="text-sm text-muted mb-4">
-                Upload and track all required documents in your case workspace.
-              </p>
-              <Link
-                href={dashboardDocumentsPath(visaCase.id)}
-                className="btn-primary px-5 py-2.5 text-sm"
-              >
-                Open case workspace
-              </Link>
+            <Panel title="Document checklist" subtitle={`Case ${visaCase.caseNumber}`}>
+              <CaseDocumentChecklist
+                caseId={visaCase.id}
+                items={visaCase.checklist}
+                onUpdated={reloadPostPayment}
+              />
+              <div className="mt-4 flex flex-wrap gap-3">
+                <Link href={visaCaseWorkspacePath(visaCase.id)} className="btn-primary px-5 py-2.5 text-sm">
+                  Open full case workspace
+                </Link>
+                <a
+                  href={`/api/cases/${visaCase.id}/download-checklist`}
+                  className="btn-outline px-5 py-2.5 text-sm"
+                  download
+                >
+                  Download checklist
+                </a>
+              </div>
             </Panel>
           </>
         ) : (
           <EmptyState
             emoji="📁"
-            title="No documents uploaded yet"
+            title="No documents yet"
             description="Purchase a visa service to unlock your document checklist and upload panel."
-            action={{ label: "Start visa service", href: "/services#premium" }}
+            action={{ label: "Start new service", href: "/services#premium" }}
           />
         )}
         <Disclaimer variant="inline" />
       </div>
     ),
 
-    referrals: (
-      <DashboardEmpty
-        title="$0 referral earnings"
-        message="Referral tracking is connected to Supabase. Share your link from the referrals page when you have an active code."
-        action={<Link href="/referrals" className="btn-primary px-5 py-2.5 text-sm">Open referrals program</Link>}
-      />
-    ),
-
-    billing: (
+    payments: (
       <div className="space-y-5">
         <div className="grid gap-4 sm:grid-cols-2">
           <StatCard
@@ -545,9 +506,11 @@ function CustomerDashboardContent() {
       </div>
     ),
 
-    messages: <MessagesInbox title="Your messages" />,
-
-    ai: <AiPanel />,
+    settings: (
+      <div className="space-y-5">
+        <DashboardProfileSection user={user} />
+      </div>
+    ),
   };
 
   return (
@@ -563,6 +526,7 @@ function CustomerDashboardContent() {
       avatarColor="bg-navy text-gold"
       defaultTab={defaultTab}
       tabsWithoutHeader={["overview"]}
+      urlTabBase="/dashboard/customer"
     />
   );
 }

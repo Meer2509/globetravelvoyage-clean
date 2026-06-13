@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
+import { customerDashboardPath } from "@/lib/dashboard-routes";
 
 export default function DashboardBillingPage() {
-  redirect("/dashboard/customer?tab=billing");
+  redirect(customerDashboardPath("payments"));
 }

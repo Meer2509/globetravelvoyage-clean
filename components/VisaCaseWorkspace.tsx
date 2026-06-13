@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Panel, ProgressBar } from "@/components/DashboardLayout";
 import { CaseDocumentChecklist } from "@/components/CaseDocumentChecklist";
@@ -10,9 +10,11 @@ import { CaseSupportForm } from "@/components/CaseSupportForm";
 import { formatPaymentAmount, formatPaymentDate, paymentServiceLabel } from "@/lib/payments-display";
 import type { VisaCaseData } from "@/lib/supabase/payment-queries";
 import { fetchCustomerVisaCaseById } from "@/lib/supabase/visa-case-queries";
-import { downloadCaseChecklist, printCaseChecklist } from "@/lib/visa-case-checklist-download";
+import { printCaseChecklist } from "@/lib/visa-case-checklist-download";
+import { downloadChecklistUrl } from "@/lib/visa-case-document-client";
 import { computeCaseProgress } from "@/lib/visa-case-progress";
-import { dashboardBillingPath } from "@/lib/visa-case-routes";
+import { dashboardPaymentsPath, visaCaseWorkspacePath } from "@/lib/visa-case-routes";
+import { customerDashboardPath } from "@/lib/dashboard-routes";
 
 function scrollToSection(id: string) {
   window.setTimeout(() => {
@@ -28,6 +30,7 @@ export function VisaCaseWorkspace({
   storageReady: boolean;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [visaCase, setVisaCase] = useState(initialCase);
   const [checklistBusy, setChecklistBusy] = useState(false);
 
@@ -40,14 +43,16 @@ export function VisaCaseWorkspace({
   }, [initialCase.id]);
 
   useEffect(() => {
-    const handleHash = () => {
-      const hash = window.location.hash.replace("#", "");
-      if (hash) scrollToSection(hash);
-    };
-    handleHash();
-    window.addEventListener("hashchange", handleHash);
-    return () => window.removeEventListener("hashchange", handleHash);
-  }, []);
+    const section = searchParams.get("section");
+    if (section === "documents" || section === "support") {
+      scrollToSection(section);
+    }
+  }, [searchParams]);
+
+  function goToSection(section: "documents" | "support") {
+    router.push(visaCaseWorkspacePath(visaCase.id, section));
+    scrollToSection(section);
+  }
 
   function applyProgress(progress?: { progressPercent: number; currentStep: string; status: string }) {
     if (!progress) return;
@@ -69,7 +74,7 @@ export function VisaCaseWorkspace({
         <div className="container-px">
           <button
             type="button"
-            onClick={() => router.push("/dashboard/customer")}
+            onClick={() => router.push(customerDashboardPath())}
             className="text-sm text-white/70 hover:text-white mb-4 inline-flex items-center gap-1"
           >
             ← Back to dashboard
@@ -83,14 +88,14 @@ export function VisaCaseWorkspace({
           <div className="mt-5 flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => scrollToSection("documents")}
+              onClick={() => goToSection("documents")}
               className="btn-gold px-4 py-2 text-xs sm:text-sm"
             >
               Upload documents
             </button>
             <button
               type="button"
-              onClick={() => scrollToSection("support")}
+              onClick={() => goToSection("support")}
               className="rounded-lg border border-white/25 px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-white/10"
             >
               Message support
@@ -130,13 +135,13 @@ export function VisaCaseWorkspace({
             subtitle="Required and optional items for your case"
             action={
               <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => downloadCaseChecklist(visaCase)}
+                <a
+                  href={downloadChecklistUrl(visaCase.id)}
                   className="btn-outline px-3 py-1.5 text-xs"
+                  download
                 >
                   Download checklist
-                </button>
+                </a>
                 <button
                   type="button"
                   onClick={() => printCaseChecklist(visaCase)}
@@ -198,7 +203,7 @@ export function VisaCaseWorkspace({
                 Stripe receipt will be available once finalized.
               </p>
             )}
-            <Link href={dashboardBillingPath()} className="btn-outline px-5 py-2.5 text-sm">
+            <Link href={dashboardPaymentsPath()} className="btn-outline px-5 py-2.5 text-sm">
               Payment history
             </Link>
           </div>
