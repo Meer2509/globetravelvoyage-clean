@@ -7,6 +7,7 @@ import { Icon } from "@/components/Icon";
 import { Disclaimer } from "@/components/Disclaimer";
 import { areReferralRewardsLive, REFERRAL_LAUNCHING_SOON } from "@/lib/launch-trust";
 import { submitReferralSignup } from "@/lib/supabase/actions";
+import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
 
 type CommissionStatus = "pending" | "approved" | "paid";
 
@@ -165,7 +166,12 @@ export default function ReferralsPage() {
           </div>
         ) : (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-            ✓ You&apos;re enrolled! Your referral code is <strong className="font-mono">{referralCode}</strong> — share the link below.
+            <p>{FORM_SUBMIT_SUCCESS_MESSAGE}</p>
+            {referralCode && (
+              <p className="mt-2">
+                Your referral code: <strong className="font-mono">{referralCode}</strong> — share the link below.
+              </p>
+            )}
           </div>
         )}
 

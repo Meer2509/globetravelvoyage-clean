@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AuthLayout, StepProgress } from "@/components/AuthLayout";
+import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
 
 const STEPS = ["Profile", "Services", "Documents", "Done"];
 
@@ -281,9 +282,9 @@ export default function AgentOnboarding() {
             <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-blue/10 text-5xl">
               👔
             </div>
-            <h2 className="mt-5 text-2xl font-extrabold text-navy">Profile submitted!</h2>
+            <h2 className="mt-5 text-2xl font-extrabold text-navy">Thank you!</h2>
             <p className="mt-2 text-sm text-charcoal/60">
-              Your Visa Expert profile is under review. You&apos;ll receive a notification within 24–48 hours.
+              {FORM_SUBMIT_SUCCESS_MESSAGE}
             </p>
 
             <div className="mt-4 rounded-xl border border-soft-200 bg-soft p-4 text-left text-sm">

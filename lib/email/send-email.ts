@@ -2,8 +2,9 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/profile-utils";
+import { SITE_CONFIG, supportFromAddress } from "@/lib/site-config";
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "Globe Travel Voyage <orders@globetravelvoyage.com>";
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL?.trim() || supportFromAddress();
 
 export type EmailType =
   | "welcome"

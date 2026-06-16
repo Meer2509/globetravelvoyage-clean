@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { submitSupportTicket } from "@/lib/supabase/actions";
+import { FORM_SUBMIT_SUCCESS_MESSAGE, SITE_CONFIG, supportMailto } from "@/lib/site-config";
 
 const HELP_CATEGORIES = [
   { icon: "🛂", title: "Visa & immigration",     desc: "Visa types, documents, application status", href: "/visa" },
@@ -42,7 +43,7 @@ const FAQS = [
   },
   {
     q: "How do I report a scam or suspicious listing?",
-    a: "Use the contact form below with 'Trust & Safety' as the subject, or email our team directly. We investigate all reports and take action including removing listings and suspending accounts.",
+    a: `Use the contact form below with 'Trust & Safety' as the subject, or email our team at ${SITE_CONFIG.supportEmail}. We investigate all reports and take action including removing listings and suspending accounts.`,
   },
   {
     q: "What data do you collect?",
@@ -151,8 +152,15 @@ export default function SupportPage() {
             {submitted ? (
               <div className="card p-8 text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-3xl">✅</div>
-                <h3 className="text-xl font-extrabold text-navy">Message received!</h3>
-                <p className="mt-2 text-sm text-charcoal/60">We&apos;ll reply to <strong>{form.email}</strong> within 24–48 hours.</p>
+                <h3 className="text-xl font-extrabold text-navy">Thank you!</h3>
+                <p className="mt-2 text-sm text-charcoal/60">{FORM_SUBMIT_SUCCESS_MESSAGE}</p>
+                <p className="mt-3 text-sm text-charcoal/55">
+                  You can also reach us at{" "}
+                  <a href={supportMailto} className="font-semibold text-blue hover:underline">
+                    {SITE_CONFIG.supportEmail}
+                  </a>
+                  .
+                </p>
                 <button onClick={() => { setSubmitted(false); setForm({ name: "", email: "", subject: "", message: "" }); }} className="btn-outline mt-6 py-2.5 px-6">Send another</button>
               </div>
             ) : (

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { DashboardEmpty } from "@/components/DashboardEmpty";
 import { Panel } from "@/components/DashboardLayout";
+import { supportMailto } from "@/lib/site-config";
 import {
   createProviderService,
   deleteProviderService,
@@ -114,7 +115,7 @@ export function ProviderServicesPanel({
       <DashboardEmpty
         title="Services table not set up"
         message="Service listings are being prepared. Contact support if you need help listing your services."
-        action={<Link href="/contact" className="btn-primary px-5 py-2.5 text-sm">Contact support</Link>}
+        action={<a href={supportMailto} className="btn-primary px-5 py-2.5 text-sm">Contact support</a>}
       />
     );
   }

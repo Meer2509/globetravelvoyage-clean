@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
+import { SITE_CONFIG, supportMailto } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -31,11 +32,11 @@ const sections = [
   },
   {
     title: "Your rights",
-    body: "Depending on your location, you may have the right to access, correct, or delete your personal information, object to or restrict certain processing, and withdraw consent at any time. To exercise these rights, please contact us through the contact page.",
+    body: `Depending on your location, you may have the right to access, correct, or delete your personal information, object to or restrict certain processing, and withdraw consent at any time. To exercise these rights, please email ${SITE_CONFIG.supportEmail}.`,
   },
   {
     title: "Children",
-    body: "Our platform is not directed at children under the age of 16. We do not knowingly collect personal information from children under 16. If you believe a child has provided us with personal information, please contact us.",
+    body: `Our platform is not directed at children under the age of 16. We do not knowingly collect personal information from children under 16. If you believe a child has provided us with personal information, please email ${SITE_CONFIG.supportEmail}.`,
   },
   {
     title: "Changes to this policy",
@@ -76,10 +77,10 @@ export default function PrivacyPage() {
           <div className="mt-12 border-t border-soft-200 pt-8 text-sm text-navy/55">
             <p>Last updated: June 2025</p>
             <p className="mt-2">
-              For privacy questions, please{" "}
-              <Link href="/contact" className="font-semibold text-blue underline">
-                contact us
-              </Link>
+              For privacy questions, please email{" "}
+              <a href={supportMailto} className="font-semibold text-blue underline">
+                {SITE_CONFIG.supportEmail}
+              </a>
               .
             </p>
             <div className="mt-4 flex flex-wrap gap-4">

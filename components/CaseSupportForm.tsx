@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { submitCaseSupportMessage } from "@/lib/visa-case-document-client";
+import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
 
 export function CaseSupportForm({ caseId }: { caseId: string; caseNumber: string }) {
   const [message, setMessage] = useState("");
@@ -23,7 +24,7 @@ export function CaseSupportForm({ caseId }: { caseId: string; caseNumber: string
 
     setFeedback({
       type: "ok",
-      text: "Message sent. Our team will respond by email as soon as possible.",
+      text: FORM_SUBMIT_SUCCESS_MESSAGE,
     });
     setMessage("");
   }

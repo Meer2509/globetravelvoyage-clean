@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Disclaimer } from "@/components/Disclaimer";
 import { submitVisaRequest } from "@/lib/supabase/actions";
+import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
 
 const STEPS = ["Your details", "Destination & purpose", "Case overview"] as const;
 
@@ -74,9 +75,9 @@ export default function VisaStartPage() {
       <div className="min-h-screen bg-hero-gradient flex items-center justify-center p-6">
         <div className="mx-auto w-full max-w-lg rounded-3xl bg-white p-8 text-center shadow-[var(--shadow-premium)]">
           <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 text-4xl">✅</div>
-          <h1 className="text-2xl font-extrabold text-navy">Application started!</h1>
+          <h1 className="text-2xl font-extrabold text-navy">Thank you!</h1>
           <p className="mt-3 text-charcoal/60 leading-relaxed">
-            A verified visa expert will review your case and contact you at <strong>{form.email}</strong> within 24 hours. Check your inbox for next steps.
+            {FORM_SUBMIT_SUCCESS_MESSAGE}
           </p>
           <div className="mt-6 rounded-xl bg-blue/5 border border-blue/15 p-4 text-left text-sm text-charcoal/60 space-y-2">
             <p className="font-semibold text-navy">What happens next:</p>

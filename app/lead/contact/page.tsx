@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Disclaimer } from "@/components/Disclaimer";
 import { submitLeadRequest } from "@/lib/supabase/actions";
+import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
 
 const EXPERT_TYPES = [
   { value: "visa_agent",   label: "Visa agent",       emoji: "🛂", desc: "Document prep & interview guidance" },
@@ -58,9 +59,9 @@ export default function LeadContactPage() {
       <div className="min-h-screen bg-hero-gradient flex items-center justify-center p-6">
         <div className="mx-auto w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-[var(--shadow-premium)]">
           <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 text-4xl">📨</div>
-          <h1 className="text-2xl font-extrabold text-navy">Message sent!</h1>
+          <h1 className="text-2xl font-extrabold text-navy">Thank you!</h1>
           <p className="mt-3 text-charcoal/60 leading-relaxed">
-            Your message has been forwarded to the expert. They&apos;ll reply to <strong>{form.email}</strong> within their stated response time.
+            {FORM_SUBMIT_SUCCESS_MESSAGE}
           </p>
           <Disclaimer className="mt-5 text-left" variant="compact" />
           <div className="mt-6 flex gap-3">

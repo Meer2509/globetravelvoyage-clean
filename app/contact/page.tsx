@@ -1,8 +1,10 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/PageHeader";
 import { ContactForm } from "@/components/ContactForm";
 import { TrustBadge } from "@/components/TrustBadge";
 import { Icon } from "@/components/Icon";
+import { SITE_CONFIG, supportMailto } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Contact Us",
@@ -45,6 +47,22 @@ export default function ContactPage() {
           </div>
 
           <aside className="space-y-5">
+            <div className="card p-6">
+              <div className="flex items-center gap-2 text-gold">
+                <Icon name="globe" className="h-5 w-5" />
+                <span className="text-sm font-bold uppercase tracking-wide text-navy">
+                  Official support email
+                </span>
+              </div>
+              <p className="mt-2 text-sm text-navy/65">
+                For all inquiries, reach our support team at{" "}
+                <a href={supportMailto} className="font-semibold text-blue hover:underline">
+                  {SITE_CONFIG.supportEmail}
+                </a>
+                .
+              </p>
+            </div>
+
             <div className="card p-6">
               <div className="flex items-center gap-2 text-gold">
                 <Icon name="sparkles" className="h-5 w-5" />

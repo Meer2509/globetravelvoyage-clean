@@ -23,6 +23,7 @@ import { CustomerActiveServices } from "@/components/CustomerActiveServices";
 import { VisaCaseSummaryCard } from "@/components/VisaCaseSummaryCard";
 import { formatPaymentAmount, formatPaymentDate, paymentServiceLabel } from "@/lib/payments-display";
 import { submitSupportTicket } from "@/lib/supabase/actions";
+import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DashboardProfileSection } from "@/components/DashboardProfileSection";
 import { CustomerDashboardHero } from "@/components/CustomerDashboardHero";
@@ -184,7 +185,7 @@ function CustomerDashboardContent() {
       setSupportMsg(result.error);
       return;
     }
-    setSupportMsg("Support ticket submitted.");
+    setSupportMsg(FORM_SUBMIT_SUCCESS_MESSAGE);
     setSupportSubject("");
     setSupportBody("");
     fetchCustomerDashboard().then((data) => { if (data) setLive(data); });

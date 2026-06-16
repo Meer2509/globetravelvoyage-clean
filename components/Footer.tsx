@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Icon } from "./Icon";
 import { useCatalog } from "@/lib/catalog/context";
 import { submitLeadRequest } from "@/lib/supabase/actions";
+import { FORM_SUBMIT_SUCCESS_MESSAGE, SITE_CONFIG, supportMailto } from "@/lib/site-config";
 
 const navCols = [
   {
@@ -147,10 +148,7 @@ function NewsletterBar() {
           {submitted ? (
             <div className="flex items-center gap-3 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-5 py-3 text-sm text-emerald-300">
               <span className="text-lg">✅</span>
-              <div>
-                <p className="font-bold">You&apos;re subscribed!</p>
-                <p className="text-xs text-emerald-400/80">Weekly travel tips will arrive at {email}</p>
-              </div>
+              <p>{FORM_SUBMIT_SUCCESS_MESSAGE}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-1.5 shrink-0">
@@ -207,6 +205,13 @@ export function Footer() {
 
             <p className="mt-5 text-sm leading-relaxed text-white/55">
               Your AI Travel Command Center for visas, flights, tours, luxury stays and global journeys — powered by AI and verified human experts worldwide.
+            </p>
+
+            <p className="mt-4 text-sm text-white/55">
+              Support:{" "}
+              <a href={supportMailto} className="font-semibold text-gold hover:underline">
+                {SITE_CONFIG.supportEmail}
+              </a>
             </p>
 
             {/* Trust badges */}

@@ -4,8 +4,9 @@ import { getSiteUrl } from "@/lib/site-url";
 import { formatPaymentAmount } from "@/lib/payments-display";
 import { paymentServiceLabel } from "@/lib/payments-display";
 import { sendEmail } from "@/lib/email/send-email";
+import { SITE_CONFIG } from "@/lib/site-config";
 
-const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL ?? "admin@globetravelvoyage.com";
+const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL?.trim() || SITE_CONFIG.supportEmail;
 
 interface PaymentEmailPayload {
   customerEmail: string;

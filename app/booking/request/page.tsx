@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Disclaimer } from "@/components/Disclaimer";
 import { submitBookingRequest } from "@/lib/supabase/actions";
+import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
 
 const SERVICE_TYPES = [
   { value: "tour", label: "Guided tour", emoji: "🗺️" },
@@ -105,9 +106,9 @@ function BookingRequestFormInner({
     return (
       <div className="card max-w-lg mx-auto p-8 text-center">
         <p className="text-4xl mb-4">✓</p>
-        <h2 className="text-xl font-extrabold text-navy">Request received</h2>
+        <h2 className="text-xl font-extrabold text-navy">Thank you!</h2>
         <p className="mt-2 text-sm text-muted">
-          Our team will review your request and respond by email when a provider is available.
+          {FORM_SUBMIT_SUCCESS_MESSAGE}
         </p>
         <Link href="/dashboard/customer" className="btn-primary mt-6 inline-flex px-6 py-3 text-sm">
           View dashboard

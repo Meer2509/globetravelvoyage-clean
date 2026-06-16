@@ -27,6 +27,7 @@ import {
   type AdminConnectProviderRow,
 } from "@/lib/supabase/connect-queries";
 import { updateIntakeStatus } from "@/lib/supabase/mvp-actions";
+import { SITE_CONFIG } from "@/lib/site-config";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
 import { ROLE_LABELS } from "@/lib/auth";
@@ -1706,7 +1707,7 @@ export default function AdminDashboard() {
               </div>
               <div>
                 <label className="label">Support email</label>
-                <input className="input" defaultValue="support@globetravelvoyage.com" />
+                <input className="input" defaultValue={SITE_CONFIG.supportEmail} />
               </div>
               <div>
                 <label className="label">Platform fee (%)</label>

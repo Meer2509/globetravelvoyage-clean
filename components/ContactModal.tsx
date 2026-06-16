@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { submitContactModal } from "@/lib/supabase/actions";
+import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -343,8 +344,8 @@ function ContactModalForm({
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-3xl">
                 ✅
               </div>
-              <h3 className="text-xl font-extrabold text-navy">{config.successTitle}</h3>
-              <p className="mt-2 text-sm text-charcoal/60 leading-relaxed">{config.successBody}</p>
+              <h3 className="text-xl font-extrabold text-navy">Thank you!</h3>
+              <p className="mt-2 text-sm text-charcoal/60 leading-relaxed">{FORM_SUBMIT_SUCCESS_MESSAGE}</p>
               <button
                 onClick={onClose}
                 className="btn-primary mt-6 py-3 px-8"

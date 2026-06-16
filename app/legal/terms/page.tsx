@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
+import { SITE_CONFIG, supportMailto } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
@@ -81,10 +82,10 @@ export default function TermsPage() {
           <div className="mt-12 border-t border-soft-200 pt-8 text-sm text-navy/55">
             <p>Last updated: June 2025</p>
             <p className="mt-2">
-              For questions about these terms, please{" "}
-              <Link href="/contact" className="font-semibold text-blue underline">
-                contact us
-              </Link>
+              For questions about these terms, please email{" "}
+              <a href={supportMailto} className="font-semibold text-blue underline">
+                {SITE_CONFIG.supportEmail}
+              </a>
               .
             </p>
             <div className="mt-4 flex flex-wrap gap-4">

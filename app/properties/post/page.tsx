@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Disclaimer } from "@/components/Disclaimer";
 import { submitPropertyListing } from "@/lib/supabase/actions";
+import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
 
 const PROPERTY_TYPES = [
   { value: "apartment", label: "Apartment",       emoji: "🏢" },
@@ -75,9 +76,9 @@ export default function PostPropertyPage() {
       <div className="min-h-screen bg-hero-gradient flex items-center justify-center p-6">
         <div className="mx-auto w-full max-w-lg rounded-3xl bg-white p-8 text-center shadow-[var(--shadow-premium)]">
           <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 text-4xl">🏠</div>
-          <h1 className="text-2xl font-extrabold text-navy">Listing submitted!</h1>
+          <h1 className="text-2xl font-extrabold text-navy">Thank you!</h1>
           <p className="mt-3 text-charcoal/60 leading-relaxed">
-            Your property listing has been received. Our team will review it and publish within 24–48 hours. You&apos;ll receive confirmation at <strong>{form.email}</strong>.
+            {FORM_SUBMIT_SUCCESS_MESSAGE}
           </p>
           <Disclaimer className="mt-5 text-left" variant="compact" />
           <div className="mt-6 flex gap-3">

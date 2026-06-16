@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { submitContactForm } from "@/lib/supabase/actions";
+import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
 
 export function ContactForm() {
   const [sent, setSent] = useState(false);
@@ -30,9 +31,9 @@ export function ContactForm() {
     return (
       <div className="card p-8 text-center">
         <span className="text-4xl">✅</span>
-        <h3 className="mt-3 text-xl font-bold text-navy">Message received</h3>
+        <h3 className="mt-3 text-xl font-bold text-navy">Thank you!</h3>
         <p className="mt-2 text-sm text-navy/65">
-          Thanks for reaching out. We&apos;ll get back to you at <strong>{form.email}</strong> as soon as possible.
+          {FORM_SUBMIT_SUCCESS_MESSAGE}
         </p>
         <button className="btn-outline mt-5 px-5 py-2.5" onClick={() => { setSent(false); setForm({ name: "", email: "", topic: "General question", message: "" }); }}>
           Send another
