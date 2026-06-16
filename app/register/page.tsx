@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
@@ -404,16 +404,17 @@ const ROLE_PARAM_MAP: Record<string, AccountType> = {
 
 function RegisterPageInner() {
   const searchParams = useSearchParams();
-  const [step, setStep] = useState<"type" | "form">("type");
-  const [selectedType, setSelectedType] = useState<AccountType>("customer");
+  const roleKey = searchParams.get("role") ?? searchParams.get("type") ?? "none";
+  const roleParam = searchParams.get("role") ?? searchParams.get("type");
+  const initialRole =
+    roleParam && ROLE_PARAM_MAP[roleParam] ? ROLE_PARAM_MAP[roleParam] : null;
 
-  useEffect(() => {
-    const role = searchParams.get("role") ?? searchParams.get("type");
-    if (role && ROLE_PARAM_MAP[role]) {
-      setSelectedType(ROLE_PARAM_MAP[role]);
-      setStep("form");
-    }
-  }, [searchParams]);
+  return <RegisterFlow key={roleKey} initialRole={initialRole} />;
+}
+
+function RegisterFlow({ initialRole }: { initialRole: AccountType | null }) {
+  const [step, setStep] = useState<"type" | "form">(initialRole ? "form" : "type");
+  const [selectedType, setSelectedType] = useState<AccountType>(initialRole ?? "customer");
 
   return (
     <AuthLayout

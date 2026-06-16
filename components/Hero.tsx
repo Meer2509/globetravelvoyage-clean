@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Icon } from "./Icon";
-import { aiPrompts } from "@/lib/data";
+import { useCatalog } from "@/lib/catalog/context";
 import { bookingRequestPath, rentalsBrowseHref } from "@/lib/marketplace-routes";
 import { PRICE_ESTIMATE_LABEL } from "@/lib/launch-trust";
 import { SamplePrice } from "@/components/PriceEstimateLabel";
@@ -168,7 +168,7 @@ function getAiResponse(q: string): string {
     return "Best value luxury: Dubai Marina from $120/night, Istanbul Bosphorus from $85/night, Bangkok Sukhumvit from $55/night, KL Twin Towers area from $65/night. Filter by budget and dates.";
   if (lq.includes("budget") || lq.includes("cheap trip"))
     return "Top budget destinations from Middle East: Thailand (7 days ~$1,200), Malaysia (7 days ~$950), Georgia (5 days ~$800), Egypt (5 days ~$700). I can create a full itinerary for any of these.";
-  return `I can help with visas, flights, hotels, cruises, car rentals, local tours, properties and full AI trip planning. Try asking about "${q}" with more specifics — destination, budget, nationality or dates for best results. (Sample answers only.)`;
+  return `I can help with visas, flights, hotels, cruises, car rentals, local tours, properties and full AI trip planning. Try asking about "${q}" with more specifics — destination, budget, nationality or dates for best results. Informational guidance only — provider confirmation required for quotes.`;
 }
 
 // ─── Disclaimer banner ────────────────────────────────────────────────────────
@@ -201,7 +201,6 @@ function FlightsForm() {
   const [cabin, setCabin]   = useState("Economy");
   const [pax, setPax]       = useState("1 Adult");
   const [dep, setDep]       = useState("");
-  const [ret, setRet]       = useState("");
   const [results, setResults] = useState(false);
 
   function search(e: React.FormEvent) {
@@ -272,7 +271,7 @@ function FlightsForm() {
       {results && (
         <div className="mt-1 rounded-xl border border-soft-200 overflow-hidden">
           <div className="bg-navy/5 px-4 py-2.5 flex items-center justify-between">
-            <p className="text-xs font-bold text-navy">Sample flights {from && to ? `${from} → ${to}` : "— popular routes"}</p>
+            <p className="text-xs font-bold text-navy">Featured routes {from && to ? `${from} → ${to}` : "— popular routes"}</p>
             <button onClick={() => setResults(false)} className="text-xs text-charcoal/40 hover:text-navy">✕</button>
           </div>
           <div className="divide-y divide-soft-200">
@@ -378,7 +377,7 @@ function HotelsForm() {
       {results && (
         <div className="mt-1 rounded-xl border border-soft-200 overflow-hidden">
           <div className="bg-navy/5 px-4 py-2.5 flex items-center justify-between">
-            <p className="text-xs font-bold text-navy">Sample stays {dest ? `in ${dest}` : "— featured properties"}</p>
+            <p className="text-xs font-bold text-navy">Featured stays {dest ? `in ${dest}` : "— featured properties"}</p>
             <button onClick={() => setResults(false)} className="text-xs text-charcoal/40 hover:text-navy">✕</button>
           </div>
           <div className="divide-y divide-soft-200">
@@ -455,12 +454,14 @@ function VisaForm() {
           {VISA_PURPOSES.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
       </div>
-      <form onSubmit={search} className="flex gap-2">
+      <form onSubmit={search} className="flex flex-col gap-2 sm:flex-row">
         <button type="submit" className="btn-primary flex-1 py-3 flex items-center justify-center gap-2">
           <Icon name="visa" className="h-4 w-4" />
-          Check Visa Requirements
+          Check requirements
         </button>
-        <Link href="/visa/start" className="btn-outline px-5 py-3">Apply now →</Link>
+        <Link href="/ai-visa-assistant" className="btn-gold px-5 py-3 text-center text-sm">
+          Start AI Visa Check →
+        </Link>
       </form>
       <p className="text-center text-[11px] text-charcoal/45">
         ⚠ Visa approval is never guaranteed. Globe Travel Voyage is not an immigration authority.
@@ -564,7 +565,7 @@ function CruisesForm() {
       {results && (
         <div className="mt-1 rounded-xl border border-soft-200 overflow-hidden">
           <div className="bg-navy/5 px-4 py-2.5 flex items-center justify-between">
-            <p className="text-xs font-bold text-navy">Sample cruises {region ? `— ${region}` : "— featured options"}</p>
+            <p className="text-xs font-bold text-navy">Featured cruises {region ? `— ${region}` : "— featured options"}</p>
             <button onClick={() => setResults(false)} className="text-xs text-charcoal/40 hover:text-navy">✕</button>
           </div>
           <div className="divide-y divide-soft-200">
@@ -657,7 +658,7 @@ function ToursForm() {
       {results && (
         <div className="mt-1 rounded-xl border border-soft-200 overflow-hidden">
           <div className="bg-navy/5 px-4 py-2.5 flex items-center justify-between">
-            <p className="text-xs font-bold text-navy">Sample tours {dest ? `in ${dest}` : "— featured experiences"}</p>
+            <p className="text-xs font-bold text-navy">Featured tours {dest ? `in ${dest}` : "— featured experiences"}</p>
             <button onClick={() => setResults(false)} className="text-xs text-charcoal/40 hover:text-navy">✕</button>
           </div>
           <div className="divide-y divide-soft-200">
@@ -755,7 +756,7 @@ function RentalsForm() {
       {results && (
         <div className="mt-1 rounded-xl border border-soft-200 overflow-hidden">
           <div className="bg-navy/5 px-4 py-2.5 flex items-center justify-between">
-            <p className="text-xs font-bold text-navy">Sample rentals {location ? `in ${location}` : "— featured options"}</p>
+            <p className="text-xs font-bold text-navy">Featured rentals {location ? `in ${location}` : "— featured options"}</p>
             <button onClick={() => setResults(false)} className="text-xs text-charcoal/40 hover:text-navy">✕</button>
           </div>
           <div className="divide-y divide-soft-200">
@@ -799,6 +800,7 @@ function RentalsForm() {
 // ─── AI Planner Form ──────────────────────────────────────────────────────────
 
 function AiPlannerForm() {
+  const { aiPrompts } = useCatalog();
   const [mode, setMode]           = useState<"quick" | "form">("quick");
   const [query, setQuery]         = useState("");
   const [budget, setBudget]       = useState("");
@@ -931,40 +933,16 @@ function AiPlannerForm() {
             <Link href="/trip-planner" className="btn-primary py-2 px-4 text-xs">Full trip planner →</Link>
             <Link href="/visa/start" className="btn-outline py-2 px-4 text-xs">Apply for visa →</Link>
           </div>
-          <p className="mt-2 text-[10px] text-charcoal/40">Sample answers only. Prices, visa outcomes and availability are not guaranteed.</p>
+          <p className="mt-2 text-[10px] text-charcoal/40">Informational guidance only. Request a verified quote for prices — visa outcomes and availability are not guaranteed.</p>
         </div>
       )}
     </div>
   );
 }
 
-// ─── Tab config ───────────────────────────────────────────────────────────────
-
-const tabs: { id: TabId; label: string; emoji: string }[] = [
-  { id: "flights",  label: "Flights",    emoji: "✈️" },
-  { id: "hotels",   label: "Hotels",     emoji: "🏨" },
-  { id: "visa",     label: "Visa",       emoji: "🛂" },
-  { id: "cruises",  label: "Cruises",    emoji: "🚢" },
-  { id: "tours",    label: "Tours",      emoji: "🎯" },
-  { id: "rentals",  label: "Rentals",    emoji: "🏠" },
-  { id: "ai",       label: "AI Planner", emoji: "✨" },
-];
-
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
 export function Hero({ statsBar }: { statsBar?: ReactNode }) {
-  const [activeTab, setActiveTab] = useState<TabId>("flights");
-
-  const FormComponents: Record<TabId, React.ReactNode> = {
-    flights: <FlightsForm />,
-    hotels:  <HotelsForm />,
-    visa:    <VisaForm />,
-    cruises: <CruisesForm />,
-    tours:   <ToursForm />,
-    rentals: <RentalsForm />,
-    ai:      <AiPlannerForm />,
-  };
-
   return (
     <section className="relative overflow-hidden bg-hero-gradient text-white">
       {/* Background orbs */}
@@ -976,90 +954,73 @@ export function Hero({ statsBar }: { statsBar?: ReactNode }) {
       <div className="pointer-events-none absolute inset-0 opacity-[0.03]"
         style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.5) 1px,transparent 1px)", backgroundSize: "60px 60px" }} />
 
-      {/* Floating decorations */}
-      <div className="pointer-events-none absolute right-[6%] top-[8%] hidden text-6xl lg:block animate-float opacity-20">✈️</div>
-      <div className="pointer-events-none absolute right-[14%] bottom-[15%] hidden text-5xl lg:block animate-float-med opacity-15" style={{ animationDelay: "1.5s" }}>🌍</div>
-      <div className="pointer-events-none absolute left-[4%] bottom-[20%] hidden text-4xl lg:block animate-float opacity-10" style={{ animationDelay: "3s" }}>🗺️</div>
+      <div className="pointer-events-none absolute right-[8%] top-[10%] hidden text-5xl lg:block animate-float opacity-15">🛂</div>
+      <div className="pointer-events-none absolute left-[6%] bottom-[18%] hidden text-4xl lg:block animate-float-med opacity-10" style={{ animationDelay: "2s" }}>✨</div>
 
-      <div className="container-px relative py-16 sm:py-20 lg:py-28">
-        {/* Top badge */}
+      <div className="container-px relative py-16 sm:py-20 lg:py-24">
         <div className="flex justify-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-gold backdrop-blur-sm">
             <Icon name="sparkles" className="h-3.5 w-3.5" />
-            AI-First Global Travel Operating System
+            AI Visa · International Travel
           </span>
         </div>
 
-        {/* Headline */}
-        <h1 className="mx-auto mt-7 max-w-5xl text-center h-hero text-white">
-          Your AI Travel Command Center for{" "}
-          <span className="text-gradient-gold">Visas</span>,{" "}
-          <span className="text-blue-light">Flights</span>
-          , Tours, Luxury Stays &{" "}
-          <span className="text-gradient-gold">Global Journeys.</span>
+        <h1 className="mx-auto mt-7 max-w-4xl text-center h-hero text-white">
+          AI-powered visa guidance &{" "}
+          <span className="text-gradient-gold">luxury travel</span>{" "}
+          planning
         </h1>
 
-        {/* Subheadline */}
-        <p className="mx-auto mt-5 max-w-3xl text-center text-base leading-relaxed text-white/80 sm:text-lg">
-          Plan smarter, travel cheaper, apply confidently. Search flights, check visa requirements,
-          compare hotels, book tours, find properties and get AI-powered trip planning — all in one place.
+        <p className="mx-auto mt-5 max-w-2xl text-center text-base leading-relaxed text-white/75 sm:text-lg">
+          Check visa requirements, plan international trips with AI, and connect with verified experts —
+          one premium platform for global journeys.
         </p>
 
-        {/* ── Tabbed Search ── */}
-        <div className="mx-auto mt-10 max-w-4xl">
-          {/* Tab bar — white background for full contrast */}
-          <div className="flex items-end overflow-x-auto rounded-t-2xl bg-white px-2 pt-2 shadow-[0_-1px_0_0_rgba(8,28,58,0.08)_inset] scrollbar-hide">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex shrink-0 items-center gap-1.5 rounded-t-xl px-4 py-2.5 text-xs font-bold transition-all duration-200 border-b-2 ${
-                  activeTab === tab.id
-                    ? "border-blue bg-blue/5 text-navy"
-                    : "border-transparent text-muted hover:text-navy hover:bg-[var(--gtv-hover-gold)]"
-                }`}
-              >
-                <span>{tab.emoji}</span>
-                <span className="text-[10px] sm:text-xs">{tab.label}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Search panel — solid white for readable inputs/selects */}
-          <div className="overflow-hidden rounded-b-2xl rounded-tr-2xl bg-white shadow-[0_24px_60px_-12px_rgba(8,28,58,0.40)]">
-            <div key={activeTab} className="animate-tab-slide max-h-[70vh] overflow-y-auto">
-              {FormComponents[activeTab]}
-            </div>
-          </div>
+        {/* Primary CTAs */}
+        <div className="mx-auto mt-9 flex max-w-3xl flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
+          <Link href="/ai-visa-assistant" className="btn-gold flex items-center justify-center gap-2 px-6 py-3.5 text-sm sm:text-base">
+            <Icon name="visa" className="h-4 w-4" />
+            Start AI Visa Check
+          </Link>
+          <Link href="/ai-trip-planner" className="btn flex items-center justify-center gap-2 border border-white/25 bg-white/10 px-6 py-3.5 text-sm text-white backdrop-blur-sm transition-colors hover:bg-white/15 sm:text-base">
+            <Icon name="sparkles" className="h-4 w-4" />
+            Plan My Trip
+          </Link>
+          <Link href="/register?role=agent" className="btn flex items-center justify-center gap-2 border border-white/15 px-6 py-3.5 text-sm text-white/90 transition-colors hover:border-gold/40 hover:text-gold sm:text-base">
+            Become a Verified Provider
+          </Link>
         </div>
 
-        {/* Quick nav links */}
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-          {[
-            { label: "🇵🇰→🇺🇸 PK to USA Guide", href: "/visa/usa-from-pakistan" },
-            { label: "🎯 Dubai Tours",            href: "/tours" },
-            { label: "🛳️ Gulf Cruises",           href: "/cruises" },
-            { label: "✈️ Cheap flights",          href: "/flights" },
-            { label: "🏠 Rentals",                href: "/properties" },
-            { label: "🤖 AI visa assistant",      href: "/ai-visa-assistant" },
-          ].map((l) => (
-            <Link key={l.label} href={l.href}
-              className="rounded-full border border-white/12 bg-white/6 px-3 py-1.5 text-xs text-white/60 transition-all hover:border-gold/30 hover:text-gold backdrop-blur-sm">
-              {l.label}
+        {/* Visa quick check */}
+        <div className="mx-auto mt-10 max-w-3xl">
+          <div className="overflow-hidden rounded-2xl bg-white shadow-[0_24px_60px_-12px_rgba(8,28,58,0.40)]">
+            <div className="border-b border-soft-200 bg-navy/[0.03] px-5 py-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-navy">
+                Quick visa requirement check
+              </p>
+            </div>
+            <VisaForm />
+          </div>
+          <p className="mt-3 text-center text-[11px] text-white/40">
+            For full AI analysis and document checklist →{" "}
+            <Link href="/ai-visa-assistant" className="font-semibold text-gold/80 hover:text-gold">
+              AI Visa Assistant
             </Link>
-          ))}
+            {" · "}
+            <Link href="#travel-services" className="font-semibold text-white/55 hover:text-white/80">
+              Flights & stays
+            </Link>
+          </p>
         </div>
 
         {/* Trust indicators */}
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-white/45">
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-white/45">
           {[
-            { icon: "shield"   as const, label: "Provider review process" },
-            { icon: "check"    as const, label: "No visa approval guarantee" },
-            { icon: "globe"    as const, label: "Global destinations" },
+            { icon: "shield" as const, label: "Verified provider marketplace" },
+            { icon: "check" as const, label: "No visa approval guarantee" },
             { icon: "sparkles" as const, label: "AI-powered guidance" },
-          ].map((item, i) => (
+          ].map((item) => (
             <span key={item.label} className="flex items-center gap-1.5">
-              {i > 0 && <span className="mr-4 hidden sm:block h-px w-px rounded-full bg-white/30" />}
               <Icon name={item.icon} className="h-3.5 w-3.5 text-gold" />
               {item.label}
             </span>

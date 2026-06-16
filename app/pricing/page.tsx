@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
 import { FreeFeatureCard } from "@/components/FreeFeatureCard";

@@ -3,6 +3,7 @@
 import { createServerSupabaseClient } from "./server";
 import { createAdminClient } from "./admin";
 import { isMissingTableError } from "./profile-utils";
+import { requireAdmin } from "@/lib/auth-server";
 
 export type MvpActionResult<T = { id: string }> =
   | { ok: true; data: T }
@@ -178,6 +179,9 @@ export async function updateIntakeStatus(
   id: string,
   status: string
 ): Promise<MvpActionResult> {
+  const adminAuth = await requireAdmin();
+  if (!adminAuth.ok) return { ok: false, error: adminAuth.error };
+
   const admin = createAdminClient();
   if (!admin) return { ok: false, error: "Supabase is not configured." };
 
@@ -194,6 +198,9 @@ export async function updateUserActiveStatus(
   userId: string,
   isActive: boolean
 ): Promise<MvpActionResult> {
+  const adminAuth = await requireAdmin();
+  if (!adminAuth.ok) return { ok: false, error: adminAuth.error };
+
   const admin = createAdminClient();
   if (!admin) return { ok: false, error: "Supabase is not configured." };
 
@@ -211,6 +218,9 @@ export async function updateProviderVerification(
   id: string,
   isVerified: boolean
 ): Promise<MvpActionResult> {
+  const adminAuth = await requireAdmin();
+  if (!adminAuth.ok) return { ok: false, error: adminAuth.error };
+
   const admin = createAdminClient();
   if (!admin) return { ok: false, error: "Supabase is not configured." };
 

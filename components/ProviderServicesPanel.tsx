@@ -25,7 +25,7 @@ export function ProviderServicesPanel({
   const user = useDashboardUser();
   const userId = user.result?.ok ? user.result.profile.id : "";
   const [services, setServices] = useState<ProviderServiceRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(userId));
   const [tableMissing, setTableMissing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState({
@@ -41,11 +41,7 @@ export function ProviderServicesPanel({
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
+    if (!userId) return;
     fetchProviderServices(userId, role).then((res) => {
       setServices(res.services);
       setTableMissing(Boolean(res.tableMissing));

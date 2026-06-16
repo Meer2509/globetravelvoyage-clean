@@ -5,6 +5,7 @@ import {
   verifyCaseOwnership,
 } from "@/lib/visa-case-document-service";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export async function POST(
   request: Request,
@@ -14,6 +15,14 @@ export async function POST(
   const session = await getSessionUser();
   if (!session.user) {
     return NextResponse.json({ ok: false, error: session.error ?? "Sign in required." }, { status: 401 });
+  }
+
+  const limited = await checkRateLimit("form", `user:${session.user.id}`);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { ok: false, error: "Too many messages. Please wait a moment and try again." },
+      { status: 429, headers: rateLimitHeaders(limited.retryAfterSec) }
+    );
   }
 
   let message = "";

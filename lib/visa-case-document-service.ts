@@ -7,6 +7,7 @@ import {
   removeCaseDocumentFile,
   uploadCaseDocumentFile,
 } from "@/lib/document-storage";
+import { resolveDocumentStoragePath } from "@/lib/document-upload-validation";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type UntypedDb = { from: (table: string) => any };
@@ -506,8 +507,15 @@ export async function getDocumentFileAccess(input: {
   if (error || !data) return { ok: false, error: "Document not found." };
 
   const row = data as { storage_path: string | null; file_url: string | null };
-  const storagePath = row.storage_path ?? row.file_url;
-  if (!storagePath) return { ok: false, error: "No file uploaded for this document." };
+  const storagePath = resolveDocumentStoragePath(row);
+  if (!storagePath) {
+    return {
+      ok: false,
+      error: row.file_url?.startsWith("http")
+        ? "This file uses a legacy link. Re-upload through your case checklist."
+        : "No file uploaded for this document.",
+    };
+  }
 
   return createCaseDocumentSignedUrl(storagePath, Boolean(input.download));
 }
@@ -540,7 +548,7 @@ export async function removeDocumentFileById(input: {
     file_url: string | null;
   };
 
-  const storagePath = row.storage_path ?? row.file_url;
+  const storagePath = resolveDocumentStoragePath(row);
   if (storagePath) {
     await removeCaseDocumentFile(storagePath);
   }

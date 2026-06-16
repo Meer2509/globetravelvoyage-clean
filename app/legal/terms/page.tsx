@@ -31,7 +31,7 @@ const sections = [
   },
   {
     title: "AI-generated content",
-    body: "The AI assistant and AI trip planner generate informational responses based on sample data. AI-generated content is not legal, immigration, financial, or professional advice. It may contain errors or inaccuracies and should not be relied upon as a sole source of information. Always verify important information with official sources.",
+    body: "The AI assistant and AI trip planner generate informational responses for planning purposes. AI-generated content is not legal, immigration, financial, or professional advice. It may contain errors or inaccuracies and should not be relied upon as a sole source of information. Always verify important information with official sources.",
   },
   {
     title: "Payments",

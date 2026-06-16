@@ -79,14 +79,16 @@ function buildState(
 
 export function useDashboardUser(): DashboardUserState {
   const [refreshKey, setRefreshKey] = useState(0);
-  const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
   const [state, setState] = useState<DashboardUserState>(() =>
-    buildState(null, null, refresh, true)
+    buildState(null, null, () => {}, true)
   );
+  const refresh = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+    setState((prev) => ({ ...prev, loading: true }));
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
-    setState((prev) => ({ ...prev, loading: true }));
 
     Promise.all([fetchDashboardUser(), checkDatabaseHealth()]).then(([result, health]) => {
       if (cancelled) return;

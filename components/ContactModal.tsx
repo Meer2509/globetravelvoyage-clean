@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Disclaimer } from "./Disclaimer";
 import { submitContactModal } from "@/lib/supabase/actions";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -178,6 +177,36 @@ export interface ContactModalProps {
 }
 
 export function ContactModal({ open, onClose, mode, subjectName, subjectMeta }: ContactModalProps) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    if (open) document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [open, onClose]);
+
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <ContactModalForm
+      key={mode}
+      mode={mode}
+      onClose={onClose}
+      subjectName={subjectName}
+      subjectMeta={subjectMeta}
+    />
+  );
+}
+
+function ContactModalForm({
+  mode,
+  onClose,
+  subjectName,
+  subjectMeta,
+}: Omit<ContactModalProps, "open">) {
   const [values, setValues]     = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading]   = useState(false);
@@ -185,24 +214,6 @@ export function ContactModal({ open, onClose, mode, subjectName, subjectMeta }: 
   const overlayRef              = useRef<HTMLDivElement>(null);
 
   const config = CONFIGS[mode];
-
-  // Reset on open/close
-  useEffect(() => {
-    if (open) { setValues({}); setSubmitted(false); setLoading(false); }
-  }, [open, mode]);
-
-  // Close on Escape
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    if (open) document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [open, onClose]);
-
-  // Prevent background scroll
-  useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [open]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -220,8 +231,6 @@ export function ContactModal({ open, onClose, mode, subjectName, subjectMeta }: 
     }
     setSubmitted(true);
   }
-
-  if (!open) return null;
 
   return (
     <div

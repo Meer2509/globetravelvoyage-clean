@@ -7,9 +7,16 @@
 import { createServerSupabaseClient } from "./server";
 import { createAdminClient } from "./admin";
 import { normalizeUserRole } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth-server";
 import { checkDatabaseHealth } from "./database-health";
 import { computeProfileCompletion, isMissingTableError } from "./profile-utils";
 import type { Profile, UserRole, VisaExpert } from "./types";
+
+async function requireAdminDashboard(): Promise<{ ok: true } | { ok: false; error: string }> {
+  const adminAuth = await requireAdmin();
+  if (!adminAuth.ok) return { ok: false, error: adminAuth.error };
+  return { ok: true };
+}
 
 export type DashboardUserResult =
   | {
@@ -125,6 +132,9 @@ export async function fetchAdminProfiles(): Promise<{
   error?: string;
   tableMissing?: boolean;
 }> {
+  const gate = await requireAdminDashboard();
+  if (!gate.ok) return { profiles: [], error: gate.error };
+
   const admin = createAdminClient();
   if (!admin) return { profiles: [] };
 
@@ -202,6 +212,9 @@ export async function fetchCustomerDashboard(): Promise<CustomerDashboardData | 
 }
 
 export async function fetchAdminCounts(): Promise<AdminDashboardCounts | null> {
+  const gate = await requireAdminDashboard();
+  if (!gate.ok) return null;
+
   const admin = createAdminClient();
   if (!admin) return null;
 
@@ -238,6 +251,9 @@ export async function fetchAdminCounts(): Promise<AdminDashboardCounts | null> {
 }
 
 export async function fetchAdminVisaRequests() {
+  const gate = await requireAdminDashboard();
+  if (!gate.ok) return [];
+
   const admin = createAdminClient();
   if (!admin) return [];
 
@@ -317,6 +333,9 @@ export async function fetchAdminPayments(): Promise<{
   error?: string;
   tableMissing?: boolean;
 }> {
+  const gate = await requireAdminDashboard();
+  if (!gate.ok) return { payments: [], error: gate.error };
+
   const admin = createAdminClient();
   if (!admin) return { payments: [] };
 
@@ -361,6 +380,9 @@ export async function fetchAdminPayments(): Promise<{
 }
 
 export async function fetchAdminBookingRequests() {
+  const gate = await requireAdminDashboard();
+  if (!gate.ok) return [];
+
   const admin = createAdminClient();
   if (!admin) return [];
 
@@ -374,6 +396,9 @@ export async function fetchAdminBookingRequests() {
 }
 
 export async function fetchAdminSupportTickets() {
+  const gate = await requireAdminDashboard();
+  if (!gate.ok) return [];
+
   const admin = createAdminClient();
   if (!admin) return [];
 
@@ -541,6 +566,9 @@ export async function fetchAdminVisaCases(): Promise<{
   error?: string;
   tableMissing?: boolean;
 }> {
+  const gate = await requireAdminDashboard();
+  if (!gate.ok) return { cases: [], error: gate.error };
+
   const admin = createAdminClient();
   if (!admin) return { cases: [] };
 
@@ -584,6 +612,9 @@ export async function fetchAdminStripeBookings(): Promise<{
   error?: string;
   tableMissing?: boolean;
 }> {
+  const gate = await requireAdminDashboard();
+  if (!gate.ok) return { bookings: [], error: gate.error };
+
   const admin = createAdminClient();
   if (!admin) return { bookings: [] };
 
@@ -607,6 +638,9 @@ export async function fetchAdminEmailLogs(): Promise<{
   error?: string;
   tableMissing?: boolean;
 }> {
+  const gate = await requireAdminDashboard();
+  if (!gate.ok) return { logs: [], error: gate.error };
+
   const admin = createAdminClient();
   if (!admin) return { logs: [] };
 

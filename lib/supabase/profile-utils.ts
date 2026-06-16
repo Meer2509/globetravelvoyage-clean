@@ -1,5 +1,5 @@
 import { parseExpertServices } from "@/lib/expert-services";
-import type { UserRole, VisaExpert } from "./types";
+import type { UserRole } from "./types";
 
 export interface ProfileFields {
   full_name?: string | null;

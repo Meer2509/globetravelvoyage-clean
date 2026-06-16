@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { mockFlightSearch, type FlightInput, type FlightResult, type FlightOption } from "@/lib/ai-mock";
+import { searchFlightsWithAi, AiUnavailableError } from "@/lib/ai-api";
+import type { FlightInput, FlightResult, FlightOption } from "@/lib/ai-types";
 
 function SaveFlightButton() {
   const [saved, setSaved] = useState(false);
@@ -103,6 +104,7 @@ function FlightCard({ opt, isReturn }: { opt: FlightOption; isReturn?: boolean }
 export default function AIFlightFinderPage() {
   const [loading, setLoading]    = useState(false);
   const [result, setResult]      = useState<FlightResult | null>(null);
+  const [error, setError]        = useState("");
   const [isReturn, setIsReturn]  = useState(true);
   const [sortBy, setSortBy]      = useState<"price" | "duration" | "stops">("price");
   const [form, setForm]          = useState<FlightInput>({
@@ -118,9 +120,13 @@ export default function AIFlightFinderPage() {
 
   async function search() {
     setLoading(true);
+    setError("");
     try {
-      const r = await mockFlightSearch(form);
+      const r = await searchFlightsWithAi(form);
       setResult(r);
+    } catch (err) {
+      setResult(null);
+      setError(err instanceof AiUnavailableError ? err.message : err instanceof Error ? err.message : "Flight search failed.");
     } finally {
       setLoading(false);
     }
@@ -128,6 +134,7 @@ export default function AIFlightFinderPage() {
 
   function reset() {
     setResult(null);
+    setError("");
   }
 
   const sortedOptions = result
@@ -238,6 +245,9 @@ export default function AIFlightFinderPage() {
               >
                 🤖 Find me the best flights →
               </button>
+              {error && (
+                <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
+              )}
             </div>
 
             {/* Popular routes */}
@@ -382,7 +392,7 @@ export default function AIFlightFinderPage() {
             </div>
 
             <p className="text-[11px] text-charcoal/35 text-center leading-relaxed">
-              ⚠ Prices shown are mock estimates for illustration only. No actual booking is made. Always verify live fares on airline websites or authorised agents. Globe Travel Voyage is not an airline or travel booking platform.
+              ⚠ Prices shown are AI estimates for planning only. No actual booking is made. Always verify live fares on airline websites or authorised agents. Globe Travel Voyage is not an airline or travel booking platform.
             </p>
           </div>
         )}

@@ -9,7 +9,7 @@ import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
 import { ContactModal } from "@/components/ContactModal";
 import { StripeCheckoutButton } from "@/components/StripeCheckoutButton";
-import { trustItems } from "@/lib/data";
+import { useCatalog } from "@/lib/catalog/context";
 import { fetchMarketplaceExperts, type MarketplaceExpertRow } from "@/lib/supabase/mvp-queries";
 import { isSupabaseConfigured } from "@/lib/auth";
 import { PremiumMarketplaceEmpty } from "@/components/PremiumMarketplaceEmpty";
@@ -50,6 +50,7 @@ function mapExpert(e: MarketplaceExpertRow): AgentCard {
 }
 
 export default function AgentsPage() {
+  const { trustItems } = useCatalog();
   const [modal, setModal] = useState<{ open: boolean; agent: AgentCard | null }>({ open: false, agent: null });
   const [search, setSearch] = useState("");
   const [chips, setChips] = useState<string[]>([]);

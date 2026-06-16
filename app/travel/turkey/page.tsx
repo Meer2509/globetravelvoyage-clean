@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { SeoLandingPage } from "@/components/SeoLandingPage";
-import { SEO_TRAVEL_PAGES } from "@/lib/seo-pages";
+import { getSeoTravelPage } from "@/lib/catalog/load-bundle";
 
 export const metadata: Metadata = {
-  title: "Travel to Turkey — Plan Your Journey",
-  description: "Turkey travel planning with free AI tools and human trip planners from $99.",
+  title: "Travel to Turkey — Plan Your Trip",
+  description: "Plan Turkey travel with free AI tools and verified providers.",
 };
 
-export default function TurkeyTravelPage() {
-  return <SeoLandingPage config={SEO_TRAVEL_PAGES.turkey} />;
+export default async function TurkeyTravelPage() {
+  const config = await getSeoTravelPage("turkey");
+  if (!config) notFound();
+  return <SeoLandingPage config={config} />;
 }

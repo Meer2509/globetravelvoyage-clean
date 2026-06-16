@@ -6,16 +6,13 @@ import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
 import { ListingGrid } from "@/components/ListingGrid";
 import { Icon } from "@/components/Icon";
-import { visas, usaRoutes } from "@/lib/data";
+import { loadCatalogBundle } from "@/lib/catalog/load-bundle";
 
 export const metadata: Metadata = {
   title: "USA Visa & Tickets from Pakistan — Step-by-Step Guide",
   description:
     "Featured guidance for applying for a US visa from Pakistan, plus cheapest PK → USA ticket routes. Independent marketplace — no approval or price guarantee.",
 };
-
-const b1b2 = visas.find((v) => v.slug === "usa-b1-b2")!;
-const f1 = visas.find((v) => v.slug === "usa-f1-student")!;
 
 const journey = [
   { title: "Pick your visa type", text: "B1/B2 for tourism/business or F-1 for study. Use the AI wizard if unsure." },
@@ -26,7 +23,11 @@ const journey = [
   { title: "Attend the interview", text: "Be honest and concise. Then track your passport return." },
 ];
 
-export default function UsaFromPakistanPage() {
+export default async function UsaFromPakistanPage() {
+  const { visas, usaRoutes } = await loadCatalogBundle();
+  const b1b2 = visas.find((v) => v.slug === "usa-b1-b2")!;
+  const f1 = visas.find((v) => v.slug === "usa-f1-student")!;
+
   return (
     <>
       <PageHeader
@@ -90,7 +91,7 @@ export default function UsaFromPakistanPage() {
           <SectionHeader
             eyebrow="Cheapest routes"
             title="Pakistan → USA ticket routes"
-            subtitle="Sample fares from major Pakistani cities to the USA. Prices are estimates and change frequently — confirm before booking."
+            subtitle="Illustrative fares from major Pakistani cities to the USA. Request a verified quote — provider confirmation required before booking."
             linkHref="/flights"
             linkLabel="Search all flights"
           />

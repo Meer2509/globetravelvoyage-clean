@@ -3,11 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Icon } from "./Icon";
-import { visas } from "@/lib/data";
+import { useCatalog } from "@/lib/catalog/context";
 
 const purposes = ["Tourism", "Business", "Study", "Family visit", "Work"] as const;
 
 export function VisaWizard() {
+  const { visas } = useCatalog();
   const [step, setStep] = useState(0);
   const [nationality, setNationality] = useState("");
   const [destination, setDestination] = useState("United States");
@@ -185,7 +186,7 @@ export function VisaWizard() {
           </div>
 
           <p className="mt-4 text-xs text-navy/45">
-            This is AI-generated guidance based on sample data, not legal advice. We
+            This is AI-generated guidance for planning purposes, not legal advice. We
             do not guarantee visa approval. Always verify with the official authority.
           </p>
         </div>

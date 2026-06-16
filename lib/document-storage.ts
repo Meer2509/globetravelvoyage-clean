@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { validateUploadFile } from "@/lib/document-upload-validation";
 
 const BUCKET = "documents";
 const SIGNED_URL_TTL_SEC = 3600;
@@ -57,6 +58,15 @@ export async function uploadCaseDocumentFile(input: {
       error:
         "Secure file storage is not active yet. This document was marked prepared, but no file was uploaded.",
     };
+  }
+
+  const validation = validateUploadFile({
+    fileName: input.fileName,
+    contentType: input.contentType,
+    byteLength: input.fileBytes.byteLength,
+  });
+  if (!validation.ok) {
+    return { ok: false, error: validation.error };
   }
 
   const storagePath = buildDocumentStoragePath(input);

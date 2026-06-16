@@ -51,7 +51,10 @@ export function PropertiesCatalog({
   const [beds, setBeds] = useState("");
   const [activeTab, setActiveTab] = useState<"all" | "rent" | "sale">("all");
 
-  const cityChips = [...new Set(properties.map((p) => p.city))];
+  const cityChips = useMemo(
+    () => [...new Set(properties.map((p) => p.city))],
+    [properties]
+  );
   const typeChips = ["For rent", "For sale", "Travel stay", "Apartment", "House", "Villa"];
 
   function handleSearch(values: Record<string, string>, selectedChips: string[]) {

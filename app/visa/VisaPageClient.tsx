@@ -9,7 +9,7 @@ import { CTASection } from "@/components/CTASection";
 import { ContactModal } from "@/components/ContactModal";
 import { PageHeader } from "@/components/PageHeader";
 import { VisaAgentsSection } from "@/components/VisaAgentsSection";
-import { visas, visaCountries } from "@/lib/data";
+import { useCatalog } from "@/lib/catalog/context";
 
 const DIFFICULTY_COLOR: Record<string, string> = {
   Easy:     "bg-emerald-50 text-emerald-700 border-emerald-100",
@@ -18,6 +18,7 @@ const DIFFICULTY_COLOR: Record<string, string> = {
 };
 
 export default function VisaPageClient() {
+  const { visas, visaCountries } = useCatalog();
   const [visaLeadOpen, setVisaLeadOpen] = useState(false);
   const [selectedVisa, setSelectedVisa] = useState<string>("");
 

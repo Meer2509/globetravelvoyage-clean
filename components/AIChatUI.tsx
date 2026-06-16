@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { AiMessage, AiCard } from "@/lib/ai-mock";
-import { uid } from "@/lib/ai-mock";
+import type { AiMessage, AiCard } from "@/lib/ai-types";
+import { uid } from "@/lib/ai-types";
+import { AiUnavailableError } from "@/lib/ai-api";
 
 // ── Typing indicator ──────────────────────────────────────────────────────────
 
@@ -306,10 +307,14 @@ export function AIChatUI({
       const result = await onUserMessage(text);
       const aiMsg: AiMessage = { id: uid(), role: "ai", text: result.text, cards: result.cards, timestamp: new Date() };
       setMessages((prev) => [...prev, aiMsg]);
-    } catch {
+    } catch (err) {
       const errMsg: AiMessage = {
         id: uid(), role: "ai",
-        text: "Sorry, I encountered an issue. Please try again.",
+        text: err instanceof AiUnavailableError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Sorry, I encountered an issue. Please try again.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errMsg]);

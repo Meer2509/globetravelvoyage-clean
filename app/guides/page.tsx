@@ -4,8 +4,7 @@ import { guideHref } from "@/lib/marketplace-routes";
 import { PageHeader } from "@/components/PageHeader";
 import { SectionHeader } from "@/components/SectionHeader";
 import { CTASection } from "@/components/CTASection";
-import { Icon } from "@/components/Icon";
-import { travelGuides, visas } from "@/lib/data";
+import { loadCatalogBundle } from "@/lib/catalog/load-bundle";
 
 export const metadata: Metadata = {
   title: "Travel Guides — Expert Destination & Visa Guides",
@@ -15,7 +14,8 @@ export const metadata: Metadata = {
 
 const categories = ["All", "City Guide", "Visa Guide", "Flights", "Religious Travel", "Budget Travel", "Beach"];
 
-export default function GuidesPage() {
+export default async function GuidesPage() {
+  const { travelGuides, visas } = await loadCatalogBundle();
   const featured = travelGuides.filter((g) => g.featured);
   const all = travelGuides;
 

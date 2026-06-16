@@ -4,7 +4,7 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { TrustBadge } from "@/components/TrustBadge";
 import { CTASection } from "@/components/CTASection";
 import { Disclaimer } from "@/components/Disclaimer";
-import { trustItems } from "@/lib/data";
+import { loadCatalogBundle } from "@/lib/catalog/load-bundle";
 import { fetchMarketplaceStats } from "@/lib/supabase/marketplace-stats";
 import { formatStatsForHero } from "@/lib/marketplace-stats-display";
 
@@ -21,6 +21,7 @@ const values = [
 ];
 
 export default async function AboutPage() {
+  const { trustItems } = await loadCatalogBundle();
   const marketplaceStats = await fetchMarketplaceStats();
   const stats = formatStatsForHero(marketplaceStats);
 
@@ -44,8 +45,8 @@ export default async function AboutPage() {
               experts when you need them.
             </p>
             <p className="mt-4 text-navy/70">
-              We believe in honesty over hype. That's why we're clear about what we
-              are — a marketplace and guidance platform — and what we're not.
+              We believe in honesty over hype. That&apos;s why we&apos;re clear about what we
+              are — a marketplace and guidance platform — and what we&apos;re not.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-4">

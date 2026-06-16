@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/auth";
-import { fetchHostListings, fetchRoleDashboardSummary } from "@/lib/supabase/queries";
+import { fetchHostListings } from "@/lib/supabase/queries";
 import { fetchProviderPayments, type PaymentRow } from "@/lib/supabase/queries";
 import { fetchProviderLeads, fetchProviderBookings, type LeadRequestRow, type BookingRequestRow } from "@/lib/supabase/mvp-queries";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
@@ -34,15 +34,12 @@ export default function HostDashboard() {
   const [bookings, setBookings] = useState<BookingRequestRow[]>([]);
   const [leads, setLeads] = useState<LeadRequestRow[]>([]);
   const [payments, setPayments] = useState<PaymentRow[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(!isSupabaseConfigured);
 
   const userId = user.result?.ok ? user.result.profile.id : "";
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setLoaded(true);
-      return;
-    }
+    if (!isSupabaseConfigured) return;
     Promise.all([
       fetchHostListings(),
       userId ? fetchProviderBookings(userId) : Promise.resolve([]),

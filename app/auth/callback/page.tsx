@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -77,49 +77,55 @@ function ErrorState({
   );
 }
 
+function resolveUrlFailure(
+  oauthError: string | null,
+  oauthDescription: string | null,
+  code: string | null
+): { message: string; code: string } | null {
+  if (oauthError || oauthDescription) {
+    return {
+      code: oauthError === "access_denied" ? "access_denied" : "auth_failed",
+      message:
+        oauthError === "access_denied"
+          ? "Sign-in was cancelled. You can try again when you're ready."
+          : "We couldn't complete sign-in. Please try again.",
+    };
+  }
+  if (!code) {
+    return {
+      code: "link_expired",
+      message:
+        "This link is invalid or has already been used. Request a new confirmation email to continue.",
+    };
+  }
+  return null;
+}
+
 function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [phase, setPhase] = useState<"loading" | "error">("loading");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [errorCode, setErrorCode] = useState<string | undefined>();
+  const oauthError = searchParams.get("error");
+  const oauthDescription = searchParams.get("error_description");
+  const code = searchParams.get("code");
+  const urlFailure = useMemo(
+    () => resolveUrlFailure(oauthError, oauthDescription, code),
+    [oauthError, oauthDescription, code]
+  );
+
+  const [asyncFailure, setAsyncFailure] = useState<{ message: string; code?: string } | null>(null);
 
   useEffect(() => {
-    const code = searchParams.get("code");
+    if (urlFailure || !code) return;
+
     const type = searchParams.get("type");
     const next = searchParams.get("next");
-    const oauthError = searchParams.get("error");
-    const oauthDescription = searchParams.get("error_description");
-
-    if (oauthError || oauthDescription) {
-      setPhase("error");
-      setErrorCode(oauthError === "access_denied" ? "access_denied" : "auth_failed");
-      setErrorMessage(
-        oauthError === "access_denied"
-          ? "Sign-in was cancelled. You can try again when you're ready."
-          : "We couldn't complete sign-in. Please try again."
-      );
-      return;
-    }
-
-    if (!code) {
-      setPhase("error");
-      setErrorCode("link_expired");
-      setErrorMessage(
-        "This link is invalid or has already been used. Request a new confirmation email to continue."
-      );
-      return;
-    }
-
     let cancelled = false;
 
     completeAuthCallback({ code, type, next }).then((result) => {
       if (cancelled) return;
 
       if (!result.ok) {
-        setPhase("error");
-        setErrorMessage(result.error);
-        setErrorCode(result.code);
+        setAsyncFailure({ message: result.error, code: result.code });
         return;
       }
 
@@ -130,10 +136,14 @@ function AuthCallbackContent() {
     return () => {
       cancelled = true;
     };
-  }, [searchParams, router]);
+  }, [urlFailure, code, searchParams, router]);
 
-  if (phase === "error") {
-    return <ErrorState message={errorMessage} code={errorCode} />;
+  if (urlFailure) {
+    return <ErrorState message={urlFailure.message} code={urlFailure.code} />;
+  }
+
+  if (asyncFailure) {
+    return <ErrorState message={asyncFailure.message} code={asyncFailure.code} />;
   }
 
   return <LoadingState />;

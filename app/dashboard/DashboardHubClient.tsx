@@ -7,9 +7,10 @@ import { PageHeader } from "@/components/PageHeader";
 import { SectionHeader } from "@/components/SectionHeader";
 import { RoleCard } from "@/components/RoleCard";
 import { Disclaimer } from "@/components/Disclaimer";
-import { roles } from "@/lib/data";
+import { useCatalog } from "@/lib/catalog/context";
 
 export function DashboardHubClient() {
+  const { roles } = useCatalog();
   const router = useRouter();
   const auth = useAuthSession();
 

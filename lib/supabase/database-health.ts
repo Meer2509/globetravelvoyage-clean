@@ -49,7 +49,7 @@ export async function checkDatabaseHealth(): Promise<DatabaseHealthResult> {
     return { ...empty, message: "Could not create Supabase client." };
   }
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const { error: authError } = await supabase.auth.getUser();
   const authOk = !authError;
 
   const [profiles, user_roles, visa_experts] = await Promise.all([

@@ -6,21 +6,24 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
 import { SaveButton } from "@/components/SaveButton";
+import { SampleCatalogBanner } from "@/components/SampleCatalogBanner";
+import { PriceEstimateLabel } from "@/components/PriceEstimateLabel";
 import { ContactModal, type ContactMode } from "@/components/ContactModal";
-import { cars, type CarRental } from "@/lib/data";
+import { useCatalog } from "@/lib/catalog/context";
+import type { CarRental } from "@/lib/data";
 import Link from "next/link";
 
-const TRANSMISSION_CHIPS = ["Automatic", "Manual"] as const;
 const TYPE_CHIPS: string[] = ["Economy", "SUV", "Luxury", "Van", "With driver", "Self-drive"];
 
 const FAQS = [
   { q: "Do I need an international driving permit?",     a: "Requirements vary by country. Many countries accept your home-country license for short stays. Always check locally before renting." },
   { q: "Is car rental insurance included?",              a: "Basic insurance is typically included. Full coverage (CDW/LDW) is optional extra. Review the provider's terms before confirming." },
   { q: "Can I rent a car with a driver?",                a: "Yes — many providers offer chauffeur-driven options. Filter by 'With driver' to see those listings." },
-  { q: "Are prices shown final?",                        a: "No. Prices shown are sample estimates. Final price depends on dates, availability, and provider policy. Always confirm directly with the provider." },
+  { q: "Are prices shown final?",                        a: "No. Prices shown are illustrative planning figures. Request a verified quote — provider confirmation required before booking." },
 ];
 
 export default function CarRentalsPage() {
+  const { cars } = useCatalog();
   const [query, setQuery]       = useState("");
   const [cityFilter, setCity]   = useState("");
   const [chips, setChips]       = useState<string[]>([]);
@@ -78,7 +81,8 @@ export default function CarRentalsPage() {
       </div>
 
       {/* Filter bar */}
-      <div className="container-px">
+      <div className="container-px space-y-4">
+        <SampleCatalogBanner />
         <FilterBar
           fields={[
             { placeholder: "City or car type", type: "text" },
@@ -97,7 +101,7 @@ export default function CarRentalsPage() {
           <SectionHeader
             eyebrow="Available now"
             title={query || chips.length ? `${filtered.length} car${filtered.length !== 1 ? "s" : ""} found` : "Featured cars"}
-            subtitle="Competitive daily rates. Request a booking and receive confirmation within a few hours."
+            subtitle="Illustrative daily rates. Request a verified quote — provider confirmation required."
           />
 
           {filtered.length === 0 ? (
@@ -128,6 +132,7 @@ export default function CarRentalsPage() {
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-lg font-extrabold text-navy">{car.pricePerDay}</p>
+                        <PriceEstimateLabel className="mt-0.5" />
                         <p className="text-xs text-charcoal/40">per day</p>
                       </div>
                     </div>

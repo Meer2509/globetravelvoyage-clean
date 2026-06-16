@@ -45,15 +45,12 @@ export default function AgenciesPage() {
   const [modal, setModal] = useState<{ open: boolean; agency: AgencyCard | null }>({ open: false, agency: null });
   const [search, setSearch] = useState("");
   const [chips, setChips] = useState<string[]>([]);
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [, setSavedIds] = useState<Set<string>>(new Set());
   const [agencyList, setAgencyList] = useState<AgencyCard[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(!isSupabaseConfigured);
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setLoaded(true);
-      return;
-    }
+    if (!isSupabaseConfigured) return;
     fetchMarketplaceAgencies().then((rows) => {
       setAgencyList(rows.map(mapAgency));
       setLoaded(true);
@@ -139,7 +136,8 @@ export default function AgenciesPage() {
                   onSave={(saved) =>
                     setSavedIds((prev) => {
                       const next = new Set(prev);
-                      saved ? next.add(a.id) : next.delete(a.id);
+                      if (saved) next.add(a.id);
+                      else next.delete(a.id);
                       return next;
                     })
                   }

@@ -4,6 +4,8 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AIAssistant } from "@/components/AIAssistant";
+import { CatalogProvider } from "@/lib/catalog/context";
+import { loadCatalogBundle } from "@/lib/catalog/load-bundle";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-sans-custom",
@@ -85,11 +87,13 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const catalog = await loadCatalogBundle();
+
   return (
     <html lang="en" className={`${jakarta.variable} h-full antialiased`}>
       <head>
@@ -99,10 +103,12 @@ export default function RootLayout({
         <meta name="theme-color" content="#081C3A" />
       </head>
       <body className="flex min-h-full flex-col bg-white">
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <AIAssistant />
+        <CatalogProvider catalog={catalog}>
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <AIAssistant />
+        </CatalogProvider>
       </body>
     </html>
   );

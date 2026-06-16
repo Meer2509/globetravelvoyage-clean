@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { defer } from "@/lib/defer-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
@@ -56,7 +57,7 @@ export default function DashboardProfilePage() {
   }
 
   useEffect(() => {
-    loadProfile();
+    defer(() => void loadProfile());
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {

@@ -28,19 +28,15 @@ const GUEST: AuthSessionState = {
 
 export function useAuthSession(): AuthSessionState {
   const pathname = usePathname();
-  const [state, setState] = useState<AuthSessionState>(GUEST);
+  const [state, setState] = useState<AuthSessionState>(() =>
+    isSupabaseConfigured ? GUEST : { ...GUEST, loading: false }
+  );
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setState({ ...GUEST, loading: false });
-      return;
-    }
+    if (!isSupabaseConfigured) return;
 
     const supabase = createClient();
-    if (!supabase) {
-      setState({ ...GUEST, loading: false });
-      return;
-    }
+    if (!supabase) return;
 
     const client = supabase;
     let cancelled = false;

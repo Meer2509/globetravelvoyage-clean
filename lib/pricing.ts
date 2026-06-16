@@ -53,7 +53,7 @@ export const pricingPlans: PricingPlan[] = [
       "AI-generated cover letter template",
       "Step-by-step timeline guide",
       "Common mistakes to avoid",
-      "Approval probability estimate (mock)",
+      "Approval probability estimate",
       "Email PDF export",
     ],
     cta: "Get AI guidance",

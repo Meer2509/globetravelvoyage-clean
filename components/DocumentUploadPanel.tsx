@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { defer } from "@/lib/defer-client";
 import Link from "next/link";
 import { DashboardEmpty } from "@/components/DashboardEmpty";
 import { Panel } from "@/components/DashboardLayout";
 import { saveDocumentRecord } from "@/lib/supabase/mvp-actions";
 import { fetchUserDocuments, type DocumentRow } from "@/lib/supabase/mvp-queries";
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
+import { validateUploadFile } from "@/lib/document-upload-validation";
 
 export function DocumentUploadPanel({ requestId }: { requestId?: string }) {
   const [documents, setDocuments] = useState<DocumentRow[]>([]);
@@ -14,7 +16,7 @@ export function DocumentUploadPanel({ requestId }: { requestId?: string }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [storageReady, setStorageReady] = useState(false);
+  const [storageReady] = useState(isSupabaseConfigured);
 
   function reload() {
     fetchUserDocuments().then((rows) => {
@@ -24,8 +26,7 @@ export function DocumentUploadPanel({ requestId }: { requestId?: string }) {
   }
 
   useEffect(() => {
-    reload();
-    if (isSupabaseConfigured) setStorageReady(true);
+    defer(() => reload());
   }, []);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -35,22 +36,21 @@ export function DocumentUploadPanel({ requestId }: { requestId?: string }) {
     setError("");
     setSuccess("");
 
-    let fileUrl: string | undefined;
-    const client = createClient();
-
-    if (client && storageReady) {
-      const path = `${Date.now()}-${file.name}`;
-      const { data, error: uploadError } = await client.storage.from("documents").upload(path, file);
-      if (!uploadError && data) {
-        const { data: urlData } = client.storage.from("documents").getPublicUrl(data.path);
-        fileUrl = urlData.publicUrl;
-      }
+    const validation = validateUploadFile({
+      fileName: file.name,
+      contentType: file.type || "application/octet-stream",
+      byteLength: file.size,
+    });
+    if (!validation.ok) {
+      setUploading(false);
+      setError(validation.error);
+      e.target.value = "";
+      return;
     }
 
     const result = await saveDocumentRecord({
       requestId,
       fileName: file.name,
-      fileUrl,
       fileType: file.type,
     });
 
@@ -59,7 +59,9 @@ export function DocumentUploadPanel({ requestId }: { requestId?: string }) {
       setError(result.error);
       return;
     }
-    setSuccess(fileUrl ? "Document uploaded and saved." : "Document record saved. Configure the documents storage bucket for file uploads.");
+    setSuccess(
+      "Document details saved. Upload the file through your visa case checklist for secure private storage."
+    );
     reload();
     e.target.value = "";
   }
@@ -74,9 +76,23 @@ export function DocumentUploadPanel({ requestId }: { requestId?: string }) {
           </div>
         )}
 
+        <p className="mb-3 text-xs text-charcoal/55">
+          Files are stored privately and accessed via signed links from your{" "}
+          <Link href="/dashboard/visa-cases" className="font-semibold text-blue hover:underline">
+            visa case checklist
+          </Link>
+          . PDF and image files up to 10 MB.
+        </p>
+
         <label className="btn-outline inline-flex cursor-pointer px-4 py-2.5 text-sm">
-          {uploading ? "Uploading…" : "Choose file"}
-          <input type="file" className="hidden" onChange={handleFile} disabled={uploading} />
+          {uploading ? "Saving…" : "Register document"}
+          <input
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,application/pdf,image/*"
+            className="hidden"
+            onChange={handleFile}
+            disabled={uploading}
+          />
         </label>
 
         {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
@@ -97,10 +113,8 @@ export function DocumentUploadPanel({ requestId }: { requestId?: string }) {
                   <p className="font-semibold text-navy">{d.file_name}</p>
                   <p className="text-xs text-charcoal/50 capitalize">{d.status}</p>
                 </div>
-                {d.file_url && (
-                  <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-blue hover:underline">
-                    View
-                  </a>
+                {d.file_url && !d.file_url.startsWith("http") && (
+                  <span className="text-xs text-charcoal/45">Available in case checklist</span>
                 )}
               </div>
             ))}

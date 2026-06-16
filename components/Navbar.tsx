@@ -66,8 +66,6 @@ const nav = [
 ];
 
 export function Navbar() {
-  const [open, setOpen]         = useState(false);
-  const [megaOpen, setMegaOpen] = useState<string | null>(null);
   const [shadow, setShadow]     = useState(false);
   const pathname                = usePathname();
   const auth                    = useAuthSession();
@@ -79,10 +77,20 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  useEffect(() => {
-    setOpen(false);
-    setMegaOpen(null);
-  }, [pathname]);
+  return <NavbarContent key={pathname} pathname={pathname} auth={auth} shadow={shadow} />;
+}
+
+function NavbarContent({
+  pathname,
+  auth,
+  shadow,
+}: {
+  pathname: string;
+  auth: ReturnType<typeof useAuthSession>;
+  shadow: boolean;
+}) {
+  const [open, setOpen]         = useState(false);
+  const [megaOpen, setMegaOpen] = useState<string | null>(null);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {

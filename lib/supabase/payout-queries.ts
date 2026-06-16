@@ -43,7 +43,7 @@ export async function fetchProviderPayoutSummary(): Promise<ProviderPayoutSummar
   const admin = createAdminClient();
   if (!admin) return null;
 
-  const [paymentsRes, bookingsRes, transactionsRes] = await Promise.all([
+  const [paymentsRes, bookingsRes] = await Promise.all([
     admin
       .from("payments")
       .select("amount, provider_amount, platform_fee, status, currency, transfer_status")
@@ -54,11 +54,6 @@ export async function fetchProviderPayoutSummary(): Promise<ProviderPayoutSummar
       .select("id", { count: "exact", head: true })
       .eq("provider_user_id", user.id)
       .in("status", ["confirmed", "pending_payment", "pending"]),
-    admin
-      .from("transactions")
-      .select("provider_amount, status")
-      .eq("provider_user_id", user.id)
-      .eq("status", "completed"),
   ]);
 
   const payments = (paymentsRes.data ?? []) as Array<{

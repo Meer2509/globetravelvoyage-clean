@@ -1,7 +1,6 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// Globe Travel Voyage — Central mock data layer
-// All static so the frontend builds and deploys without external services.
-// ─────────────────────────────────────────────────────────────────────────────
+// Globe Travel Voyage — Static catalog fallback (lib/data.ts)
+// Runtime pages load from Supabase via lib/catalog when the database is seeded.
+// These exports remain the offline / empty-database fallback.
 
 export type IconName =
   | "visa"
@@ -753,7 +752,7 @@ export const faqs: Faq[] = [
   },
   {
     q: "Are the flight and ticket prices guaranteed?",
-    a: "No. All prices shown are sample or estimated figures for demonstration purposes and can change at any time based on availability, season and provider. Always confirm final prices directly with the airline or service provider before booking.",
+    a: "No. Browse pages show illustrative planning figures, not live pricing. Request a verified quote — provider confirmation required before booking.",
   },
   {
     q: "How does the AI travel assistant work?",

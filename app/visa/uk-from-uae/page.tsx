@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { SeoLandingPage } from "@/components/SeoLandingPage";
-import { SEO_VISA_PAGES } from "@/lib/seo-pages";
+import { getSeoVisaPage } from "@/lib/catalog/load-bundle";
 
 export const metadata: Metadata = {
   title: "UK Visa from UAE — Guide & Services",
-  description: "UK Standard Visitor visa guidance for UAE residents. Free tools and optional paid support.",
+  description: "UK visa guidance for UAE residents. Free checklist and paid preparation support.",
 };
 
-export default function UkFromUaePage() {
-  return <SeoLandingPage config={SEO_VISA_PAGES["uk-from-uae"]} />;
+export default async function UkFromUaePage() {
+  const config = await getSeoVisaPage("uk-from-uae");
+  if (!config) notFound();
+  return <SeoLandingPage config={config} />;
 }

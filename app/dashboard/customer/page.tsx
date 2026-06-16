@@ -22,7 +22,6 @@ import { VisaCasePanel } from "@/components/VisaCasePanel";
 import { CustomerActiveServices } from "@/components/CustomerActiveServices";
 import { VisaCaseSummaryCard } from "@/components/VisaCaseSummaryCard";
 import { formatPaymentAmount, formatPaymentDate, paymentServiceLabel } from "@/lib/payments-display";
-import { fetchCustomerLeadRequests, fetchCustomerBookingRequests } from "@/lib/supabase/mvp-queries";
 import { submitSupportTicket } from "@/lib/supabase/actions";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DashboardProfileSection } from "@/components/DashboardProfileSection";
@@ -33,15 +32,11 @@ import { customerDashboardPath, hashToCustomerTab, normalizeCustomerTab } from "
 import { summarizeChecklistStatus } from "@/lib/visa-case-progress";
 import { CaseDocumentChecklist } from "@/components/CaseDocumentChecklist";
 import { Disclaimer } from "@/components/Disclaimer";
-import { Stars } from "@/components/Stars";
-import { Icon } from "@/components/Icon";
 import {
   DashboardLayout,
   StatCard,
   Panel,
   TableRow,
-  ProgressBar,
-  TimelineItem,
   EmptyState,
   type DashboardTab,
 } from "@/components/DashboardLayout";
@@ -64,23 +59,23 @@ function AiPanel() {
   ]);
   const [input, setInput] = useState("");
 
-  const mockResponses: Record<string, string> = {
+  const quickResponses: Record<string, string> = {
     visa: "Check your Visa Applications or My Visa Case tab for the latest status on your requests.",
     flight: "Submit a booking request for flight quotes — we connect you with verified travel providers.",
-    hotel: "Browse hotels and stays on our marketplace, then request a quote for personalized help.",
-    document: "Upload visa documents in your Documents tab. Your files are stored securely on your account.",
+    hotel: "Browse hotels and stays on our marketplace, then request a verified quote for personalized help.",
+    document: "Secure upload is available after case creation. Open your visa case workspace to upload documents.",
     budget: "Use the AI Trip Planner for itinerary ideas and budget guidance.",
     default: "I provide informational travel guidance. Check your dashboard for requests, payments, and messages.",
   };
 
   const getResponse = (q: string) => {
     const lower = q.toLowerCase();
-    if (lower.includes("visa")) return mockResponses.visa;
-    if (lower.includes("flight")) return mockResponses.flight;
-    if (lower.includes("hotel")) return mockResponses.hotel;
-    if (lower.includes("document")) return mockResponses.document;
-    if (lower.includes("budget") || lower.includes("cost")) return mockResponses.budget;
-    return mockResponses.default;
+    if (lower.includes("visa")) return quickResponses.visa;
+    if (lower.includes("flight")) return quickResponses.flight;
+    if (lower.includes("hotel")) return quickResponses.hotel;
+    if (lower.includes("document")) return quickResponses.document;
+    if (lower.includes("budget") || lower.includes("cost")) return quickResponses.budget;
+    return quickResponses.default;
   };
 
   const send = () => {

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { mockVisaAnalysis, type VisaInput, type VisaResult } from "@/lib/ai-mock";
+import { analyzeVisaWithAi, AiUnavailableError } from "@/lib/ai-api";
+import type { VisaInput, VisaResult } from "@/lib/ai-types";
 
 // ── Action helpers ─────────────────────────────────────────────────────────────
 
@@ -99,6 +100,7 @@ export default function AIVisaAssistantPage() {
   const [step, setStep]         = useState(0);
   const [loading, setLoading]   = useState(false);
   const [result, setResult]     = useState<VisaResult | null>(null);
+  const [error, setError]       = useState("");
   const [activeTab, setActiveTab] = useState<"docs" | "risks" | "steps">("docs");
 
   const [form, setForm] = useState<VisaInput>({
@@ -118,10 +120,15 @@ export default function AIVisaAssistantPage() {
 
   async function analyze() {
     setLoading(true);
+    setError("");
     setStep(3);
     try {
-      const r = await mockVisaAnalysis(form);
+      const r = await analyzeVisaWithAi(form);
       setResult(r);
+    } catch (err) {
+      setResult(null);
+      setError(err instanceof AiUnavailableError ? err.message : err instanceof Error ? err.message : "Analysis failed.");
+      setStep(2);
     } finally {
       setLoading(false);
     }
@@ -130,6 +137,7 @@ export default function AIVisaAssistantPage() {
   function reset() {
     setStep(0);
     setResult(null);
+    setError("");
     setForm({ nationality: "", currentCountry: "", destination: "", purpose: "tourism", previousVisaRefusals: false, travelHistory: "limited", employmentStatus: "employed", financialSituation: "moderate" });
   }
 
@@ -289,6 +297,9 @@ export default function AIVisaAssistantPage() {
                   🤖 Analyse my visa case →
                 </button>
               </div>
+              {error && (
+                <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
+              )}
             </div>
           )}
 
@@ -315,7 +326,6 @@ export default function AIVisaAssistantPage() {
                   </div>
                 ))}
               </div>
-              <p className="mt-6 text-xs text-charcoal/35">Mock AI — no real API call. Add OPENAI_API_KEY to enable real analysis.</p>
             </div>
           )}
 

@@ -536,6 +536,73 @@ export interface Database {
         Insert: Omit<Payment, "id" | "created_at"> & { id?: string; created_at?: string };
         Update: Partial<Payment>;
       };
+      catalog_entries: {
+        Row: {
+          id: string;
+          collection: string;
+          item_key: string | null;
+          sort_order: number;
+          payload: unknown;
+          is_published: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          collection: string;
+          item_key?: string | null;
+          sort_order?: number;
+          payload: unknown;
+          is_published?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<{
+          collection: string;
+          item_key: string | null;
+          sort_order: number;
+          payload: unknown;
+          is_published: boolean;
+          updated_at: string;
+        }>;
+      };
+      seo_pages: {
+        Row: {
+          slug: string;
+          page_group: "visa" | "travel";
+          config: unknown;
+          is_published: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          slug: string;
+          page_group: "visa" | "travel";
+          config: unknown;
+          is_published?: boolean;
+          updated_at?: string;
+        };
+        Update: Partial<{
+          page_group: "visa" | "travel";
+          config: unknown;
+          is_published: boolean;
+          updated_at: string;
+        }>;
+      };
+      pricing_plans: {
+        Row: { id: string; sort_order: number; payload: unknown; is_published: boolean; updated_at: string };
+        Insert: { id: string; sort_order?: number; payload: unknown; is_published?: boolean; updated_at?: string };
+        Update: Partial<{ sort_order: number; payload: unknown; is_published: boolean; updated_at: string }>;
+      };
+      pricing_bundles: {
+        Row: { id: string; sort_order: number; payload: unknown; is_published: boolean; updated_at: string };
+        Insert: { id: string; sort_order?: number; payload: unknown; is_published?: boolean; updated_at?: string };
+        Update: Partial<{ sort_order: number; payload: unknown; is_published: boolean; updated_at: string }>;
+      };
+      pricing_commission_rates: {
+        Row: { id: string; sort_order: number; payload: unknown; is_published: boolean; updated_at: string };
+        Insert: { id?: string; sort_order?: number; payload: unknown; is_published?: boolean; updated_at?: string };
+        Update: Partial<{ sort_order: number; payload: unknown; is_published: boolean; updated_at: string }>;
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

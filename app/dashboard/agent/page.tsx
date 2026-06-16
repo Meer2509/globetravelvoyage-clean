@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { defer } from "@/lib/defer-client";
 import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/auth";
 import {
@@ -187,14 +188,12 @@ export default function AgentDashboard() {
     user.result?.ok ? parseExpertServices(user.result.visaExpert?.services) : []
   );
   const [totalEarnings, setTotalEarnings] = useState(0);
-  const [dataLoaded, setDataLoaded] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(!isSupabaseConfigured);
   const [dataError, setDataError] = useState<string | null>(null);
+  const profileUpdatedAt = user.result?.ok ? user.result.profile.updated_at : "";
 
   function loadAgentData() {
-    if (!isSupabaseConfigured) {
-      setDataLoaded(true);
-      return;
-    }
+    if (!isSupabaseConfigured) return;
     fetchAgentDashboardData().then((result) => {
       setDataLoaded(true);
       if (!result.ok) {
@@ -212,8 +211,8 @@ export default function AgentDashboard() {
   }
 
   useEffect(() => {
-    loadAgentData();
-  }, [user.result?.ok ? user.result.profile.updated_at : "", user.completion]);
+    defer(() => loadAgentData());
+  }, [profileUpdatedAt, user.completion]);
 
   const pipeline = useMemo(() => {
     const stages: Record<string, number> = {};

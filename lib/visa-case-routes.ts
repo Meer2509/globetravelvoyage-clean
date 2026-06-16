@@ -16,6 +16,7 @@ export function dashboardPaymentsPath(): string {
 }
 
 export function dashboardSupportPath(_caseId?: string): string {
+  void _caseId;
   return customerDashboardPath("support");
 }
 

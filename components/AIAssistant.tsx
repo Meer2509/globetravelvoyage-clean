@@ -22,12 +22,12 @@ function reply(input: string): string {
   if (q.includes("visa"))
     return "Tell me your nationality, destination and purpose, and I'll suggest the right visa type plus a document checklist. Try the Visa Wizard on the Visa page. This is guidance only — not legal advice.";
   if (q.includes("flight") || q.includes("cheap"))
-    return "I can compare sample routes. For example, Dubai → Manila from $320 direct, or Abu Dhabi → Delhi from $150. Prices are estimates and change often. Open Flights to see more.";
+    return "I can compare popular routes — for example, Dubai → Manila from $320 direct, or Abu Dhabi → Delhi from $150. These are planning figures only; request a verified quote for confirmed fares.";
   if (q.includes("plan") || q.includes("budget") || q.includes("days"))
     return "Great — head to the AI Trip Planner. Enter destination, days and budget, and I'll split your budget across flights, stay, food and tours, then draft a day-by-day itinerary.";
   if (q.includes("hotel") || q.includes("stay"))
     return "I can suggest hotels, apartments and long-stay rentals. For Dubai, the Burj Vista Residences from $180/night is popular. Open Hotels & Stays to filter by area and price.";
-  return "I can help with visas, flights, hotels, cars, cruises, tours, properties and full trip planning. What would you like to do? (Demo assistant — sample answers, no guarantees.)";
+  return "I can help with visas, flights, hotels, cars, cruises, tours, properties and full trip planning. What would you like to do? Informational guidance only — provider confirmation required for quotes.";
 }
 
 export function AIAssistant() {
@@ -66,7 +66,7 @@ export function AIAssistant() {
             </span>
             <div>
               <p className="text-sm font-bold">AI Travel Assistant</p>
-              <p className="text-xs text-white/60">Demo · sample answers</p>
+              <p className="text-xs text-white/60">AI travel guidance</p>
             </div>
           </div>
 

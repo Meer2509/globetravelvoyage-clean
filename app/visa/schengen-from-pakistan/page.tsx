@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { SeoLandingPage } from "@/components/SeoLandingPage";
-import { SEO_VISA_PAGES } from "@/lib/seo-pages";
+import { getSeoVisaPage } from "@/lib/catalog/load-bundle";
 
 export const metadata: Metadata = {
   title: "Schengen Visa from Pakistan — Guide & Services",
-  description: "Schengen short-stay visa guidance for Pakistani applicants. Free checklist and paid case tracking.",
+  description: "Schengen visa guidance for Pakistani applicants.",
 };
 
-export default function SchengenFromPakistanPage() {
-  return <SeoLandingPage config={SEO_VISA_PAGES["schengen-from-pakistan"]} />;
+export default async function SchengenFromPakistanPage() {
+  const config = await getSeoVisaPage("schengen-from-pakistan");
+  if (!config) notFound();
+  return <SeoLandingPage config={config} />;
 }

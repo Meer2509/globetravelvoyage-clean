@@ -10,15 +10,16 @@ import { SaveButton } from "@/components/SaveButton";
 import { SampleCatalogBanner } from "@/components/SampleCatalogBanner";
 import { ProviderOnboardingCta } from "@/components/ProviderOnboardingCta";
 import { SamplePrice } from "@/components/PriceEstimateLabel";
-import { tours, tickets } from "@/lib/data";
+import { useCatalog } from "@/lib/catalog/context";
 
 const CATEGORY_CHIPS = ["Food", "Heritage", "Adventure", "City tour", "Half day", "Full day", "Beach", "Desert"];
-const CITY_CHIPS     = [...new Set(tours.map((t) => t.city))];
 
-type Tour   = (typeof tours)[0];
-type Ticket = (typeof tickets)[0];
+type Tour = import("@/lib/data").Tour;
+type Ticket = import("@/lib/data").Ticket;
 
 export default function ToursPage() {
+  const { tours, tickets } = useCatalog();
+  const cityChips = useMemo(() => [...new Set(tours.map((t) => t.city))], [tours]);
   const [modalTour, setModalTour]       = useState<Tour | null>(null);
   const [modalTicket, setModalTicket]   = useState<Ticket | null>(null);
   const [search, setSearch]             = useState("");
@@ -41,12 +42,12 @@ export default function ToursPage() {
         t.guide.toLowerCase().includes(q)
       );
     }
-    const cityChips = chips.filter((c) => CITY_CHIPS.includes(c));
-    if (cityChips.length > 0) list = list.filter((t) => cityChips.includes(t.city));
+    const activeCityChips = chips.filter((c) => cityChips.includes(c));
+    if (activeCityChips.length > 0) list = list.filter((t) => activeCityChips.includes(t.city));
     if (chips.includes("Half day"))  list = list.filter((t) => t.duration.toLowerCase().includes("half") || t.duration.includes("3") || t.duration.includes("4"));
     if (chips.includes("Full day"))  list = list.filter((t) => t.duration.toLowerCase().includes("full") || t.duration.includes("7") || t.duration.includes("8"));
     return list;
-  }, [search, chips]);
+  }, [tours, search, chips, cityChips]);
 
   return (
     <>
@@ -76,7 +77,7 @@ export default function ToursPage() {
             { key: "date", placeholder: "Date", type: "date" },
             { key: "travelers", placeholder: "Travelers" },
           ]}
-          chips={[...CITY_CHIPS, ...CATEGORY_CHIPS]}
+          chips={[...cityChips, ...CATEGORY_CHIPS]}
           onSearch={handleSearch}
         />
       </div>
@@ -113,7 +114,8 @@ export default function ToursPage() {
                           onToggle={(s) =>
                             setSavedIds((prev) => {
                               const next = new Set(prev);
-                              s ? next.add(tour.id) : next.delete(tour.id);
+                              if (s) next.add(tour.id);
+                              else next.delete(tour.id);
                               return next;
                             })
                           }

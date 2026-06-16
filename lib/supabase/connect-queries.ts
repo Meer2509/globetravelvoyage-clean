@@ -1,7 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createServerSupabaseClient } from "./server";
+import { requireAdmin } from "@/lib/auth-server";
 
 export interface AdminConnectStats {
   connectedProviders: number;
@@ -23,6 +23,9 @@ export interface AdminConnectProviderRow {
 }
 
 export async function fetchAdminConnectStats(): Promise<AdminConnectStats | null> {
+  const adminAuth = await requireAdmin();
+  if (!adminAuth.ok) return null;
+
   const admin = createAdminClient();
   if (!admin) return null;
 
@@ -72,11 +75,8 @@ export async function fetchAdminConnectStats(): Promise<AdminConnectStats | null
 }
 
 export async function fetchAdminConnectProviders(): Promise<AdminConnectProviderRow[]> {
-  const supabase = await createServerSupabaseClient();
-  if (!supabase) return [];
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return [];
+  const adminAuth = await requireAdmin();
+  if (!adminAuth.ok) return [];
 
   const admin = createAdminClient();
   if (!admin) return [];

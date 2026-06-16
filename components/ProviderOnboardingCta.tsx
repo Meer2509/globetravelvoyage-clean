@@ -47,8 +47,8 @@ export function ProviderOnboardingCta({ compact = false }: { compact?: boolean }
               </Link>
             ))}
           </div>
-          <Link href="/dashboard/payouts" className="btn-gold mt-8 inline-flex px-8 py-3 text-sm">
-            Learn about provider payouts
+          <Link href="/register?role=agent" className="btn-gold mt-8 inline-flex px-8 py-3 text-sm">
+            Become a Verified Provider
           </Link>
         </div>
       </div>

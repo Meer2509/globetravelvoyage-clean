@@ -2,14 +2,25 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { type TripInput, type TripResult } from "@/lib/ai-mock";
-import { generateTripPlanWithAi } from "@/lib/ai-api";
+import { type TripInput, type TripResult } from "@/lib/ai-types";
+import { generateTripPlanWithAi, AiUnavailableError } from "@/lib/ai-api";
 import { StripeCheckoutButton } from "@/components/StripeCheckoutButton";
 
 function DownloadItineraryButton({ destination, totalDays }: { destination: string; totalDays: number }) {
   const [done, setDone] = useState(false);
   function download() {
-    const lines = [`Globe Travel Voyage — ${totalDays}-Day ${destination} Itinerary`, "", `This is a placeholder itinerary for ${destination} (${totalDays} days).`, "", "Day 1: Arrival & city exploration", "Day 2: Main attractions", "Day 3: Cultural immersion", "...", "", "Disclaimer: Sample itinerary. Prices and availability are not guaranteed."];
+    const lines = [
+      `Globe Travel Voyage — ${totalDays}-Day ${destination} Itinerary`,
+      "",
+      `Day-by-day outline for ${destination} (${totalDays} days).`,
+      "",
+      "Day 1: Arrival & city exploration",
+      "Day 2: Main attractions",
+      "Day 3: Cultural immersion",
+      "...",
+      "",
+      "Disclaimer: For guidance only. Prices and availability are not guaranteed.",
+    ];
     const blob = new Blob([lines.join("\n")], { type: "text/plain" });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement("a"); a.href = url; a.download = `${destination.toLowerCase().replace(/\s/g, "-")}-itinerary.txt`; a.click();
@@ -39,6 +50,7 @@ const DESTINATIONS = ["Dubai, UAE", "Istanbul, Turkey", "Bangkok, Thailand", "Ma
 export default function AITripPlannerPage() {
   const [loading, setLoading]     = useState(false);
   const [result, setResult]       = useState<TripResult | null>(null);
+  const [error, setError]         = useState("");
   const [activeDay, setActiveDay] = useState(0);
   const [form, setForm]           = useState<TripInput>({
     destination:     "",
@@ -64,10 +76,14 @@ export default function AITripPlannerPage() {
 
   async function generatePlan() {
     setLoading(true);
+    setError("");
     try {
       const r = await generateTripPlanWithAi(form);
       setResult(r);
       setActiveDay(0);
+    } catch (err) {
+      setResult(null);
+      setError(err instanceof AiUnavailableError ? err.message : err instanceof Error ? err.message : "Trip planning failed.");
     } finally {
       setLoading(false);
     }
@@ -75,6 +91,7 @@ export default function AITripPlannerPage() {
 
   function reset() {
     setResult(null);
+    setError("");
     setForm({ destination: "", days: 5, budget: 2000, currency: "USD", travelers: 2, travelStyle: "moderate", accommodation: "hotel", interests: [], includeFlights: true, includeVisa: true });
   }
 
@@ -254,6 +271,9 @@ export default function AITripPlannerPage() {
             >
               🤖 Generate my AI trip plan →
             </button>
+            {error && (
+              <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
+            )}
           </div>
         )}
 
@@ -268,7 +288,7 @@ export default function AITripPlannerPage() {
             </div>
             <h2 className="text-xl font-extrabold text-navy">Planning your perfect trip…</h2>
             <div className="mx-auto mt-4 max-w-xs space-y-2">
-              {["Researching {form.destination}…", "Building day-by-day itinerary…", "Selecting hotels for your style…", "Finding tours and activities…", "Calculating budget breakdown…"].map((s, i) => (
+              {[`Researching ${form.destination}…`, "Building day-by-day itinerary…", "Selecting hotels for your style…", "Finding tours and activities…", "Calculating budget breakdown…"].map((s, i) => (
                 <p key={i} className="text-sm text-charcoal/45 animate-pulse" style={{ animationDelay: `${i * 0.3}s` }}>{s}</p>
               ))}
             </div>
@@ -463,7 +483,7 @@ export default function AITripPlannerPage() {
             </div>
 
             <p className="text-[11px] text-charcoal/35 leading-relaxed">
-              ⚠ AI trip plans use mock/estimated data. Prices, availability and itinerary suggestions are illustrative only. Not financial advice. Always verify costs and bookings independently.
+              ⚠ AI trip plans are estimates for planning purposes. Prices, availability and itinerary suggestions may change. Not financial advice. Always verify costs and bookings independently.
             </p>
           </div>
         )}

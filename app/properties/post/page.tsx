@@ -220,6 +220,10 @@ export default function PostPropertyPage() {
                 ⚠ Globe Travel Voyage is NOT a licensed real estate broker. Listings are informational only. You are responsible for the accuracy of your listing. Do not include personal financial or legal data.
               </div>
 
+              {error && (
+                <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
+              )}
+
               <button type="submit" disabled={loading || !form.listingType || !form.propertyType || !form.title || !form.name || !form.email} className="btn-primary w-full py-3.5 disabled:opacity-50">
                 {loading ? "Submitting listing…" : "Submit listing for review →"}
               </button>

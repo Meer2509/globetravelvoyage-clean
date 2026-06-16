@@ -31,7 +31,7 @@ export async function GET() {
   }
 
   const admin = createAdminClient();
-  let earnings = {
+  const earnings = {
     grossSales: 0,
     platformFees: 0,
     estimatedPayout: 0,

@@ -33,10 +33,7 @@ function PaymentSuccessContent() {
   const [data, setData] = useState<VerifyData | null>(null);
 
   useEffect(() => {
-    if (!sessionId || !isStripeConfigured) {
-      setLoading(false);
-      return;
-    }
+    if (!sessionId || !isStripeConfigured) return;
 
     fetch(`/api/stripe/verify?session_id=${encodeURIComponent(sessionId)}`)
       .then(async (res) => {

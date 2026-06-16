@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { VISA_DOCUMENT_CHECKLIST } from "@/lib/visa-case-checklist";
 import { DocumentStatusBadge } from "@/components/DocumentStatusBadge";
 import {
@@ -50,7 +50,20 @@ function formatUploadedAt(value?: string | null): string | null {
   }
 }
 
-export function CaseDocumentChecklist({
+export function CaseDocumentChecklist(props: {
+  caseId: string;
+  items: ChecklistItem[];
+  storageReady?: boolean;
+  onUpdated?: () => void;
+  onProgress?: (progress: ProgressUpdate) => void;
+}) {
+  const itemsKey = props.items
+    .map((i) => `${i.name}:${i.status}:${i.documentId ?? ""}`)
+    .join("|");
+  return <CaseDocumentChecklistInner key={itemsKey} {...props} />;
+}
+
+function CaseDocumentChecklistInner({
   caseId,
   items,
   storageReady = true,
@@ -69,10 +82,6 @@ export function CaseDocumentChecklist({
   const [error, setError] = useState("");
   const [savedNotes, setSavedNotes] = useState<Record<string, boolean>>({});
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    setLocalItems(items);
-  }, [items]);
 
   const checklist: ChecklistItem[] =
     localItems.length > 0

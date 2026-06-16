@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Icon } from "./Icon";
-import { DISCLAIMER_SHORT } from "@/lib/data";
+import { useCatalog } from "@/lib/catalog/context";
 import { submitLeadRequest } from "@/lib/supabase/actions";
 
 const navCols = [
@@ -182,6 +182,7 @@ function NewsletterBar() {
 }
 
 export function Footer() {
+  const { disclaimerShort } = useCatalog();
   return (
     <footer className="mt-auto bg-navy text-white">
       <NewsletterBar />
@@ -242,7 +243,7 @@ export function Footer() {
 
             {/* Disclaimer */}
             <p className="mt-6 text-[11px] leading-relaxed text-white/30">
-              {DISCLAIMER_SHORT}
+              {disclaimerShort}
             </p>
           </div>
 

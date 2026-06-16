@@ -3,13 +3,7 @@
 import { useState } from "react";
 import { submitCaseSupportMessage } from "@/lib/visa-case-document-client";
 
-export function CaseSupportForm({
-  caseId,
-  caseNumber: _caseNumber,
-}: {
-  caseId: string;
-  caseNumber: string;
-}) {
+export function CaseSupportForm({ caseId }: { caseId: string; caseNumber: string }) {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "ok" | "err"; text: string } | null>(null);

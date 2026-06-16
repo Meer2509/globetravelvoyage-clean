@@ -5,9 +5,10 @@ import { PageHeader } from "@/components/PageHeader";
 import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
 import { Icon } from "@/components/Icon";
-import { visas } from "@/lib/data";
+import { getCatalogVisas } from "@/lib/catalog/load-bundle";
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  const visas = await getCatalogVisas();
   return visas.map((v) => ({ slug: v.slug }));
 }
 
@@ -17,6 +18,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const visas = await getCatalogVisas();
   const visa = visas.find((v) => v.slug === slug);
   if (!visa) return { title: "Visa guide" };
   return {
@@ -31,6 +33,7 @@ export default async function VisaDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const visas = await getCatalogVisas();
   const visa = visas.find((v) => v.slug === slug);
   if (!visa) notFound();
 
@@ -108,8 +111,8 @@ export default async function VisaDetailPage({
                   </p>
                 </div>
                 <Disclaimer>
-                  This {visa.type} guide is AI-assisted, informational content based
-                  on sample data. Globe Travel Voyage is not an embassy, government
+                  This {visa.type} guide is AI-assisted, informational content for planning.
+                  Globe Travel Voyage is not an embassy, government
                   agency or immigration lawyer, and we do not guarantee visa
                   approval. Verify all requirements with the official authority.
                 </Disclaimer>

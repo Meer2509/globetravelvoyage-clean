@@ -126,7 +126,7 @@ export function AIPlanner() {
           <Icon name="sparkles" className="h-4 w-4" /> Generate AI plan
         </button>
         <p className="text-xs text-navy/45">
-          Demo planner using sample data. Estimates only — not a quote or guarantee.
+          Informational planner only — request a verified quote before booking. Not a guaranteed price or itinerary.
         </p>
       </form>
 

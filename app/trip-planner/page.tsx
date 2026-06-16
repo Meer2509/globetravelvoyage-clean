@@ -6,94 +6,18 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
 import { ContactModal } from "@/components/ContactModal";
-import { packages } from "@/lib/data";
+import { useCatalog } from "@/lib/catalog/context";
+import { generateTripPlanWithAi, mapTravelStyleLabel, AiUnavailableError } from "@/lib/ai-api";
+import type { TripResult } from "@/lib/ai-types";
 
-// ── Mock AI trip plan ─────────────────────────────────────────────────────────
+const TRIP_PLAN_DISCLAIMER =
+  "These estimates are for planning purposes only. Prices may vary significantly based on season, availability, and booking source. Globe Travel Voyage does not guarantee any price or service. Always verify with official providers before booking.";
 
-type TripPlan = {
-  destination: string;
-  days: number;
-  budget: string;
+type TripPlan = TripResult & {
   style: string;
-  breakdown: { label: string; amount: string; emoji: string }[];
-  itinerary: { day: number; title: string; activities: string[] }[];
-  visaNote: string;
+  totalBudget: number;
   disclaimer: string;
 };
-
-function generateMockPlan(dest: string, days: number, budget: number, style: string): TripPlan {
-  const flight = Math.round(budget * 0.30);
-  const hotel  = Math.round(budget * 0.35);
-  const tours  = Math.round(budget * 0.18);
-  const food   = Math.round(budget * 0.12);
-  const misc   = budget - flight - hotel - tours - food;
-
-  const templates: Record<string, { visa: string; days: { title: string; acts: string[] }[] }> = {
-    dubai: {
-      visa: "Pakistani nationals typically need a UAE tourist visa. Process time 3–5 business days. No interview required.",
-      days: [
-        { title: "Arrival & Dubai Marina",   acts: ["Check in, rest", "JBR Beach walk", "Dubai Marina dinner cruise"] },
-        { title: "Old Dubai & Gold Souk",    acts: ["Dubai Museum", "Gold & Spice Souks", "Abra boat ride"] },
-        { title: "Downtown & Burj Khalifa",  acts: ["Dubai Mall", "Burj Khalifa observation deck", "Dubai Fountain show"] },
-        { title: "Desert Safari",            acts: ["Morning relaxation", "Afternoon desert safari", "BBQ dinner under stars"] },
-        { title: "Day trip — Abu Dhabi",     acts: ["Sheikh Zayed Grand Mosque", "Louvre Abu Dhabi", "Corniche"] },
-        { title: "Shopping & departure",     acts: ["Dubai Outlet Mall", "Souvenir shopping", "Airport transfer"] },
-        { title: "Optional extra day",       acts: ["Wild Wadi water park", "Atlantis aquaventure", "Beach day"] },
-      ],
-    },
-    turkey: {
-      visa: "Pakistani nationals require an e-Visa for Turkey. Apply online at evisa.gov.tr. Processing time 1–3 business days.",
-      days: [
-        { title: "Istanbul arrival",              acts: ["Sultanahmet hotel check-in", "Blue Mosque", "Hagia Sophia"] },
-        { title: "Grand Bazaar & Topkapi",        acts: ["Topkapi Palace", "Grand Bazaar shopping", "Bosphorus evening cruise"] },
-        { title: "Galata & Modern Istanbul",      acts: ["Galata Tower", "Taksim Square", "Istiklal Street dining"] },
-        { title: "Cappadocia — hot air balloon",  acts: ["Flight to Cappadocia", "Hot air balloon at sunrise", "Cave hotel"] },
-        { title: "Rock formations & valleys",     acts: ["Göreme Open-Air Museum", "Devrent & Pasabag valleys", "Sunset at Uçhisar"] },
-        { title: "Return to Istanbul",            acts: ["Morning flight", "Bosphorus walk", "Shopping at Arasta Bazaar"] },
-        { title: "Departure",                     acts: ["Hotel checkout", "Final breakfast", "Airport transfer"] },
-      ],
-    },
-  };
-
-  const key = dest.toLowerCase().includes("dubai") || dest.toLowerCase().includes("uae") ? "dubai"
-    : dest.toLowerCase().includes("turkey") || dest.toLowerCase().includes("istanbul") ? "turkey"
-    : null;
-
-  const visaNote = key ? templates[key].visa : `Check the official embassy website for ${dest} visa requirements well in advance. Globe Travel Voyage's AI Visa Assistant can guide you.`;
-
-  const daysTemplate = key ? templates[key].days : [
-    { title: "Arrival & orientation",   acts: ["Check in", "Explore the neighbourhood", "Welcome dinner"] },
-    { title: "Main attractions",        acts: ["Top landmark 1", "Top landmark 2", "Local cuisine"] },
-    { title: "Cultural experience",     acts: ["Museum or heritage site", "Local market", "Street food tour"] },
-    { title: "Nature or adventure",     acts: ["Day excursion", "Scenic viewpoint", "Outdoor activity"] },
-    { title: "Relaxation day",          acts: ["Spa or beach", "Shopping", "Sunset photo spot"] },
-    { title: "Day trip",                acts: ["Nearby attraction", "Countryside", "Return evening"] },
-    { title: "Departure day",           acts: ["Final breakfast", "Last souvenir run", "Airport transfer"] },
-  ];
-
-  const itinerary = Array.from({ length: Math.min(days, 7) }, (_, i) => ({
-    day: i + 1,
-    title: daysTemplate[i]?.title ?? `Day ${i + 1}`,
-    activities: daysTemplate[i]?.acts ?? ["Explore", "Sightsee", "Relax"],
-  }));
-
-  return {
-    destination: dest,
-    days,
-    budget: `$${budget.toLocaleString()}`,
-    style,
-    breakdown: [
-      { label: "Flights (return)", amount: `$${flight}`, emoji: "✈️" },
-      { label: "Accommodation",   amount: `$${hotel}`,  emoji: "🏨" },
-      { label: "Tours & tickets", amount: `$${tours}`,  emoji: "🗺️" },
-      { label: "Food & dining",   amount: `$${food}`,   emoji: "🍽️" },
-      { label: "Transport & misc", amount: `$${misc}`,  emoji: "🚕" },
-    ],
-    itinerary,
-    visaNote,
-    disclaimer: "These are sample estimates for planning purposes only. Prices may vary significantly based on season, availability, and booking source. Globe Travel Voyage does not guarantee any price or service. Always verify with official providers before booking.",
-  };
-}
 
 // ── Main component ────────────────────────────────────────────────────────────
 
@@ -107,18 +31,49 @@ export default function TripPlannerPage() {
   const [travelers, setTravelers]     = useState(2);
   const [plan, setPlan]               = useState<TripPlan | null>(null);
   const [loading, setLoading]         = useState(false);
+  const [error, setError]             = useState("");
   const [modal, setModal]             = useState(false);
 
-  const pkgFilter = useMemo(() => packages.filter((p) => !destination || p.destinations.toLowerCase().includes(destination.toLowerCase())).slice(0, 4), [destination]);
+  const { packages } = useCatalog();
+  const pkgFilter = useMemo(() => packages.filter((p) => !destination || p.destinations.toLowerCase().includes(destination.toLowerCase())).slice(0, 4), [destination, packages]);
 
   async function generatePlan(e: React.FormEvent) {
     e.preventDefault();
     if (!destination.trim()) return;
     setLoading(true);
     setPlan(null);
-    await new Promise((r) => setTimeout(r, 2000));
-    setPlan(generateMockPlan(destination, days, budget * travelers, style));
-    setLoading(false);
+    setError("");
+    const totalBudget = budget * travelers;
+    try {
+      const result = await generateTripPlanWithAi({
+        destination: destination.trim(),
+        days,
+        budget: totalBudget,
+        currency: "USD",
+        travelers,
+        travelStyle: mapTravelStyleLabel(style),
+        accommodation: "hotel",
+        interests: [],
+        includeFlights: true,
+        includeVisa: true,
+      });
+      setPlan({
+        ...result,
+        style,
+        totalBudget,
+        disclaimer: TRIP_PLAN_DISCLAIMER,
+      });
+    } catch (err) {
+      setError(
+        err instanceof AiUnavailableError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Trip planning failed."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -198,6 +153,12 @@ export default function TripPlannerPage() {
               </form>
             </div>
 
+            {error && (
+              <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                {error}
+              </div>
+            )}
+
             {/* AI Output */}
             {plan && (
               <div className="mt-8 space-y-6">
@@ -206,7 +167,7 @@ export default function TripPlannerPage() {
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                       <h3 className="text-2xl font-extrabold text-navy">{plan.destination}</h3>
-                      <p className="text-charcoal/55">{plan.days} days · {plan.budget} total budget · {plan.style}</p>
+                      <p className="text-charcoal/55">{plan.totalDays} days · ${plan.totalBudget.toLocaleString()} total budget · {plan.style}</p>
                     </div>
                     <button onClick={() => setModal(true)} className="btn-primary py-2.5 px-5">Book this trip</button>
                   </div>
@@ -216,16 +177,16 @@ export default function TripPlannerPage() {
                 <div className="card p-6">
                   <h4 className="font-extrabold text-navy mb-4">💰 Budget breakdown</h4>
                   <div className="space-y-3">
-                    {plan.breakdown.map((b) => {
-                      const total = plan.breakdown.reduce((sum, x) => sum + parseInt(x.amount.replace(/[$,]/g, "")), 0);
-                      const pct = Math.round((parseInt(b.amount.replace(/[$,]/g, "")) / total) * 100);
+                    {plan.budgetBreakdown.map((b) => {
+                      const total = plan.budgetBreakdown.reduce((sum, x) => sum + x.amount, 0);
+                      const pct = total > 0 ? Math.round((b.amount / total) * 100) : 0;
                       return (
                         <div key={b.label} className="flex items-center gap-3">
                           <span className="text-xl w-7">{b.emoji}</span>
                           <div className="flex-1">
                             <div className="flex justify-between text-sm mb-1">
                               <span className="font-semibold text-navy">{b.label}</span>
-                              <span className="font-extrabold text-navy">{b.amount}</span>
+                              <span className="font-extrabold text-navy">${b.amount.toLocaleString()}</span>
                             </div>
                             <div className="h-1.5 rounded-full bg-soft-200 overflow-hidden">
                               <div className="h-full rounded-full bg-blue transition-all" style={{ width: `${pct}%` }} />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { defer } from "@/lib/defer-client";
 import Link from "next/link";
 import { Panel } from "@/components/DashboardLayout";
 import { getPlatformFeePercent } from "@/lib/stripe/connect-config";
@@ -45,7 +46,7 @@ export function PayoutSetupPanel({ showFullActions = false }: { showFullActions?
   }, []);
 
   useEffect(() => {
-    loadStatus();
+    defer(() => void loadStatus());
   }, [loadStatus]);
 
   async function startOnboarding(endpoint: "create-account" | "account-link") {

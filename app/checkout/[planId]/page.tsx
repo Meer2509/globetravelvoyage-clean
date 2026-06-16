@@ -2,7 +2,8 @@
 
 import { use } from "react";
 import Link from "next/link";
-import { getPlanById, isPricingPlan } from "@/lib/pricing";
+import { useCatalogPlan } from "@/lib/catalog/context";
+import { isPricingPlan } from "@/lib/pricing";
 import { isStripeConfigured } from "@/lib/stripe";
 import { checkoutProductKeyForPlan } from "@/lib/stripe/plan-map";
 import { StripeCheckoutButton } from "@/components/StripeCheckoutButton";
@@ -14,7 +15,7 @@ export default function CheckoutPlanPage({
   params: Promise<{ planId: string }>;
 }) {
   const { planId } = use(params);
-  const plan = getPlanById(planId);
+  const plan = useCatalogPlan(planId);
 
   if (!plan) {
     return (

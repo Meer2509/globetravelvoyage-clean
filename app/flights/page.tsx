@@ -8,14 +8,13 @@ import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
 import { ContactModal } from "@/components/ContactModal";
 import { Icon } from "@/components/Icon";
-import { flights, cheapRoutes, usaRoutes } from "@/lib/data";
+import { useCatalog } from "@/lib/catalog/context";
+import type { Flight, Route } from "@/lib/data";
 import { SampleCatalogBanner } from "@/components/SampleCatalogBanner";
 import { SamplePrice } from "@/components/PriceEstimateLabel";
 
-type Flight = (typeof flights)[0];
-type Route  = (typeof cheapRoutes)[0];
-
 export default function FlightsPage() {
+  const { flights, cheapRoutes, usaRoutes } = useCatalog();
   const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
   const [selectedRoute, setSelectedRoute]   = useState<Route | null>(null);
   const [search, setSearch]     = useState({ from: "", to: "" });
@@ -43,9 +42,6 @@ export default function FlightsPage() {
     return list;
   }, [search, chips]);
 
-  const flightLabel = (f: Flight) =>
-    `${f.airline} · ${f.from} → ${f.to} · ${f.depart}–${f.arrive} · ${f.stops}`;
-
   return (
     <>
       <div className="bg-hero-gradient py-14">
@@ -56,7 +52,7 @@ export default function FlightsPage() {
           <span className="eyebrow-white mb-3">Flights</span>
           <h1 className="text-3xl font-extrabold text-white sm:text-4xl">Compare flights across the globe</h1>
           <p className="mt-2 text-white/60 text-sm max-w-2xl">
-            Find budget routes from the Gulf to Pakistan, India, the Philippines, Bangladesh and the West. Sample data — always confirm final prices.
+            Find budget routes from the Gulf to Pakistan, India, the Philippines, Bangladesh and the West. Request a verified quote — provider confirmation required.
           </p>
         </div>
       </div>
@@ -78,7 +74,7 @@ export default function FlightsPage() {
       <section className="section">
         <div className="container-px">
           <div className="mb-5">
-            <span className="eyebrow mb-1">Sample results</span>
+            <span className="eyebrow mb-1">Featured routes</span>
             <h2 className="text-xl font-extrabold text-navy">
               Popular flights{" "}
               <span className="text-sm font-normal text-charcoal/40">({filteredFlights.length} results)</span>
@@ -209,9 +205,9 @@ export default function FlightsPage() {
           />
           <div className="mt-8">
             <Disclaimer>
-              Globe Travel Voyage is not an airline or ticketing authority. All fares
-              are sample estimates and can change at any time. We do not guarantee
-              ticket prices or availability.
+              Globe Travel Voyage is not an airline or ticketing authority. Live pricing is not
+              displayed here. Request a verified quote — provider confirmation required before booking.
+              We do not guarantee ticket prices or availability.
             </Disclaimer>
           </div>
         </div>

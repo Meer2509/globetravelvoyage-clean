@@ -3,6 +3,7 @@
 import { createServerSupabaseClient } from "./server";
 import { createAdminClient } from "./admin";
 import { isMissingTableError } from "./profile-utils";
+import { requireAdmin } from "@/lib/auth-server";
 
 export interface ProviderServiceRow {
   id: string;
@@ -366,6 +367,9 @@ export async function fetchMarketplaceExperts(): Promise<MarketplaceExpertRow[]>
 }
 
 export async function fetchAdminReviews() {
+  const adminAuth = await requireAdmin();
+  if (!adminAuth.ok) return [];
+
   const admin = createAdminClient();
   if (!admin) return [];
 
@@ -379,6 +383,9 @@ export async function fetchAdminReviews() {
 }
 
 export async function fetchAdminProviders() {
+  const adminAuth = await requireAdmin();
+  if (!adminAuth.ok) return { experts: [], agencies: [], guides: [], hosts: [] };
+
   const admin = createAdminClient();
   if (!admin) return { experts: [], agencies: [], guides: [], hosts: [] };
 
@@ -398,6 +405,9 @@ export async function fetchAdminProviders() {
 }
 
 export async function fetchAdminProviderServices() {
+  const adminAuth = await requireAdmin();
+  if (!adminAuth.ok) return [];
+
   const admin = createAdminClient();
   if (!admin) return [];
 
@@ -412,6 +422,9 @@ export async function fetchAdminProviderServices() {
 }
 
 export async function fetchAdminReferrals() {
+  const adminAuth = await requireAdmin();
+  if (!adminAuth.ok) return [];
+
   const admin = createAdminClient();
   if (!admin) return [];
 

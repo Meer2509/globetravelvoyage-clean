@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Icon } from "./Icon";
 
 // Shared left-panel visual items
 const features = [

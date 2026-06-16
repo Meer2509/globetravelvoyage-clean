@@ -9,18 +9,18 @@ import { ContactModal } from "@/components/ContactModal";
 import { SaveButton } from "@/components/SaveButton";
 import { SampleCatalogBanner } from "@/components/SampleCatalogBanner";
 import { SamplePrice } from "@/components/PriceEstimateLabel";
-import { stays } from "@/lib/data";
+import { useCatalog } from "@/lib/catalog/context";
 
-const CITY_CHIPS  = [...new Set(stays.map((s) => s.city))];
-const TYPE_CHIPS: string[]  = [...new Set(stays.map((s) => s.type))];
-
-type Stay = (typeof stays)[0];
+type Stay = import("@/lib/data").Stay;
 
 export default function HotelsPage() {
+  const { stays } = useCatalog();
+  const cityChips = useMemo(() => [...new Set(stays.map((s) => s.city))] as string[], [stays]);
+  const typeChips = useMemo(() => [...new Set(stays.map((s) => s.type))] as string[], [stays]);
   const [modalStay, setModalStay]   = useState<Stay | null>(null);
   const [search, setSearch]         = useState("");
   const [chips, setChips]           = useState<string[]>([]);
-  const [savedIds, setSavedIds]     = useState<Set<string>>(new Set());
+  const [, setSavedIds]     = useState<Set<string>>(new Set());
   const [checkIn, setCheckIn]       = useState("");
   const [checkOut, setCheckOut]     = useState("");
   const [guestsRaw, setGuestsRaw]   = useState("");
@@ -44,13 +44,13 @@ export default function HotelsPage() {
         s.type.toLowerCase().includes(q)
       );
     }
-    const cityChips = chips.filter((c) => CITY_CHIPS.includes(c));
-    if (cityChips.length > 0) list = list.filter((s) => cityChips.includes(s.city));
-    const typeChips = chips.filter((c) => TYPE_CHIPS.includes(c));
-    if (typeChips.length > 0) list = list.filter((s) => typeChips.includes(s.type));
+    const selectedCityChips = chips.filter((c) => cityChips.includes(c));
+    if (selectedCityChips.length > 0) list = list.filter((s) => selectedCityChips.includes(s.city));
+    const selectedTypeChips = chips.filter((c) => typeChips.includes(c));
+    if (selectedTypeChips.length > 0) list = list.filter((s) => selectedTypeChips.includes(s.type));
     if (chips.includes("Free cancellation")) list = list.filter((s) => s.amenities.some((a) => a.toLowerCase().includes("cancel")));
     return list;
-  }, [search, chips]);
+  }, [search, chips, stays, cityChips, typeChips]);
 
   return (
     <>
@@ -75,7 +75,7 @@ export default function HotelsPage() {
             { key: "checkout", placeholder: "Check-out", type: "date" },
             { key: "guests",   placeholder: "Guests" },
           ]}
-          chips={["Hotels", "Apartments", "Villas", "Long stay", "Free cancellation", ...CITY_CHIPS]}
+          chips={["Hotels", "Apartments", "Villas", "Long stay", "Free cancellation", ...cityChips]}
           onSearch={handleSearch}
         />
       </div>
@@ -120,7 +120,8 @@ export default function HotelsPage() {
                         onToggle={(saved) =>
                           setSavedIds((prev) => {
                             const next = new Set(prev);
-                            saved ? next.add(stay.id) : next.delete(stay.id);
+                            if (saved) next.add(stay.id);
+                            else next.delete(stay.id);
                             return next;
                           })
                         }

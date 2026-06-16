@@ -460,7 +460,7 @@ export default async function AdminSetupPage() {
         <SetupSection
           emoji="🤖"
           title="AI Features"
-          note="Currently showing mock AI responses. Real AI is planned for a future phase."
+          note={hasOpenAI ? "Live AI responses are enabled via /api/ai." : "Add OPENAI_API_KEY to enable live AI responses. Without it, assistants show an unavailable message."}
           items={[
             {
               label: "OPENAI_API_KEY",
@@ -470,13 +470,13 @@ export default async function AdminSetupPage() {
             },
             {
               label: "AI route handler",
-              detail: "Create /app/api/ai/plan/route.ts using OpenAI streaming",
-              status: "todo",
+              detail: "/app/api/ai/route.ts — shared POST handler for all AI assistants",
+              status: "done",
             },
             {
               label: "AI visa assistant",
-              detail: "Create /app/api/ai/visa/route.ts for country-specific visa guidance",
-              status: "todo",
+              detail: "Visa analysis via /api/ai on /ai-visa-assistant",
+              status: hasOpenAI ? "done" : "todo",
             },
           ]}
         />
@@ -517,8 +517,8 @@ export default async function AdminSetupPage() {
               status: "done",
             },
             {
-              label: "Mock data layer (lib/data.ts)",
-              detail: "All pages render with static mock data — safe without backend",
+              label: "Catalog CMS (016_catalog_cms.sql)",
+              detail: "catalog_entries, seo_pages, pricing_plans — seed with npm run seed:catalog",
               status: "done",
             },
             {
@@ -533,7 +533,7 @@ export default async function AdminSetupPage() {
             },
             {
               label: "All 6 dashboards",
-              detail: "Customer, Agent, Agency, Guide, Host, Admin — with mock data",
+              detail: "Customer, Agent, Agency, Guide, Host, Admin — with preview data until Supabase is connected",
               status: "done",
             },
             {

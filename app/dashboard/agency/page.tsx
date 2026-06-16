@@ -14,7 +14,6 @@ import { PayoutSetupPanel } from "@/components/PayoutSetupPanel";
 import { ProviderEarningsSummary } from "@/components/ProviderEarningsSummary";
 import { MessagesInbox } from "@/components/MessagesInbox";
 import { Disclaimer } from "@/components/Disclaimer";
-import { Icon } from "@/components/Icon";
 import { formatPaymentAmount } from "@/lib/payments-display";
 import {
   DashboardLayout,
@@ -34,15 +33,12 @@ export default function AgencyDashboard() {
   const [leads, setLeads] = useState<LeadRequestRow[]>([]);
   const [tours, setTours] = useState<Array<{ id: string; title: string; city: string | null; tour_type: string | null; price: number | null; status: string; created_at: string }>>([]);
   const [payments, setPayments] = useState<PaymentRow[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(!isSupabaseConfigured);
 
   const userId = user.result?.ok ? user.result.profile.id : "";
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setLoaded(true);
-      return;
-    }
+    if (!isSupabaseConfigured) return;
     if (!userId) return;
     Promise.all([
       fetchAgencyBookings(userId),

@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
-import { referralTiers } from "@/lib/data";
-import { commissionRates } from "@/lib/pricing";
+import { useCatalog } from "@/lib/catalog/context";
 import { Icon } from "@/components/Icon";
 import { Disclaimer } from "@/components/Disclaimer";
 import { areReferralRewardsLive, REFERRAL_LAUNCHING_SOON } from "@/lib/launch-trust";
@@ -42,6 +41,7 @@ function StatCard({ label, value, sub, color }: { label: string; value: string; 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ReferralsPage() {
+  const { referralTiers, commissionRates } = useCatalog();
   const [copied, setCopied]           = useState(false);
   const [activeTab, setActiveTab]     = useState<"all" | CommissionStatus>("all");
   const [referralHistory] = useState<Referral[]>([]);
@@ -52,19 +52,15 @@ export default function ReferralsPage() {
   const [signupError, setSignupError] = useState("");
   const [signupDone, setSignupDone] = useState(false);
 
-  const [referralLink, setReferralLink] = useState("");
+  const referralLink = useMemo(() => {
+    if (!referralCode) return "";
+    if (typeof window === "undefined") return "";
+    return `${window.location.origin}/register?ref=${referralCode}`;
+  }, [referralCode]);
 
   const totalEarned   = referralHistory.filter((r) => r.status === "paid").reduce((s, r) => s + r.amount, 0);
   const totalApproved = referralHistory.filter((r) => r.status === "approved").reduce((s, r) => s + r.amount, 0);
   const totalPending  = referralHistory.filter((r) => r.status === "pending").reduce((s, r) => s + r.amount, 0);
-
-  useEffect(() => {
-    if (referralCode) {
-      setReferralLink(`${window.location.origin}/register?ref=${referralCode}`);
-    } else {
-      setReferralLink("");
-    }
-  }, [referralCode]);
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
@@ -121,7 +117,7 @@ export default function ReferralsPage() {
               <p className="mt-2 text-white/60 text-sm max-w-xl">
                 {areReferralRewardsLive()
                   ? "Share your unique link. Earn commission when friends and partners sign up and take qualifying actions."
-                  : "Referral tracking is in development. Sign up to reserve your place — rewards open after launch verification."}
+                  : "Referral tracking is in development. Sign up to reserve your place — rewards open after member onboarding is complete."}
               </p>
             </div>
             <div className="flex items-center gap-3 flex-shrink-0">
@@ -141,7 +137,7 @@ export default function ReferralsPage() {
         {!areReferralRewardsLive() && (
           <div className="rounded-2xl border border-gold/25 bg-gold/5 px-5 py-4 text-sm text-muted">
             <p className="font-bold text-navy">{REFERRAL_LAUNCHING_SOON}</p>
-            <p className="mt-1">Commission payouts are not live yet. You can still sign up to receive your referral code when rewards open.</p>
+            <p className="mt-1">Commission payouts are not live yet. You can still sign up to receive your referral code when verified payouts open.</p>
           </div>
         )}
 
@@ -257,7 +253,7 @@ export default function ReferralsPage() {
               <span className="inline-flex items-center gap-2 rounded-xl bg-soft px-4 py-2 text-xs font-semibold text-charcoal/60">
                 {areReferralRewardsLive()
                   ? "Commissions track automatically when referrals convert"
-                  : `${REFERRAL_LAUNCHING_SOON} — commissions track automatically when payouts go live`}
+                  : "Referral rewards — early member onboarding — commissions track automatically when payouts open"}
               </span>
             </div>
           </div>

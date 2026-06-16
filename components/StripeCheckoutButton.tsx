@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { isStripeConfigured } from "@/lib/stripe";
 import type { CheckoutProductKey } from "@/lib/stripe/products";
 

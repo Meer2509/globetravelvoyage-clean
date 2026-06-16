@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { CountryExplorer } from "@/components/CountryExplorer";
 import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
-import { visaCountries } from "@/lib/data";
+import { loadCatalogBundle } from "@/lib/catalog/load-bundle";
 
 export const metadata: Metadata = {
   title: "Visa Requirements by Country",
@@ -11,7 +11,8 @@ export const metadata: Metadata = {
     "Browse visa guidance for 190+ countries. Search by country and region to find visa types, difficulty and document checklists.",
 };
 
-export default function VisaCountriesPage() {
+export default async function VisaCountriesPage() {
+  const { visaCountries } = await loadCatalogBundle();
   return (
     <>
       <PageHeader

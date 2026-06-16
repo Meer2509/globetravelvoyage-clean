@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AIChatUI } from "@/components/AIChatUI";
-import { mockTravelReply } from "@/lib/ai-mock";
+import { getTravelAssistantReply } from "@/lib/ai-api";
 
 const PROMPTS = [
   "Which visa do I need for the USA from Pakistan?",
@@ -20,7 +20,7 @@ const AI_SERVICES = [
   { href: "/ai-visa-assistant",   emoji: "🛂", title: "Visa Assistant",     desc: "Nationality → destination → document checklist + risk analysis"  },
   { href: "/ai-trip-planner",     emoji: "🗺️", title: "Trip Planner",       desc: "Budget, days, style → full itinerary + hotel & tour picks"        },
   { href: "/ai-flight-finder",    emoji: "✈️", title: "Flight Finder",      desc: "From/to/dates → cheapest routes + flexible date comparison"       },
-  { href: "/ai-document-checker", emoji: "📋", title: "Document Checker",   desc: "Upload placeholder → missing docs + mistake prevention checklist"  },
+  { href: "/ai-document-checker", emoji: "📋", title: "Document Checker",   desc: "Checklist + readiness score for visa documents"  },
 ];
 
 export default function AITravelAssistantPage() {
@@ -33,7 +33,17 @@ export default function AITravelAssistantPage() {
   }
 
   function handleDownload() {
-    const text = "Globe Travel Voyage — AI Travel Checklist\n\nThis is a placeholder checklist.\n1. Check visa requirements for your destination\n2. Book flights and accommodation\n3. Purchase travel insurance\n4. Check passport validity (6+ months)\n5. Get required vaccinations\n6. Notify your bank of travel plans\n7. Make copies of important documents\n\nDisclaimer: For guidance only. Verify all requirements with official sources.";
+    const text = `Globe Travel Voyage — AI Travel Checklist
+
+1. Check visa requirements for your destination
+2. Book flights and accommodation
+3. Purchase travel insurance
+4. Check passport validity (6+ months)
+5. Get required vaccinations
+6. Notify your bank of travel plans
+7. Make copies of important documents
+
+Disclaimer: For guidance only. Verify all requirements with official sources.`;
     const blob = new Blob([text], { type: "text/plain" });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement("a");
@@ -89,14 +99,10 @@ export default function AITravelAssistantPage() {
                 timestamp: new Date(),
               }]}
               suggestedPrompts={PROMPTS}
-              onUserMessage={async (text) => {
-                const { mockDelay } = await import("@/lib/ai-mock");
-                await mockDelay(1000, 1800);
-                return mockTravelReply(text);
-              }}
+              onUserMessage={(text) => getTravelAssistantReply(text)}
               placeholder="Ask about visas, flights, hotels, trip planning…"
               maxHeight="520px"
-              disclaimer="AI responses are informational and use mock data only. Not legal, immigration or financial advice. No guarantees on visa approvals, prices or availability."
+              disclaimer="AI responses are informational only. Not legal, immigration, or financial advice. No guarantees on visa approvals, prices, or availability."
             />
 
             {/* ── Action bar ── */}

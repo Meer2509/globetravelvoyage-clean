@@ -6,7 +6,7 @@
 
 import { createServerSupabaseClient } from "./server";
 import { createAdminClient } from "./admin";
-import { syncUserRole } from "./actions";
+import { applyUserRole } from "./role-sync";
 import { ensureProfileForUserId } from "./ensure-user-profile";
 import { normalizeUserRole } from "@/lib/auth";
 import type { UserRole } from "./types";
@@ -103,8 +103,10 @@ async function resolveRoleAfterCallback(user: {
 
   const metaRole = normalizeUserRole(user.user_metadata?.role as string | undefined);
   if (metaRole !== "customer" || user.user_metadata?.role) {
-    await syncUserRole(user.id, metaRole);
-    return metaRole;
+    if (metaRole !== "admin") {
+      await applyUserRole(user.id, metaRole);
+    }
+    return metaRole === "admin" ? "customer" : metaRole;
   }
 
   return "customer";

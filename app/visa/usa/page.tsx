@@ -5,15 +5,13 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
 import { Icon } from "@/components/Icon";
-import { visas } from "@/lib/data";
+import { loadCatalogBundle } from "@/lib/catalog/load-bundle";
 
 export const metadata: Metadata = {
   title: "USA Visa Guidance — B1/B2, F-1 Student & More",
   description:
     "Featured AI guidance for US visas: B1/B2 visitor, F-1 student and more. Document checklists, steps and interview prep. Not affiliated with the US government.",
 };
-
-const usaVisas = visas.filter((v) => v.country === "United States");
 
 const interviewTips = [
   "Be concise, honest and confident in your answers",
@@ -23,7 +21,10 @@ const interviewTips = [
   "Dress professionally and arrive early",
 ];
 
-export default function UsaVisaPage() {
+export default async function UsaVisaPage() {
+  const { visas } = await loadCatalogBundle();
+  const usaVisas = visas.filter((v) => v.country === "United States");
+
   return (
     <>
       <PageHeader
@@ -99,7 +100,7 @@ export default function UsaVisaPage() {
             <h3 className="text-lg font-bold text-navy">DS-160 quick facts</h3>
             <div className="mt-4 space-y-3 text-sm text-navy/70">
               <p>• The DS-160 is the online non-immigrant visa application form.</p>
-              <p>• You'll need it for B1/B2, F-1 and most visitor/student visas.</p>
+              <p>• You&apos;ll need it for B1/B2, F-1 and most visitor/student visas.</p>
               <p>• Keep your confirmation page — you need it for the interview.</p>
               <p>• Pay the consular fee and, for students, the SEVIS fee.</p>
             </div>

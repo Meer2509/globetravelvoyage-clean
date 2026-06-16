@@ -66,12 +66,14 @@ export async function fetchCustomerVisaCases(): Promise<VisaCaseData[]> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
 
-  let { data: rows, error } = await supabase
+  const { data: initialRows, error } = await supabase
     .from("visa_cases")
     .select("*")
     .eq("user_id", user.id)
     .not("status", "eq", "cancelled")
     .order("created_at", { ascending: false });
+
+  let rows = initialRows;
 
   if (error && isMissingTableError(error)) return [];
 

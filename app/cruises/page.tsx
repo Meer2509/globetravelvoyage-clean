@@ -6,8 +6,11 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
 import { SaveButton } from "@/components/SaveButton";
+import { SampleCatalogBanner } from "@/components/SampleCatalogBanner";
+import { PriceEstimateLabel } from "@/components/PriceEstimateLabel";
 import { ContactModal, type ContactMode } from "@/components/ContactModal";
-import { cruises, type Cruise } from "@/lib/data";
+import { useCatalog } from "@/lib/catalog/context";
+import type { Cruise } from "@/lib/data";
 import Link from "next/link";
 
 const TYPE_CHIPS: string[] = ["Cruise", "Yacht", "Boat", "Ferry", "Day charter", "Multi-night"];
@@ -20,6 +23,7 @@ const FAQS = [
 ];
 
 export default function CruisesPage() {
+  const { cruises } = useCatalog();
   const [regionFilter, setRegion] = useState("");
   const [chips, setChips]         = useState<string[]>([]);
   const [savedIds, setSaved]       = useState<string[]>([]);
@@ -72,7 +76,8 @@ export default function CruisesPage() {
       </div>
 
       {/* Filter bar */}
-      <div className="container-px">
+      <div className="container-px space-y-4">
+        <SampleCatalogBanner />
         <FilterBar
           fields={[
             { placeholder: "Region or port", type: "text" },
@@ -91,7 +96,7 @@ export default function CruisesPage() {
           <SectionHeader
             eyebrow="Set sail"
             title={regionFilter || chips.length ? `${filtered.length} cruise${filtered.length !== 1 ? "s" : ""} found` : "Featured cruises & charters"}
-            subtitle="From Gulf day trips to multi-night ocean voyages. Request a booking and get confirmation within 24 hours."
+            subtitle="From Gulf day trips to multi-night ocean voyages. Request a verified quote — provider confirmation required."
           />
 
           {filtered.length === 0 ? (
@@ -121,6 +126,7 @@ export default function CruisesPage() {
                       <div className="text-right shrink-0">
                         <p className="text-xs text-charcoal/40">from</p>
                         <p className="text-lg font-extrabold text-navy">{cruise.priceFrom}</p>
+                        <PriceEstimateLabel className="mt-0.5" />
                         <p className="text-xs text-charcoal/40">{cruise.nights > 0 ? `${cruise.nights} nights` : "Day charter"}</p>
                       </div>
                     </div>

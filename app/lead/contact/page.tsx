@@ -159,6 +159,10 @@ export default function LeadContactPage() {
                 ⚠ Globe Travel Voyage connects you with independent experts. We verify identity but do not guarantee the quality of services. Always agree terms in writing before making any payment.
               </div>
 
+              {error && (
+                <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
+              )}
+
               <button type="submit" disabled={loading || !form.expertType || !form.name || !form.email || !form.message} className="btn-primary w-full py-3.5 disabled:opacity-50">
                 {loading ? "Sending…" : "Send message to expert →"}
               </button>

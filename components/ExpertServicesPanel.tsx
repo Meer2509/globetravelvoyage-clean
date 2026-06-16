@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Disclaimer } from "@/components/Disclaimer";
 import { saveExpertServices } from "@/lib/supabase/agent-data";
 import { newExpertService, type ExpertService } from "@/lib/expert-services";
@@ -12,11 +12,24 @@ export function ExpertServicesPanel({
   initialServices: ExpertService[];
   onSaved?: (services: ExpertService[]) => void;
 }) {
-  const [services, setServices] = useState<ExpertService[]>(initialServices);
+  const servicesKey = initialServices.map((s) => s.id).join(",") || "empty";
+  return (
+    <ExpertServicesPanelInner
+      key={servicesKey}
+      initialServices={initialServices}
+      onSaved={onSaved}
+    />
+  );
+}
 
-  useEffect(() => {
-    setServices(initialServices);
-  }, [initialServices]);
+function ExpertServicesPanelInner({
+  initialServices,
+  onSaved,
+}: {
+  initialServices: ExpertService[];
+  onSaved?: (services: ExpertService[]) => void;
+}) {
+  const [services, setServices] = useState<ExpertService[]>(initialServices);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<ExpertService | null>(null);
   const [saving, setSaving] = useState(false);

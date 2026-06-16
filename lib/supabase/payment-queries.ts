@@ -146,7 +146,7 @@ export async function fetchCustomerVisaCase(): Promise<VisaCaseData | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  let { data: visaCaseRow, error: caseError } = await supabase
+  const { data: initialCaseRow, error: caseError } = await supabase
     .from("visa_cases")
     .select("*")
     .eq("user_id", user.id)
@@ -154,6 +154,8 @@ export async function fetchCustomerVisaCase(): Promise<VisaCaseData | null> {
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  let visaCaseRow = initialCaseRow;
 
   if (caseError && isMissingTableError(caseError)) {
     console.error("[visa_cases] table missing:", caseError.message);

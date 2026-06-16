@@ -5,7 +5,7 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { CTASection } from "@/components/CTASection";
 import { Disclaimer } from "@/components/Disclaimer";
 import { Icon } from "@/components/Icon";
-import { destinations } from "@/lib/data";
+import { loadCatalogBundle } from "@/lib/catalog/load-bundle";
 
 export const metadata: Metadata = {
   title: "Luxury Destinations — Explore the World",
@@ -15,7 +15,8 @@ export const metadata: Metadata = {
 
 const categories = ["All", "City", "Beach", "Culture", "Adventure", "Religious"] as const;
 
-export default function DestinationsPage() {
+export default async function DestinationsPage() {
+  const { destinations } = await loadCatalogBundle();
   const categoryGroups: Record<string, typeof destinations> = {};
   for (const cat of categories.slice(1)) {
     categoryGroups[cat] = destinations.filter((d) => d.category === cat);

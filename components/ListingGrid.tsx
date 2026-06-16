@@ -1,6 +1,7 @@
 "use client";
 
 import { Stars } from "./Stars";
+import { QUOTE_BADGE_LABEL } from "@/lib/launch-trust";
 import { PriceEstimateLabel } from "./PriceEstimateLabel";
 import { SaveButton } from "./SaveButton";
 
@@ -33,7 +34,7 @@ function ListingCard({
       <div className="relative flex h-32 items-center justify-center bg-gradient-to-br from-soft to-soft-200 text-5xl">
         <span>{item.emoji ?? "🌍"}</span>
         <span className="absolute left-3 top-3 rounded-full bg-gold px-2.5 py-1 text-xs font-bold text-navy">
-          {item.badge ?? "Sample estimate"}
+          {item.badge ?? QUOTE_BADGE_LABEL}
         </span>
         {onSave && (
           <div className="absolute right-2 top-2">

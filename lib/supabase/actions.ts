@@ -7,6 +7,9 @@
 import { createServerSupabaseClient } from "./server";
 import { createAdminClient, isAdminClientConfigured } from "./admin";
 import type { UserRole } from "./types";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { requireAdmin, requireSession, SELF_ASSIGNABLE_ROLES } from "@/lib/auth-server";
+import { applyUserRole } from "./role-sync";
 
 export type ActionResult<T = { id: string }> =
   | { ok: true; data: T }
@@ -27,25 +30,31 @@ function notConfigured<T = { id: string }>(): ActionResult<T> {
   return { ok: false, error: "Supabase is not configured.", demo: true };
 }
 
+async function guardFormRateLimit(userId: string | null): Promise<{ ok: false; error: string } | null> {
+  const limited = await enforceRateLimit("form", userId);
+  if (!limited.ok) return { ok: false, error: limited.error };
+  return null;
+}
+
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
 export async function syncUserRole(userId: string, role: UserRole): Promise<ActionResult<{ role: UserRole }>> {
-  const admin = dbClient();
-  if (!admin) return notConfigured();
+  if (role === "admin") {
+    const adminAuth = await requireAdmin();
+    if (!adminAuth.ok) return { ok: false, error: adminAuth.error };
+  } else {
+    const session = await requireSession();
+    if (!session.ok) return { ok: false, error: session.error };
+    if (session.userId !== userId) {
+      const adminAuth = await requireAdmin();
+      if (!adminAuth.ok) return { ok: false, error: adminAuth.error };
+    } else if (!SELF_ASSIGNABLE_ROLES.includes(role)) {
+      return { ok: false, error: "Not authorized to assign this role." };
+    }
+  }
 
-  const { error: metaError } = await admin.auth.admin.updateUserById(userId, {
-    user_metadata: { role },
-  });
-  if (metaError) return { ok: false, error: metaError.message };
-
-  await admin.from("user_roles").delete().eq("user_id", userId).eq("is_primary", true);
-
-  const { error: roleError } = await admin.from("user_roles").upsert(
-    { user_id: userId, role, is_primary: true },
-    { onConflict: "user_id,role" }
-  );
-  if (roleError) return { ok: false, error: roleError.message };
-
+  const result = await applyUserRole(userId, role);
+  if (!result.ok) return { ok: false, error: result.error };
   return { ok: true, data: { role } };
 }
 
@@ -85,6 +94,8 @@ export async function submitVisaRequest(input: VisaRequestInput): Promise<Action
   if (!admin) return notConfigured();
 
   const userId = await getOptionalUserId();
+  const rateBlocked = await guardFormRateLimit(userId);
+  if (rateBlocked) return rateBlocked;
 
   const { data, error } = await admin
     .from("visa_requests")
@@ -131,6 +142,8 @@ export async function submitBookingRequest(input: BookingRequestInput): Promise<
   if (!admin) return notConfigured();
 
   const userId = await getOptionalUserId();
+  const rateBlocked = await guardFormRateLimit(userId);
+  if (rateBlocked) return rateBlocked;
 
   const { data, error } = await admin
     .from("booking_requests")
@@ -177,6 +190,8 @@ export async function submitLeadRequest(input: LeadRequestInput): Promise<Action
   if (!admin) return notConfigured();
 
   const userId = await getOptionalUserId();
+  const rateBlocked = await guardFormRateLimit(userId);
+  if (rateBlocked) return rateBlocked;
 
   const { data, error } = await admin
     .from("lead_requests")
@@ -219,6 +234,8 @@ export async function submitSupportTicket(input: SupportTicketInput): Promise<Ac
   if (!admin) return notConfigured();
 
   const userId = await getOptionalUserId();
+  const rateBlocked = await guardFormRateLimit(userId);
+  if (rateBlocked) return rateBlocked;
 
   const { data, error } = await admin
     .from("support_messages")
@@ -261,6 +278,8 @@ export async function submitPropertyListing(input: PropertyListingInput): Promis
   if (!admin) return notConfigured();
 
   const userId = await getOptionalUserId();
+  const rateBlocked = await guardFormRateLimit(userId);
+  if (rateBlocked) return rateBlocked;
 
   const { data, error } = await admin
     .from("property_listings")
@@ -302,6 +321,8 @@ export async function submitReferralSignup(input: ReferralSignupInput): Promise<
   if (!admin) return notConfigured();
 
   const userId = await getOptionalUserId();
+  const rateBlocked = await guardFormRateLimit(userId);
+  if (rateBlocked) return rateBlocked;
   const codeBase = input.name.split(" ")[0]?.toUpperCase().slice(0, 6) ?? "USER";
   const code = `GTV-${codeBase}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 

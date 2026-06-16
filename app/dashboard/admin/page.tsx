@@ -33,14 +33,12 @@ import { ROLE_LABELS } from "@/lib/auth";
 import type { UserRole } from "@/lib/supabase/types";
 import Link from "next/link";
 import { formatPaymentAmount, formatPaymentDate, paymentServiceLabel } from "@/lib/payments-display";
-import { Stars } from "@/components/Stars";
 import { Icon } from "@/components/Icon";
 import {
   DashboardLayout,
   StatCard,
   Panel,
   TableRow,
-  ProgressBar,
   type DashboardTab,
 } from "@/components/DashboardLayout";
 
@@ -65,21 +63,6 @@ const tabs: DashboardTab[] = [
 
 // ─── Mock data ─────────────────────────────────────────────────────────────────
 
-const recentUsers = [
-  { name: "Ahmed K.", role: "Customer", country: "🇵🇰 Pakistan", joined: "Jun 10", status: "Active" },
-  { name: "Sana M.", role: "Visa Expert", country: "🇦🇪 UAE", joined: "Jun 9", status: "Active" },
-  { name: "Voyage Pro", role: "Agency", country: "🇦🇪 UAE", joined: "Jun 8", status: "Active" },
-  { name: "Khalid R.", role: "Tour Guide", country: "🇦🇪 UAE", joined: "Jun 7", status: "Active" },
-  { name: "Omar F.", role: "Host", country: "🇦🇪 UAE", joined: "Jun 6", status: "Suspended" },
-];
-
-const allUsers = [
-  ...recentUsers,
-  { name: "Maria L.", role: "Customer", country: "🇵🇭 Philippines", joined: "Jun 5", status: "Active" },
-  { name: "Tariq M.", role: "Customer", country: "🇵🇰 Pakistan", joined: "Jun 4", status: "Active" },
-  { name: "Sara J.", role: "Visa Expert", country: "🇮🇳 India", joined: "Jun 3", status: "Pending" },
-];
-
 const verificationQueue = [
   { name: "Global Visas Ltd.", type: "Agency", country: "🇦🇪 UAE", submitted: "Jun 10", docs: 4 },
   { name: "Rania Hassan", type: "Visa Expert", country: "🇪🇬 Egypt", submitted: "Jun 9", docs: 3 },
@@ -95,21 +78,6 @@ const agencies = [
   { name: "Orient Express Travel", country: "🇵🇰 Pakistan", packages: 5, tours: 12, bookings: 28, revenue: "$18.2k", verified: true, status: "Active" },
   { name: "Global Wings Agency", country: "🇵🇭 Philippines", packages: 2, tours: 4, bookings: 15, revenue: "$9.8k", verified: false, status: "Active" },
   { name: "Pearl of Asia Tours", country: "🇮🇳 India", packages: 4, tours: 9, bookings: 33, revenue: "$21.5k", verified: true, status: "Active" },
-];
-
-const visaExperts = [
-  { name: "Sana Malik", country: "🇦🇪 UAE", specialties: "USA, UK, Schengen", clients: 5, rating: 4.9, reviews: 312, status: "Active" },
-  { name: "Hassan Al-Qadi", country: "🇸🇦 KSA", specialties: "Canada, Australia", clients: 3, rating: 4.8, reviews: 148, status: "Active" },
-  { name: "Priya Sharma", country: "🇮🇳 India", specialties: "UK, Schengen", clients: 7, rating: 4.7, reviews: 92, status: "Active" },
-  { name: "Rania Hassan", country: "🇪🇬 Egypt", specialties: "USA, Canada", clients: 0, rating: 0, reviews: 0, status: "Pending" },
-];
-
-const adminBookings = [
-  { id: "#10421", type: "Package", item: "Dubai Family Escape", customer: "B. Ahmed", agency: "Voyage Pro", amount: "$3,560", status: "Confirmed", date: "Jun 14" },
-  { id: "#10420", type: "Package", item: "Umrah Premium", customer: "I. Khan", agency: "Orient Express", amount: "$3,300", status: "Confirmed", date: "Jun 13" },
-  { id: "#10419", type: "Tour", item: "Desert Safari x4", customer: "M. Saeed", agency: "Voyage Pro", amount: "$220", status: "Pending", date: "Jun 13" },
-  { id: "#10418", type: "Ticket", item: "Burj Khalifa x2", customer: "R. Iqbal", agency: "Voyage Pro", amount: "$84", status: "Confirmed", date: "Jun 12" },
-  { id: "#10417", type: "Package", item: "Turkey Discovery", customer: "F. Khan", agency: "Orient Express", amount: "$2,300", status: "Pending", date: "Jun 12" },
 ];
 
 const referrals = [
@@ -151,14 +119,6 @@ const flaggedReviews = [
   { id: "REV-438", reviewer: "Maria L.", target: "Unknown Agent", rating: 1, text: "No response from agent.", flag: "Quality issue", date: "Jun 7" },
 ];
 
-const supportTickets = [
-  { id: "ST-101", user: "Ahmed K.", subject: "Visa appointment reschedule", priority: "High", status: "Open", assigned: "Support 1", date: "Jun 10" },
-  { id: "ST-100", user: "Maria L.", subject: "Refund request — cancelled tour", priority: "High", status: "In Progress", assigned: "Support 2", date: "Jun 9" },
-  { id: "ST-099", user: "Tariq M.", subject: "Referral payout not received", priority: "Medium", status: "Open", assigned: "—", date: "Jun 9" },
-  { id: "ST-098", user: "Sara J.", subject: "Account verification delay", priority: "Medium", status: "In Progress", assigned: "Support 1", date: "Jun 8" },
-  { id: "ST-097", user: "Omar F.", subject: "Listing removal appeal", priority: "Low", status: "Resolved", assigned: "Support 3", date: "Jun 7" },
-];
-
 const seoPages = [
   { slug: "/visa/usa-from-pakistan", title: "USA Visa from Pakistan Guide", views: 12400, rank: "3", lastEdited: "Jun 5", status: "Published" },
   { slug: "/visa/usa", title: "USA Visa Information", views: 8900, rank: "8", lastEdited: "Jun 3", status: "Published" },
@@ -182,23 +142,6 @@ interface VisaRequestItem {
   assignedTo: string;
   email: string;
 }
-
-const INITIAL_VISA_REQUESTS: VisaRequestItem[] = [
-  { id: "VR-1021", name: "Ahmed Khan",      nationality: "🇵🇰 Pakistani",  destination: "🇺🇸 USA B1/B2",   purpose: "Tourism",  submitted: "Jun 10", status: "pending",   assignedTo: "—",         email: "ahmed@example.com" },
-  { id: "VR-1020", name: "Maria Santos",    nationality: "🇵🇭 Filipino",   destination: "🇨🇦 Canada",      purpose: "Work",     submitted: "Jun 9",  status: "reviewing", assignedTo: "Sana Malik", email: "maria@example.com" },
-  { id: "VR-1019", name: "Bilal Iqbal",     nationality: "🇵🇰 Pakistani",  destination: "🇬🇧 UK Visitor", purpose: "Business", submitted: "Jun 9",  status: "submitted", assignedTo: "Sana Malik", email: "bilal@example.com" },
-  { id: "VR-1018", name: "Layla Hassan",    nationality: "🇪🇬 Egyptian",   destination: "🇩🇪 Germany",     purpose: "Study",    submitted: "Jun 8",  status: "approved",  assignedTo: "Priya Sharma",email: "layla@example.com" },
-  { id: "VR-1017", name: "Rashid Ali",      nationality: "🇮🇳 Indian",     destination: "🇦🇺 Australia",   purpose: "PR",       submitted: "Jun 7",  status: "pending",   assignedTo: "—",         email: "rashid@example.com" },
-  { id: "VR-1016", name: "Nadia Iqbal",     nationality: "🇵🇰 Pakistani",  destination: "🇪🇺 Schengen",    purpose: "Tourism",  submitted: "Jun 6",  status: "rejected",  assignedTo: "Sana Malik", email: "nadia@example.com" },
-  { id: "VR-1015", name: "David Lopez",     nationality: "🇵🇭 Filipino",   destination: "🇺🇸 USA B1/B2",   purpose: "Family",   submitted: "Jun 5",  status: "approved",  assignedTo: "Hassan Al-Qadi",email: "david@example.com" },
-  { id: "VR-1014", name: "Fatima Al-Ali",   nationality: "🇯🇴 Jordanian",  destination: "🇨🇦 Canada",      purpose: "Business", submitted: "Jun 5",  status: "pending",   assignedTo: "—",         email: "fatima@example.com" },
-  { id: "VR-1013", name: "Tariq Mehmood",   nationality: "🇵🇰 Pakistani",  destination: "🇬🇧 UK Visitor", purpose: "Tourism",  submitted: "Jun 4",  status: "reviewing", assignedTo: "Priya Sharma",email: "tariq@example.com" },
-  { id: "VR-1012", name: "Grace Reyes",     nationality: "🇵🇭 Filipino",   destination: "🇸🇦 Saudi Arabia",purpose: "Work",     submitted: "Jun 3",  status: "approved",  assignedTo: "Hassan Al-Qadi",email: "grace@example.com" },
-  { id: "VR-1011", name: "Omar Farooq",     nationality: "🇵🇰 Pakistani",  destination: "🇦🇪 UAE Tourist", purpose: "Tourism",  submitted: "Jun 2",  status: "pending",   assignedTo: "—",         email: "omar@example.com" },
-  { id: "VR-1010", name: "Samira Youssef",  nationality: "🇲🇦 Moroccan",   destination: "🇫🇷 France",      purpose: "Study",    submitted: "Jun 1",  status: "rejected",  assignedTo: "Sana Malik", email: "samira@example.com" },
-  { id: "VR-1009", name: "Imran Hussain",   nationality: "🇧🇩 Bangladeshi",destination: "🇺🇸 USA F-1",     purpose: "Study",    submitted: "Jun 1",  status: "submitted", assignedTo: "Sana Malik", email: "imran@example.com" },
-  { id: "VR-1008", name: "Ana dela Cruz",   nationality: "🇵🇭 Filipino",   destination: "🇦🇺 Australia",   purpose: "Work",     submitted: "May 31", status: "approved",  assignedTo: "Hassan Al-Qadi",email: "ana@example.com" },
-];
 
 const EXPERTS_LIST = ["Sana Malik", "Hassan Al-Qadi", "Priya Sharma", "Rania Hassan"];
 
@@ -536,20 +479,6 @@ function GuidesTab() {
   );
 }
 
-// ─── Analytics Bar ─────────────────────────────────────────────────────────────
-
-function MiniBar({ label, value, max, color = "bg-blue" }: { label: string; value: number; max: number; color?: string }) {
-  return (
-    <div className="flex items-center gap-3 text-sm">
-      <span className="w-28 shrink-0 text-xs text-charcoal/60">{label}</span>
-      <div className="flex-1 h-2 rounded-full bg-soft-200">
-        <div className={`h-2 rounded-full ${color}`} style={{ width: `${(value / max) * 100}%` }} />
-      </div>
-      <span className="w-12 text-right text-xs font-bold text-navy">{value.toLocaleString()}</span>
-    </div>
-  );
-}
-
 // ─── Verification Queue Tab ──────────────────────────────────────────────────
 
 type VerifStatus = "pending" | "approved" | "rejected" | "reviewing";
@@ -728,7 +657,7 @@ function ReviewsManagementTab() {
                       </span>
                     </div>
                     <p className="text-xs text-charcoal/50">Target: {r.target} · {r.date}</p>
-                    <p className="mt-2 text-sm text-charcoal/70 italic">"{r.text}"</p>
+                    <p className="mt-2 text-sm text-charcoal/70 italic">&ldquo;{r.text}&rdquo;</p>
                   </div>
                   <div className="flex shrink-0 items-center gap-0.5">
                     {Array.from({ length: 5 }).map((_, i) => (
@@ -1049,7 +978,6 @@ export default function AdminDashboard() {
       fetchAdminConnectProviders().then(setLiveConnectProviders),
     ]).then(() => setDbWarnings([...warnings]));
   }, []);
-  const [usersData, setUsersData]   = useState(allUsers.map((u) => ({ ...u })));
   const [featureToggles, setFeatureToggles] = useState([
     { label: "AI Visa Assistant",           enabled: true  },
     { label: "AI Trip Planner",             enabled: true  },
@@ -1058,20 +986,10 @@ export default function AdminDashboard() {
     { label: "New user registrations",      enabled: true  },
     { label: "Maintenance mode",            enabled: false },
   ]);
-  const [supportData, setSupportData] = useState<Array<{ id: string; subject: string; status: string; created_at: string }>>([]);
-
-  useEffect(() => {
-    setSupportData(liveSupport);
-  }, [liveSupport]);
 
   function showToast(msg: string) {
     setAdminToast(msg);
     setTimeout(() => setAdminToast(null), 3000);
-  }
-
-  function toggleUserStatus(name: string) {
-    setUsersData((prev) => prev.map((u) => u.name === name ? { ...u, status: u.status === "Active" ? "Suspended" : "Active" } : u));
-    showToast(`User status updated`);
   }
 
   function toggleFeature(label: string) {
@@ -1080,7 +998,7 @@ export default function AdminDashboard() {
   }
 
   function updateTicketStatus(id: string, status: string) {
-    setSupportData((prev) => prev.map((t) => t.id === id ? { ...t, status } : t));
+    setLiveSupport((prev) => prev.map((t) => t.id === id ? { ...t, status } : t));
     showToast(`Ticket updated to "${status}" (refresh to sync with Supabase)`);
   }
 
@@ -1216,7 +1134,7 @@ export default function AdminDashboard() {
           <StatCard label="Countries" value={liveProfiles.length > 0 ? String(new Set(liveProfiles.map((p) => p.country).filter(Boolean)).size) : "—"} icon="check" color="navy" />
         </div>
 
-        <Panel title="Registered users" subtitle={liveProfiles.length > 0 ? "Live profiles from Supabase" : "Sample data — connect Supabase to see real users"}>
+        <Panel title="Registered users" subtitle={liveProfiles.length > 0 ? "Live profiles from Supabase" : "Preview data — connect Supabase to see live profiles"}>
           <div className="mb-4 flex gap-3">
             <input
               className="input flex-1 text-sm"
@@ -1709,11 +1627,11 @@ export default function AdminDashboard() {
         </div>
 
         <Panel title="Support Tickets" noPad>
-          {supportData.length === 0 ? (
+          {liveSupport.length === 0 ? (
             <p className="p-8 text-center text-sm text-charcoal/50">No support tickets yet. Customer messages appear here from Supabase.</p>
           ) : (
             <div className="divide-y divide-soft-200">
-              {supportData.map((t) => (
+              {liveSupport.map((t) => (
                 <div key={t.id} className="flex items-center justify-between p-5 flex-wrap gap-3">
                   <div>
                     <p className="font-bold text-navy">{t.subject}</p>

@@ -24,7 +24,7 @@ const sections = [
   },
   {
     title: "No price guarantee on flights or tickets",
-    body: "All flight prices, ticket prices, hotel rates, car rental rates, cruise prices, and tour prices displayed on this platform are sample or estimated figures for demonstration purposes. They are not guaranteed rates and may change at any time based on availability, season, airline policy, and other factors. Always confirm the final price directly with the provider before booking.",
+    body: "All flight prices, ticket prices, hotel rates, car rental rates, cruise prices, and tour prices displayed on this platform are illustrative figures for planning purposes. Live pricing is not displayed — request a verified quote and confirm with the provider before booking. Rates may change based on availability, season, airline policy, and other factors.",
   },
   {
     title: "Third-party providers",
@@ -32,7 +32,7 @@ const sections = [
   },
   {
     title: "AI assistant",
-    body: "Our AI assistant provides sample, informational responses based on publicly available data. It does not have access to your personal immigration history, real-time airline systems, or live visa authority databases. AI responses are not a substitute for advice from a qualified professional.",
+    body: "Our AI assistant provides AI-generated informational responses based on publicly available data. It does not have access to your personal immigration history, real-time airline systems, or live visa authority databases. AI responses are not a substitute for advice from a qualified professional.",
   },
   {
     title: "Property listings",

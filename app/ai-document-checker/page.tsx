@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { mockDocumentCheck, VISA_TYPES, type DocumentCheckResult } from "@/lib/ai-mock";
+import { checkDocumentsWithAi, AiUnavailableError } from "@/lib/ai-api";
+import { VISA_TYPES, VISA_DOCUMENT_SETS, type DocumentCheckResult } from "@/lib/ai-types";
 
-// ── Document upload placeholder ───────────────────────────────────────────────
+// ── Document upload UI ─────────────────────────────────────────────────────────
 
 function UploadSlot({ label, required }: { label: string; required?: boolean }) {
   const [status, setStatus] = useState<"idle" | "uploading" | "done">("idle");
@@ -206,7 +207,11 @@ function ResultPanel({ result, onReset }: { result: DocumentCheckResult; onReset
 function DownloadReportButton() {
   const [done, setDone] = useState(false);
   function download() {
-    const text = "Globe Travel Voyage — Document Check Report\n\nThis is a placeholder report.\n\nDisclaimer: For guidance only. Verify with official sources.";
+    const text = `Globe Travel Voyage — Document Check Report
+
+Summary of your document readiness review.
+
+Disclaimer: For guidance only. Verify with official sources.`;
     const blob = new Blob([text], { type: "text/plain" });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement("a"); a.href = url; a.download = "document-check-report.txt"; a.click();
@@ -230,20 +235,9 @@ export default function AIDocumentCheckerPage() {
   const [checkedDocs, setCheckedDocs] = useState<string[]>([]);
   const [loading, setLoading]         = useState(false);
   const [result, setResult]           = useState<DocumentCheckResult | null>(null);
+  const [error, setError]             = useState("");
 
-  // Get document set for selected visa type
-  const { mockDocumentCheck: _mock, VISA_TYPES: _vt, ..._ } = { mockDocumentCheck, VISA_TYPES };
-
-  const VISA_DOC_MAP: Record<string, { critical: string[]; optional: string[] }> = {
-    "usa-b1b2":       { critical: ["Valid passport (6+ months)", "DS-160 confirmation page", "$185 MRV fee receipt", "CEAC interview appointment", "Passport photo (5×5 cm)", "Bank statements (3–6 months)", "Employment letter", "Proof of home ties"], optional: ["Property documents", "Previous US visas", "International travel history", "Sponsor/invitation letter", "Cover letter"] },
-    "usa-student":    { critical: ["Valid passport", "I-20 from accredited school", "SEVIS I-901 payment receipt", "DS-160 form", "$185 MRV fee receipt", "CEAC appointment", "Financial proof (tuition + living)"], optional: ["Admission letter", "Scholarship documents", "SAT/TOEFL scores", "Academic transcripts"] },
-    "uk-visitor":     { critical: ["Valid passport + old passports", "Online UK visa application", "Biometric enrolment", "Bank statements (6 months)", "Employment/payslip letter", "Accommodation proof", "Return flights"], optional: ["Travel insurance", "Previous UK visas", "Cover letter", "Property documents"] },
-    "canada-visitor": { critical: ["Valid passport", "IMM 5257 form", "Digital photo", "Financial proof (CAD $2,500+)", "Biometrics", "Employment letter"], optional: ["Invitation letter", "Travel history", "Property documents", "Bank reference letter"] },
-    "schengen":       { critical: ["Valid passport (3 months post-departure)", "Application form", "2 biometric photos", "Travel insurance (€30,000 min)", "Accommodation proof", "Return flight booking", "Bank statements (3 months)"], optional: ["Employer letter", "Previous Schengen visas", "Invitation letter", "Detailed itinerary"] },
-    "uae-tourist":    { critical: ["Valid passport (6+ months)", "Passport photo", "Return ticket", "Hotel booking"], optional: ["Travel insurance", "Bank statement", "Employment letter"] },
-  };
-
-  const currentDocs = VISA_DOC_MAP[visaType] ?? { critical: [], optional: [] };
+  const currentDocs = VISA_DOCUMENT_SETS[visaType] ?? { critical: [], optional: [] };
 
   function toggleDoc(doc: string) {
     setCheckedDocs((prev) => prev.includes(doc) ? prev.filter((d) => d !== doc) : [...prev, doc]);
@@ -251,10 +245,15 @@ export default function AIDocumentCheckerPage() {
 
   async function runCheck() {
     setLoading(true);
+    setError("");
     setStep("result");
     try {
-      const r = await mockDocumentCheck({ visaType, nationality, destination, checkedDocs });
+      const r = await checkDocumentsWithAi({ visaType, nationality, destination, checkedDocs });
       setResult(r);
+    } catch (err) {
+      setResult(null);
+      setError(err instanceof AiUnavailableError ? err.message : err instanceof Error ? err.message : "Document check failed.");
+      setStep("checklist");
     } finally {
       setLoading(false);
     }
@@ -263,6 +262,7 @@ export default function AIDocumentCheckerPage() {
   function reset() {
     setStep("select");
     setResult(null);
+    setError("");
     setCheckedDocs([]);
     setVisaType("");
     setNationality("");
@@ -425,12 +425,12 @@ export default function AIDocumentCheckerPage() {
                 </div>
               )}
 
-              {/* Upload placeholders */}
+              {/* Upload documents */}
               <div className="card p-5">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-bold text-navy text-sm">Upload your documents</h3>
                   <span className="rounded-full border border-gold/20 bg-gold/8 px-2 py-0.5 text-[10px] font-bold text-gold">
-                    Secure document upload coming soon
+                    Secure upload available after case creation
                   </span>
                 </div>
                 <div className="space-y-2">
@@ -439,7 +439,7 @@ export default function AIDocumentCheckerPage() {
                   ))}
                 </div>
                 <p className="mt-3 text-[11px] text-charcoal/35">
-                  Files are stored securely on your account and never shared without your consent.
+                  Secure upload available after case creation. Files are stored on your account and never shared without your consent.
                 </p>
               </div>
 
@@ -465,6 +465,9 @@ export default function AIDocumentCheckerPage() {
               <button onClick={runCheck} className="btn-gold w-full py-4 text-base font-extrabold">
                 🤖 Run AI document check →
               </button>
+              {error && (
+                <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
+              )}
             </div>
           )}
 

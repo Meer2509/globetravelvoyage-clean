@@ -4,7 +4,7 @@ import { useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Stars } from "@/components/Stars";
-import { agents, tours, stays, tickets, visas } from "@/lib/data";
+import { useCatalog } from "@/lib/catalog/context";
 
 const CATEGORIES = [
   { key: "all",    label: "All results", emoji: "🔍" },
@@ -18,6 +18,7 @@ const CATEGORIES = [
 type Category = (typeof CATEGORIES)[number]["key"];
 
 function SearchContent() {
+  const { visas, agents, tours, stays, tickets } = useCatalog();
   const params         = useSearchParams();
   const initialQuery   = params.get("q") ?? "";
   const [query, setQuery]   = useState(initialQuery);
@@ -41,7 +42,7 @@ function SearchContent() {
       hotels:  stays.filter((s) => s.name.toLowerCase().includes(q) || s.city.toLowerCase().includes(q) || s.country.toLowerCase().includes(q)),
       tickets: tickets.filter((t) => t.attraction.toLowerCase().includes(q) || t.city.toLowerCase().includes(q) || t.category.toLowerCase().includes(q)),
     };
-  }, [q]);
+  }, [q, visas, agents, tours, stays, tickets]);
 
   const totalCount = Object.values(results).reduce((sum, arr) => sum + arr.length, 0);
 

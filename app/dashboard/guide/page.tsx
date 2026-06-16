@@ -33,15 +33,12 @@ export default function GuideDashboard() {
   const [bookings, setBookings] = useState<BookingRequestRow[]>([]);
   const [payments, setPayments] = useState<PaymentRow[]>([]);
   const [summary, setSummary] = useState<{ bookingRequests: number; leadRequests: number } | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(!isSupabaseConfigured);
 
   const userId = user.result?.ok ? user.result.profile.id : "";
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setLoaded(true);
-      return;
-    }
+    if (!isSupabaseConfigured) return;
     Promise.all([
       fetchGuideTours(),
       userId ? fetchProviderBookings(userId) : Promise.resolve([]),

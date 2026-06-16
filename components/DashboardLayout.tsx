@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -196,23 +196,30 @@ function DashboardLayoutUrlTabs(props: DashboardLayoutProps & { urlTabBase: stri
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlTab = normalizeCustomerTab(searchParams.get("tab"));
-  const initial = resolveDashboardTab(props.tabs, props.defaultTab, urlTab);
-  const [active, setActive] = useState(initial);
-
-  useEffect(() => {
-    const next = resolveDashboardTab(props.tabs, props.defaultTab, urlTab);
-    if (next && next !== active) setActive(next);
-  }, [urlTab, props.tabs, props.defaultTab, active]);
+  const active = resolveDashboardTab(props.tabs, props.defaultTab, urlTab);
 
   const onSelectTab = useCallback(
     (key: string) => {
-      setActive(key);
       router.push(customerDashboardPath(key));
     },
     [router]
   );
 
   return <DashboardLayoutFrame {...props} active={active} onSelectTab={onSelectTab} />;
+}
+
+function DashboardLayoutLocalTabs(props: DashboardLayoutProps) {
+  const [active, setActive] = useState(() =>
+    resolveDashboardTab(props.tabs, props.defaultTab, null)
+  );
+
+  return (
+    <DashboardLayoutFrame
+      {...props}
+      active={active}
+      onSelectTab={setActive}
+    />
+  );
 }
 
 export function DashboardLayout(props: DashboardLayoutProps) {
@@ -233,17 +240,7 @@ export function DashboardLayout(props: DashboardLayoutProps) {
     );
   }
 
-  const [active, setActive] = useState(() =>
-    resolveDashboardTab(props.tabs, props.defaultTab, null)
-  );
-
-  return (
-    <DashboardLayoutFrame
-      {...props}
-      active={active}
-      onSelectTab={setActive}
-    />
-  );
+  return <DashboardLayoutLocalTabs {...props} />;
 }
 
 // ─── StatCard ─────────────────────────────────────────────────────────────────

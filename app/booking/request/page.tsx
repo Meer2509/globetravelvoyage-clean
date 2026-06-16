@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Disclaimer } from "@/components/Disclaimer";
@@ -27,14 +27,24 @@ function normalizeServiceType(raw: string | null): string {
   return map[raw] ?? raw;
 }
 
-function BookingRequestForm() {
-  const searchParams = useSearchParams();
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [form, setForm] = useState({
-    serviceType: "",
-    serviceName: "",
+function buildInitialForm(searchParams: ReturnType<typeof useSearchParams>) {
+  const service = normalizeServiceType(searchParams.get("service"));
+  const subject = searchParams.get("subject") ?? "";
+  const from = searchParams.get("from") ?? "";
+  const to = searchParams.get("to") ?? "";
+  const destination = searchParams.get("destination") ?? "";
+  const details = searchParams.get("details") ?? "";
+
+  const messageParts = [
+    subject ? `Request: ${subject}` : "",
+    from && to ? `Route: ${from} → ${to}` : "",
+    destination ? `Destination: ${destination}` : "",
+    details,
+  ].filter(Boolean);
+
+  return {
+    serviceType: service,
+    serviceName: subject || destination,
     name: "",
     email: "",
     phone: "",
@@ -42,33 +52,19 @@ function BookingRequestForm() {
     endDate: "",
     travelers: "1",
     budget: "",
-    message: "",
-  });
+    message: messageParts.join("\n"),
+  };
+}
 
-  useEffect(() => {
-    const service = normalizeServiceType(searchParams.get("service"));
-    const subject = searchParams.get("subject") ?? "";
-    const from = searchParams.get("from") ?? "";
-    const to = searchParams.get("to") ?? "";
-    const destination = searchParams.get("destination") ?? "";
-    const details = searchParams.get("details") ?? "";
-
-    if (!service && !subject && !destination) return;
-
-    const messageParts = [
-      subject ? `Request: ${subject}` : "",
-      from && to ? `Route: ${from} → ${to}` : "",
-      destination ? `Destination: ${destination}` : "",
-      details,
-    ].filter(Boolean);
-
-    setForm((f) => ({
-      ...f,
-      serviceType: service || f.serviceType,
-      serviceName: subject || destination || f.serviceName,
-      message: messageParts.join("\n") || f.message,
-    }));
-  }, [searchParams]);
+function BookingRequestFormInner({
+  searchParams,
+}: {
+  searchParams: ReturnType<typeof useSearchParams>;
+}) {
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [form, setForm] = useState(() => buildInitialForm(searchParams));
 
   function set(key: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -198,6 +194,11 @@ function BookingRequestForm() {
       <Disclaimer variant="inline" />
     </form>
   );
+}
+
+function BookingRequestForm() {
+  const searchParams = useSearchParams();
+  return <BookingRequestFormInner key={searchParams.toString()} searchParams={searchParams} />;
 }
 
 export default function BookingRequestPage() {

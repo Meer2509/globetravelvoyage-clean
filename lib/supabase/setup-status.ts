@@ -3,7 +3,6 @@
 import { readFileSync } from "fs";
 import { join } from "path";
 import { checkDatabaseHealth } from "./database-health";
-import { isAdminClientConfigured } from "./admin";
 
 export interface SupabaseSetupStatus {
   hasSupabaseJs: boolean;

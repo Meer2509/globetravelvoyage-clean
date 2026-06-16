@@ -8,6 +8,7 @@ import {
   type UntypedDb,
 } from "@/lib/visa-case-document-service";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 function getServiceDb(): UntypedDb | null {
   const admin = createAdminClient();
@@ -23,6 +24,9 @@ export async function submitCaseSupportMessage(input: {
   if (!session.user) {
     return { ok: false, error: session.error ?? "Sign in to contact support." };
   }
+
+  const limited = await enforceRateLimit("form", session.user.id);
+  if (!limited.ok) return { ok: false, error: limited.error };
 
   const owned = await verifyCaseOwnership(input.caseId, session.user.id);
   if (!owned.ok) return { ok: false, error: owned.error };
@@ -83,6 +87,11 @@ export async function submitSupportTicket(input: {
   message: string;
 }): Promise<{ ok: boolean; error?: string }> {
   const session = await getSessionUser();
+  if (!session.user) return { ok: false, error: "Sign in to submit a ticket." };
+
+  const limited = await enforceRateLimit("form", session.user.id);
+  if (!limited.ok) return { ok: false, error: limited.error };
+
   const db = getServiceDb();
   const supabase = await createServerSupabaseClient();
   const writer = db ?? (supabase as UntypedDb | null);

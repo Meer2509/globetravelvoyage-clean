@@ -122,7 +122,7 @@ export function SearchBar() {
           <div>
             <p className="text-sm text-navy/80">{result}</p>
             <p className="mt-1 text-xs text-charcoal/45">
-              Demo preview — sample results only. We never guarantee prices or visa approval.
+              Informational preview only. Request a verified quote — we never guarantee prices or visa approval.
             </p>
           </div>
         </div>

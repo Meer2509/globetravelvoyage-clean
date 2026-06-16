@@ -14,12 +14,6 @@ export function FilterBar({ fields, chips = [], onSearch, className = "" }: Filt
   const [values, setValues]           = useState<Record<string, string>>({});
   const [selectedChips, setSelected]  = useState<string[]>([]);
 
-  function toggleChip(chip: string) {
-    setSelected((prev) =>
-      prev.includes(chip) ? prev.filter((c) => c !== chip) : [...prev, chip]
-    );
-  }
-
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     onSearch?.(values, selectedChips);
