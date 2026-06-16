@@ -6,8 +6,10 @@ import {
   type CatalogBundle,
 } from "@/lib/catalog/static-bundle";
 import type { CommissionRate, PricingBundle, PricingPlan } from "@/lib/pricing";
+import type { Visa } from "@/lib/data";
 import {
   fetchCatalogEntriesGrouped,
+  fetchCatalogCollectionFromDb,
   fetchCommissionRatesFromDb,
   fetchPricingBundlesFromDb,
   fetchPricingPlansFromDb,
@@ -101,6 +103,20 @@ export const loadCatalogBundle = cache(async (): Promise<CatalogBundle> => {
 
 export async function getCatalogVisas() {
   return (await loadCatalogBundle()).visas;
+}
+
+/** Safe for generateStaticParams — static slugs plus optional public DB slugs; no cookies/session. */
+export async function getStaticVisaSlugs(): Promise<{ slug: string }[]> {
+  const slugSet = new Set(buildStaticCatalogBundle().visas.map((v) => v.slug));
+
+  const fromDb = await fetchCatalogCollectionFromDb<Visa>(CATALOG_COLLECTIONS.visas);
+  if (fromDb?.length) {
+    for (const visa of fromDb) {
+      if (visa.slug) slugSet.add(visa.slug);
+    }
+  }
+
+  return [...slugSet].map((slug) => ({ slug }));
 }
 
 export async function getSeoVisaPage(slug: string): Promise<SeoPageConfig | undefined> {

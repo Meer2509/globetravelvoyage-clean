@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from "./server";
+import { createPublicSupabaseClient } from "./public-server";
 import { createAdminClient } from "./admin";
 import type { CatalogCollectionKey } from "@/lib/catalog/collections";
 
@@ -22,7 +22,7 @@ export interface PricingRow {
 }
 
 export async function fetchCatalogEntriesGrouped(): Promise<Map<string, unknown[]> | null> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = createPublicSupabaseClient();
   if (!supabase) return null;
 
   const { data, error } = await supabase
@@ -53,7 +53,7 @@ export async function fetchCatalogCollectionFromDb<T>(
 }
 
 export async function fetchSiteConstantFromDb<T>(itemKey: string): Promise<T | null> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = createPublicSupabaseClient();
   if (!supabase) return null;
 
   const { data, error } = await supabase
@@ -72,7 +72,7 @@ export async function fetchSeoPagesFromDb(): Promise<{
   visa: Record<string, unknown>;
   travel: Record<string, unknown>;
 } | null> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = createPublicSupabaseClient();
   if (!supabase) return null;
 
   const { data, error } = await supabase
@@ -92,7 +92,7 @@ export async function fetchSeoPagesFromDb(): Promise<{
 }
 
 export async function fetchPricingPlansFromDb<T>(): Promise<T[] | null> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = createPublicSupabaseClient();
   if (!supabase) return null;
 
   const { data, error } = await supabase
@@ -106,7 +106,7 @@ export async function fetchPricingPlansFromDb<T>(): Promise<T[] | null> {
 }
 
 export async function fetchPricingBundlesFromDb<T>(): Promise<T[] | null> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = createPublicSupabaseClient();
   if (!supabase) return null;
 
   const { data, error } = await supabase
@@ -120,7 +120,7 @@ export async function fetchPricingBundlesFromDb<T>(): Promise<T[] | null> {
 }
 
 export async function fetchCommissionRatesFromDb<T>(): Promise<T[] | null> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = createPublicSupabaseClient();
   if (!supabase) return null;
 
   const { data, error } = await supabase

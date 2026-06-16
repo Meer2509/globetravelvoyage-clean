@@ -5,11 +5,10 @@ import { PageHeader } from "@/components/PageHeader";
 import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
 import { Icon } from "@/components/Icon";
-import { getCatalogVisas } from "@/lib/catalog/load-bundle";
+import { getCatalogVisas, getStaticVisaSlugs } from "@/lib/catalog/load-bundle";
 
 export async function generateStaticParams() {
-  const visas = await getCatalogVisas();
-  return visas.map((v) => ({ slug: v.slug }));
+  return getStaticVisaSlugs();
 }
 
 export async function generateMetadata({

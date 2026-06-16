@@ -3,6 +3,7 @@ export { CatalogProvider, useCatalog, useCatalogPlan } from "./context";
 export {
   loadCatalogBundle,
   getCatalogVisas,
+  getStaticVisaSlugs,
   getSeoVisaPage,
   getSeoTravelPage,
   getPricingPlanById,
