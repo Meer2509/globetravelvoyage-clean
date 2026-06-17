@@ -29,13 +29,21 @@ async function callAi(prompt: string, json = false): Promise<string> {
     body: JSON.stringify({ prompt, json }),
   });
 
-  const data = (await res.json()) as { text?: string; error?: string; message?: string };
+  const data = (await res.json()) as {
+    text?: string;
+    error?: string;
+    message?: string;
+    source?: string;
+  };
 
   if (res.status === 503) {
     throw new AiUnavailableError(data.message ?? AI_UNAVAILABLE_MESSAGE);
   }
   if (!res.ok) {
     throw new Error(data.error ?? "AI request failed.");
+  }
+  if (data.source !== "openai") {
+    throw new Error("AI response did not come from the live OpenAI service.");
   }
   if (!data.text?.trim()) {
     throw new Error("Empty response from AI.");
