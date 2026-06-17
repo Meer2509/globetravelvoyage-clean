@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Disclaimer } from "@/components/Disclaimer";
 import { submitLeadRequest } from "@/lib/supabase/actions";
-import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
+import { FORM_SUBMIT_SUCCESS_MESSAGE, FORM_SUBMIT_ERROR_MESSAGE } from "@/lib/site-config";
 
 const EXPERT_TYPES = [
   { value: "visa_agent",   label: "Visa agent",       emoji: "🛂", desc: "Document prep & interview guidance" },
@@ -47,8 +47,7 @@ export default function LeadContactPage() {
     setLoading(false);
 
     if (!result.ok) {
-      if (result.demo) { setSubmitted(true); return; }
-      setError(result.error);
+      setError(result.error ?? FORM_SUBMIT_ERROR_MESSAGE);
       return;
     }
     setSubmitted(true);

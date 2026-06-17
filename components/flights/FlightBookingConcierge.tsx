@@ -9,7 +9,7 @@ import {
   formatFlightPrice,
   type FlightBookingParams,
 } from "@/lib/flights/booking-params";
-import { SITE_CONFIG, supportMailto } from "@/lib/site-config";
+import { SITE_CONFIG, FORM_SUBMIT_ERROR_MESSAGE, supportMailto } from "@/lib/site-config";
 
 const TRUST_ITEMS = [
   { icon: "🔒", title: "Secure request", text: "Your details are handled confidentially by our booking team." },
@@ -28,7 +28,7 @@ const CABIN_OPTIONS = [
 const FLIGHT_SUCCESS_MESSAGE =
   "Thank you. Your flight request has been received. A Globe Travel Voyage specialist will review the fare and contact you shortly before ticketing.";
 
-const FLIGHT_ERROR_MESSAGE = `We could not submit your request right now. Please email ${SITE_CONFIG.supportEmail}.`;
+const FLIGHT_ERROR_MESSAGE = FORM_SUBMIT_ERROR_MESSAGE;
 
 function normalizeCabin(raw?: string): string {
   if (!raw) return "economy";

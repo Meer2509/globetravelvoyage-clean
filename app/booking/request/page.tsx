@@ -7,7 +7,7 @@ import { Disclaimer } from "@/components/Disclaimer";
 import { FlightBookingConcierge } from "@/components/flights/FlightBookingConcierge";
 import { parseFlightBookingParams } from "@/lib/flights/booking-params";
 import { submitBookingRequest } from "@/lib/supabase/actions";
-import { SITE_CONFIG, supportMailto } from "@/lib/site-config";
+import { SITE_CONFIG, FORM_SUBMIT_ERROR_MESSAGE, supportMailto } from "@/lib/site-config";
 import { useState } from "react";
 
 const SERVICE_TYPES = [
@@ -21,7 +21,7 @@ const SERVICE_TYPES = [
   { value: "ticket", label: "Attraction ticket", emoji: "🎟️" },
 ];
 
-const GENERIC_ERROR = `We could not submit your request right now. Please email ${SITE_CONFIG.supportEmail}.`;
+const GENERIC_ERROR = FORM_SUBMIT_ERROR_MESSAGE;
 
 function normalizeServiceType(raw: string | null): string {
   if (!raw) return "";

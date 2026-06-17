@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AuthLayout, StepProgress } from "@/components/AuthLayout";
+import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
+import { completeHostOnboarding } from "@/lib/supabase/onboarding-actions";
 
 const STEPS = ["Property", "Details", "Policies", "Done"];
 
@@ -15,6 +17,8 @@ const amenities = [
 
 export default function HostOnboarding() {
   const [step, setStep] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [data, setData] = useState({
     propertyType: "",
     listingType: "",
@@ -47,6 +51,43 @@ export default function HostOnboarding() {
         ? p.selectedAmenities.filter((x) => x !== a)
         : [...p.selectedAmenities, a],
     }));
+  }
+
+  async function handleSubmit() {
+    setError("");
+    setLoading(true);
+    try {
+      const result = await completeHostOnboarding({
+        propertyType: data.propertyType,
+        listingType: data.listingType,
+        title: data.title,
+        city: data.city,
+        country: data.country,
+        neighborhood: data.neighborhood,
+        beds: data.beds,
+        baths: data.baths,
+        maxGuests: data.maxGuests,
+        sqft: data.sqft,
+        pricePerNight: data.pricePerNight,
+        pricePerMonth: data.pricePerMonth,
+        askingPrice: data.askingPrice,
+        description: data.description,
+        selectedAmenities: data.selectedAmenities,
+        checkIn: data.checkIn,
+        checkOut: data.checkOut,
+        minStay: data.minStay,
+        petFriendly: data.petFriendly,
+        smokingAllowed: data.smokingAllowed,
+        instantBook: data.instantBook,
+      });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setStep(3);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -304,9 +345,13 @@ export default function HostOnboarding() {
               <strong className="text-navy">📋 Important:</strong> Globe Travel Voyage is a lead generation and listing platform. We are not a real estate broker, property manager or landlord. All rental and sale agreements are between host and guest/buyer directly. Verify all legal requirements in your country.
             </div>
 
+            {error && <p className="text-sm text-red-600">{error}</p>}
+
             <div className="flex gap-3">
-              <button onClick={() => setStep(1)} className="btn-outline flex-1 py-3">← Back</button>
-              <button onClick={() => setStep(3)} className="btn-primary flex-1 py-3">List my property →</button>
+              <button onClick={() => setStep(1)} className="btn-outline flex-1 py-3" disabled={loading}>← Back</button>
+              <button onClick={handleSubmit} className="btn-primary flex-1 py-3" disabled={loading}>
+                {loading ? "Saving…" : "List my property →"}
+              </button>
             </div>
           </div>
         )}
@@ -316,9 +361,9 @@ export default function HostOnboarding() {
             <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-blue/10 text-5xl">
               🏠
             </div>
-            <h2 className="mt-5 text-2xl font-extrabold text-navy">Property listed!</h2>
+            <h2 className="mt-5 text-2xl font-extrabold text-navy">Listing submitted!</h2>
             <p className="mt-2 text-sm text-charcoal/60">
-              {data.title || "Your property"} is now live and visible to travelers worldwide.
+              {FORM_SUBMIT_SUCCESS_MESSAGE}
             </p>
 
             <div className="mt-4 rounded-xl border border-soft-200 bg-soft p-4 text-left text-xs text-charcoal/60">

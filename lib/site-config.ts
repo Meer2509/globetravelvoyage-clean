@@ -7,6 +7,8 @@ export const SITE_CONFIG = {
 export const FORM_SUBMIT_SUCCESS_MESSAGE =
   "Thank you! Your request has been received. Our Globe Travel Voyage support team will review it and contact you shortly.";
 
+export const FORM_SUBMIT_ERROR_MESSAGE = `We could not submit your request right now. Please email ${SITE_CONFIG.supportEmail}.`;
+
 export const supportMailto = `mailto:${SITE_CONFIG.supportEmail}`;
 
 export function supportFromAddress(name = SITE_CONFIG.name): string {

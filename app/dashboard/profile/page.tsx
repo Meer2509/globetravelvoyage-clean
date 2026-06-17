@@ -82,7 +82,7 @@ export default function DashboardProfilePage() {
     setSaving(false);
 
     if (!result.ok) {
-      setError(result.demo ? "Your profile could not be saved right now. Please try again later." : result.error);
+      setError(result.error);
       return;
     }
 

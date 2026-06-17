@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AdminAccessRequired } from "@/components/admin/AdminAccessRequired";
+import { requireAdmin } from "@/lib/auth-server";
 import { getProductionAuditReport } from "@/lib/audit-status";
 
 export const metadata: Metadata = {
@@ -15,6 +17,11 @@ const STATUS_STYLES = {
 };
 
 export default async function AdminAuditPage() {
+  const adminAuth = await requireAdmin();
+  if (!adminAuth.ok) {
+    return <AdminAccessRequired message={adminAuth.error} />;
+  }
+
   const report = await getProductionAuditReport();
 
   return (

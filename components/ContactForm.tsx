@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { submitContactForm } from "@/lib/supabase/actions";
-import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
+import { FORM_SUBMIT_SUCCESS_MESSAGE, FORM_SUBMIT_ERROR_MESSAGE } from "@/lib/site-config";
 
 export function ContactForm() {
   const [sent, setSent] = useState(false);
@@ -20,8 +20,7 @@ export function ContactForm() {
     setLoading(false);
 
     if (!result.ok) {
-      if (result.demo) { setSent(true); return; }
-      setError(result.error);
+      setError(result.error ?? FORM_SUBMIT_ERROR_MESSAGE);
       return;
     }
     setSent(true);

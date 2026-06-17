@@ -9,10 +9,28 @@ import {
   upsertVisaExpertForProfile,
 } from "./ensure-user-profile";
 import type { UserRole } from "./types";
+import { notifyIntakeSubmission } from "@/lib/email/intake-notifications";
+import { FORM_SUBMIT_ERROR_MESSAGE } from "@/lib/site-config";
+
+const PROVIDER_ROLES: UserRole[] = [
+  "visa_agent",
+  "travel_agency",
+  "tour_guide",
+  "property_host",
+];
+
+const ROLE_LABELS: Record<UserRole, string> = {
+  customer: "Traveler",
+  visa_agent: "Visa Expert",
+  travel_agency: "Travel Agency",
+  tour_guide: "Tour Guide",
+  property_host: "Property Host",
+  admin: "Administrator",
+};
 
 export type ProfileActionResult<T = void> =
   | { ok: true; data?: T }
-  | { ok: false; error: string; demo?: boolean };
+  | { ok: false; error: string };
 
 export interface SignupProfileInput {
   userId: string;
@@ -47,7 +65,7 @@ function adminOrFail(): ReturnType<typeof createAdminClient> | null {
 
 export async function saveProfileOnSignup(input: SignupProfileInput): Promise<ProfileActionResult> {
   const admin = adminOrFail();
-  if (!admin) return { ok: false, error: "Supabase is not configured.", demo: true };
+  if (!admin) return { ok: false, error: FORM_SUBMIT_ERROR_MESSAGE };
 
   const profileResult = await ensureProfileForUserId(input.userId, input.email, {
     fullName: input.fullName,
@@ -82,12 +100,36 @@ export async function saveProfileOnSignup(input: SignupProfileInput): Promise<Pr
     if (!expertResult.ok) return { ok: false, error: expertResult.error };
   }
 
+  if (PROVIDER_ROLES.includes(input.role)) {
+    notifyIntakeSubmission({
+      kind: "provider_application",
+      requestId: input.userId,
+      customerName: input.fullName,
+      customerEmail: input.email,
+      userId: input.userId,
+      supportSubject: `New provider application: ${ROLE_LABELS[input.role]}`,
+      fields: [
+        { label: "Provider type", value: ROLE_LABELS[input.role] },
+        { label: "Phone", value: input.phone },
+        { label: "Country", value: input.country },
+        { label: "City", value: input.city },
+        { label: "Company", value: input.companyName },
+        { label: "Business type", value: input.businessType },
+        {
+          label: "Specializations",
+          value: input.specializations?.join(", "),
+        },
+        { label: "Bio", value: input.bio },
+      ],
+    });
+  }
+
   return { ok: true };
 }
 
 export async function updateUserProfile(input: ProfileUpdateInput): Promise<ProfileActionResult> {
   const admin = adminOrFail();
-  if (!admin) return { ok: false, error: "Supabase is not configured.", demo: true };
+  if (!admin) return { ok: false, error: FORM_SUBMIT_ERROR_MESSAGE };
 
   const profileResult = await ensureUserProfile({
     fullName: input.fullName,

@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Icon } from "./Icon";
 import { useCatalog } from "@/lib/catalog/context";
 import { submitLeadRequest } from "@/lib/supabase/actions";
-import { FORM_SUBMIT_SUCCESS_MESSAGE, SITE_CONFIG, supportMailto } from "@/lib/site-config";
+import { SITE_CONFIG, FORM_SUBMIT_SUCCESS_MESSAGE, FORM_SUBMIT_ERROR_MESSAGE, supportMailto } from "@/lib/site-config";
 
 const navCols = [
   {
@@ -126,8 +126,8 @@ function NewsletterBar() {
       message: "Footer newsletter signup",
     });
     setLoading(false);
-    if (!result.ok && !result.demo) {
-      setError(result.error ?? "Could not subscribe. Try again or contact support.");
+    if (!result.ok) {
+      setError(result.error ?? FORM_SUBMIT_ERROR_MESSAGE);
       return;
     }
     setSubmitted(true);

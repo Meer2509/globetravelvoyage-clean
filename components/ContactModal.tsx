@@ -226,7 +226,6 @@ function ContactModalForm({
     setLoading(false);
 
     if (!result.ok) {
-      if (result.demo) { setSubmitted(true); return; }
       setError(result.error);
       return;
     }

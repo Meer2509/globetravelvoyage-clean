@@ -658,3 +658,445 @@ export async function fetchAdminEmailLogs(): Promise<{
   }
   return { logs: (data ?? []) as AdminEmailLogRow[] };
 }
+
+// ─── Admin operational data ───────────────────────────────────────────────────
+
+export interface AdminVerificationItem {
+  id: string;
+  name: string;
+  type: string;
+  country: string | null;
+  submitted: string;
+  status: string;
+}
+
+export interface AdminAgencyRow {
+  id: string;
+  agency_name: string;
+  country: string | null;
+  services: string[] | null;
+  verification_status: string;
+  is_active: boolean;
+  total_packages: number;
+  rating: number;
+  review_count: number;
+  created_at: string;
+}
+
+export interface AdminGuideRow {
+  id: string;
+  name: string;
+  city: string | null;
+  country: string | null;
+  languages: string[] | null;
+  verification_status: string;
+  is_active: boolean;
+  rating: number;
+  review_count: number;
+  total_tours_led: number;
+  created_at: string;
+}
+
+export interface AdminReferralRow {
+  id: string;
+  referral_code: string;
+  referrer_name: string | null;
+  referrer_email: string | null;
+  referred_name: string | null;
+  status: string;
+  commission_usd: number;
+  created_at: string;
+  paid_at: string | null;
+}
+
+export interface AdminReviewRow {
+  id: string;
+  reviewer_name: string | null;
+  target_type: string;
+  target_id: string;
+  rating: number;
+  title: string | null;
+  body: string | null;
+  is_verified: boolean;
+  created_at: string;
+}
+
+export interface AdminExpertRow {
+  id: string;
+  name: string;
+  country: string | null;
+  city: string | null;
+  verification_status: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+function formatAdminDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+async function profileNameMap(
+  admin: NonNullable<ReturnType<typeof createAdminClient>>,
+  userIds: string[]
+): Promise<Map<string, { full_name: string | null; email: string; country: string | null }>> {
+  if (userIds.length === 0) return new Map();
+
+  const { data } = await admin
+    .from("profiles")
+    .select("id, full_name, email, country")
+    .in("id", userIds);
+
+  return new Map(
+    ((data ?? []) as Array<{ id: string; full_name: string | null; email: string; country: string | null }>).map(
+      (p) => [p.id, p]
+    )
+  );
+}
+
+export async function fetchAdminVerificationQueue(): Promise<AdminVerificationItem[]> {
+  const gate = await requireAdminDashboard();
+  if (!gate.ok) return [];
+
+  const admin = createAdminClient();
+  if (!admin) return [];
+
+  const pendingFilter = ["pending", "under_review"];
+
+  const [agenciesRes, expertsRes, guidesRes, hostsRes] = await Promise.all([
+    admin
+      .from("agencies")
+      .select("id, agency_name, registration_country, verification_status, created_at, user_id")
+      .in("verification_status", pendingFilter)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    admin
+      .from("visa_experts")
+      .select("id, full_name, country, verification_status, created_at, user_id")
+      .in("verification_status", pendingFilter)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    admin
+      .from("tour_guides")
+      .select("id, guide_country, verification_status, created_at, user_id")
+      .in("verification_status", pendingFilter)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    admin
+      .from("property_hosts")
+      .select("id, verification_status, created_at, user_id")
+      .in("verification_status", pendingFilter)
+      .order("created_at", { ascending: false })
+      .limit(50),
+  ]);
+
+  const userIds = [
+    ...((agenciesRes.data ?? []) as Array<{ user_id: string }>).map((r) => r.user_id),
+    ...((expertsRes.data ?? []) as Array<{ user_id: string }>).map((r) => r.user_id),
+    ...((guidesRes.data ?? []) as Array<{ user_id: string }>).map((r) => r.user_id),
+    ...((hostsRes.data ?? []) as Array<{ user_id: string }>).map((r) => r.user_id),
+  ];
+  const profiles = await profileNameMap(admin, [...new Set(userIds)]);
+
+  const items: AdminVerificationItem[] = [];
+
+  for (const row of (agenciesRes.data ?? []) as Array<{
+    id: string;
+    agency_name: string;
+    registration_country: string | null;
+    verification_status: string;
+    created_at: string;
+    user_id: string;
+  }>) {
+    const profile = profiles.get(row.user_id);
+    items.push({
+      id: row.id,
+      name: row.agency_name || profile?.full_name || "Agency",
+      type: "Agency",
+      country: row.registration_country ?? profile?.country ?? null,
+      submitted: formatAdminDate(row.created_at),
+      status: row.verification_status,
+    });
+  }
+
+  for (const row of (expertsRes.data ?? []) as Array<{
+    id: string;
+    full_name: string | null;
+    country: string | null;
+    verification_status: string;
+    created_at: string;
+    user_id: string;
+  }>) {
+    const profile = profiles.get(row.user_id);
+    items.push({
+      id: row.id,
+      name: row.full_name || profile?.full_name || profile?.email || "Visa Expert",
+      type: "Visa Expert",
+      country: row.country ?? profile?.country ?? null,
+      submitted: formatAdminDate(row.created_at),
+      status: row.verification_status,
+    });
+  }
+
+  for (const row of (guidesRes.data ?? []) as Array<{
+    id: string;
+    guide_country: string | null;
+    verification_status: string;
+    created_at: string;
+    user_id: string;
+  }>) {
+    const profile = profiles.get(row.user_id);
+    items.push({
+      id: row.id,
+      name: profile?.full_name || profile?.email || "Tour Guide",
+      type: "Tour Guide",
+      country: row.guide_country ?? profile?.country ?? null,
+      submitted: formatAdminDate(row.created_at),
+      status: row.verification_status,
+    });
+  }
+
+  for (const row of (hostsRes.data ?? []) as Array<{
+    id: string;
+    verification_status: string;
+    created_at: string;
+    user_id: string;
+  }>) {
+    const profile = profiles.get(row.user_id);
+    items.push({
+      id: row.id,
+      name: profile?.full_name || profile?.email || "Property Host",
+      type: "Host",
+      country: profile?.country ?? null,
+      submitted: formatAdminDate(row.created_at),
+      status: row.verification_status,
+    });
+  }
+
+  return items.sort((a, b) => b.submitted.localeCompare(a.submitted));
+}
+
+export async function fetchAdminAgencies(): Promise<AdminAgencyRow[]> {
+  const gate = await requireAdminDashboard();
+  if (!gate.ok) return [];
+
+  const admin = createAdminClient();
+  if (!admin) return [];
+
+  const { data, error } = await admin
+    .from("agencies")
+    .select(
+      "id, agency_name, registration_country, services, verification_status, is_active, total_packages, rating, review_count, created_at"
+    )
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error || !data) return [];
+
+  return (data as Array<{
+    id: string;
+    agency_name: string;
+    registration_country: string | null;
+    services: string[] | null;
+    verification_status: string;
+    is_active: boolean;
+    total_packages: number;
+    rating: number;
+    review_count: number;
+    created_at: string;
+  }>).map((a) => ({
+    id: a.id,
+    agency_name: a.agency_name,
+    country: a.registration_country,
+    services: a.services,
+    verification_status: a.verification_status,
+    is_active: a.is_active,
+    total_packages: a.total_packages ?? 0,
+    rating: Number(a.rating ?? 0),
+    review_count: a.review_count ?? 0,
+    created_at: a.created_at,
+  }));
+}
+
+export async function fetchAdminGuides(): Promise<AdminGuideRow[]> {
+  const gate = await requireAdminDashboard();
+  if (!gate.ok) return [];
+
+  const admin = createAdminClient();
+  if (!admin) return [];
+
+  const { data, error } = await admin
+    .from("tour_guides")
+    .select(
+      "id, user_id, guide_city, guide_country, languages, verification_status, is_active, rating, review_count, total_tours_led, created_at"
+    )
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error || !data) return [];
+
+  const userIds = (data as Array<{ user_id: string }>).map((g) => g.user_id);
+  const profiles = await profileNameMap(admin, userIds);
+
+  return (data as Array<{
+    id: string;
+    user_id: string;
+    guide_city: string | null;
+    guide_country: string | null;
+    languages: string[] | null;
+    verification_status: string;
+    is_active: boolean;
+    rating: number;
+    review_count: number;
+    total_tours_led: number;
+    created_at: string;
+  }>).map((g) => {
+    const profile = profiles.get(g.user_id);
+    return {
+      id: g.id,
+      name: profile?.full_name || profile?.email || "Tour Guide",
+      city: g.guide_city,
+      country: g.guide_country ?? profile?.country ?? null,
+      languages: g.languages,
+      verification_status: g.verification_status,
+      is_active: g.is_active,
+      rating: Number(g.rating ?? 0),
+      review_count: g.review_count ?? 0,
+      total_tours_led: g.total_tours_led ?? 0,
+      created_at: g.created_at,
+    };
+  });
+}
+
+export async function fetchAdminExperts(): Promise<AdminExpertRow[]> {
+  const gate = await requireAdminDashboard();
+  if (!gate.ok) return [];
+
+  const admin = createAdminClient();
+  if (!admin) return [];
+
+  const { data, error } = await admin
+    .from("visa_experts")
+    .select("id, user_id, full_name, country, city, verification_status, is_active, created_at")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error || !data) return [];
+
+  const userIds = (data as Array<{ user_id: string }>).map((e) => e.user_id);
+  const profiles = await profileNameMap(admin, userIds);
+
+  return (data as Array<{
+    id: string;
+    user_id: string;
+    full_name: string | null;
+    country: string | null;
+    city: string | null;
+    verification_status: string;
+    is_active: boolean;
+    created_at: string;
+  }>).map((e) => {
+    const profile = profiles.get(e.user_id);
+    return {
+      id: e.id,
+      name: e.full_name || profile?.full_name || profile?.email || "Visa Expert",
+      country: e.country ?? profile?.country ?? null,
+      city: e.city,
+      verification_status: e.verification_status,
+      is_active: e.is_active,
+      created_at: e.created_at,
+    };
+  });
+}
+
+export async function fetchAdminReferralRows(): Promise<AdminReferralRow[]> {
+  const gate = await requireAdminDashboard();
+  if (!gate.ok) return [];
+
+  const admin = createAdminClient();
+  if (!admin) return [];
+
+  const { data, error } = await admin
+    .from("referrals")
+    .select("id, referrer_id, referred_id, referral_code, status, commission_usd, created_at, paid_at")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error || !data) return [];
+
+  const userIds = [
+    ...((data ?? []) as Array<{ referrer_id: string; referred_id: string | null }>).map((r) => r.referrer_id),
+    ...((data ?? []) as Array<{ referred_id: string | null }>)
+      .map((r) => r.referred_id)
+      .filter((id): id is string => Boolean(id)),
+  ];
+  const profiles = await profileNameMap(admin, [...new Set(userIds)]);
+
+  return (data as Array<{
+    id: string;
+    referrer_id: string;
+    referred_id: string | null;
+    referral_code: string;
+    status: string;
+    commission_usd: number;
+    created_at: string;
+    paid_at: string | null;
+  }>).map((r) => {
+    const referrer = profiles.get(r.referrer_id);
+    const referred = r.referred_id ? profiles.get(r.referred_id) : undefined;
+    return {
+      id: r.id,
+      referral_code: r.referral_code,
+      referrer_name: referrer?.full_name ?? null,
+      referrer_email: referrer?.email ?? null,
+      referred_name: referred?.full_name ?? null,
+      status: r.status,
+      commission_usd: Number(r.commission_usd ?? 0),
+      created_at: r.created_at,
+      paid_at: r.paid_at,
+    };
+  });
+}
+
+export async function fetchAdminReviewRows(): Promise<AdminReviewRow[]> {
+  const gate = await requireAdminDashboard();
+  if (!gate.ok) return [];
+
+  const admin = createAdminClient();
+  if (!admin) return [];
+
+  const { data, error } = await admin
+    .from("reviews")
+    .select("id, reviewer_id, target_type, target_id, rating, title, body, is_verified, created_at")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error || !data) return [];
+
+  const userIds = (data as Array<{ reviewer_id: string }>).map((r) => r.reviewer_id);
+  const profiles = await profileNameMap(admin, userIds);
+
+  return (data as Array<{
+    id: string;
+    reviewer_id: string;
+    target_type: string;
+    target_id: string;
+    rating: number;
+    title: string | null;
+    body: string | null;
+    is_verified: boolean;
+    created_at: string;
+  }>).map((r) => {
+    const reviewer = profiles.get(r.reviewer_id);
+    return {
+      id: r.id,
+      reviewer_name: reviewer?.full_name || reviewer?.email || null,
+      target_type: r.target_type,
+      target_id: r.target_id,
+      rating: r.rating,
+      title: r.title,
+      body: r.body,
+      is_verified: r.is_verified,
+      created_at: r.created_at,
+    };
+  });
+}

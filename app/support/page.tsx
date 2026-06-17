@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { submitSupportTicket } from "@/lib/supabase/actions";
-import { FORM_SUBMIT_SUCCESS_MESSAGE, SITE_CONFIG, supportMailto } from "@/lib/site-config";
+import { FORM_SUBMIT_SUCCESS_MESSAGE, FORM_SUBMIT_ERROR_MESSAGE, SITE_CONFIG, supportMailto } from "@/lib/site-config";
 
 const HELP_CATEGORIES = [
   { icon: "🛂", title: "Visa & immigration",     desc: "Visa types, documents, application status", href: "/visa" },
@@ -76,8 +76,7 @@ export default function SupportPage() {
     setLoading(false);
 
     if (!result.ok) {
-      if (result.demo) { setSubmitted(true); return; }
-      setError(result.error);
+      setError(result.error ?? FORM_SUBMIT_ERROR_MESSAGE);
       return;
     }
     setSubmitted(true);

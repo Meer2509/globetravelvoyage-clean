@@ -12,7 +12,9 @@ export type EmailType =
   | "visa_case_created"
   | "document_reminder"
   | "expert_assigned"
-  | "booking_confirmation";
+  | "booking_confirmation"
+  | "intake_support"
+  | "intake_confirmation";
 
 async function logEmailEvent(input: {
   userId?: string | null;

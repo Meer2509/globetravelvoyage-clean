@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AuthLayout, StepProgress } from "@/components/AuthLayout";
+import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
+import { completeGuideOnboarding } from "@/lib/supabase/onboarding-actions";
 
 const STEPS = ["Profile", "Tours", "Availability", "Done"];
 
@@ -17,6 +19,8 @@ const dayOptions = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Sat
 
 export default function GuideOnboarding() {
   const [step, setStep] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [data, setData] = useState({
     fullName: "",
     email: "",
@@ -44,6 +48,40 @@ export default function GuideOnboarding() {
   }
 
   const langOptions = ["English", "Arabic", "Urdu", "Hindi", "Tagalog", "French", "German", "Japanese", "Mandarin"];
+
+  async function handleSubmit() {
+    setError("");
+    setLoading(true);
+    try {
+      const tours = [
+        { title: data.tourTitle1, duration: data.tourDuration1, price: data.tourPrice1 },
+        { title: data.tourTitle2, duration: data.tourDuration2, price: data.tourPrice2 },
+      ].filter((t) => t.title.trim());
+
+      const result = await completeGuideOnboarding({
+        fullName: data.fullName,
+        email: data.email,
+        phone: data.phone,
+        city: data.city,
+        country: data.country,
+        languages: data.languages,
+        bio: data.bio,
+        categories: data.categories,
+        tours,
+        groupSize: data.groupSize,
+        availableDays: data.availableDays,
+        startTime: data.startTime,
+        advanceBooking: data.advanceBooking,
+      });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setStep(3);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <AuthLayout
@@ -275,9 +313,13 @@ export default function GuideOnboarding() {
               <strong className="text-navy">💡 Tip:</strong> Guides with clear availability get 3× more bookings. You can update your calendar anytime from your dashboard.
             </div>
 
+            {error && <p className="text-sm text-red-600">{error}</p>}
+
             <div className="flex gap-3">
-              <button onClick={() => setStep(1)} className="btn-outline flex-1 py-3">← Back</button>
-              <button onClick={() => setStep(3)} className="btn-primary flex-1 py-3">Go live →</button>
+              <button onClick={() => setStep(1)} className="btn-outline flex-1 py-3" disabled={loading}>← Back</button>
+              <button onClick={handleSubmit} className="btn-primary flex-1 py-3" disabled={loading}>
+                {loading ? "Saving…" : "Go live →"}
+              </button>
             </div>
           </div>
         )}
@@ -287,10 +329,9 @@ export default function GuideOnboarding() {
             <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-blue/10 text-5xl">
               🧭
             </div>
-            <h2 className="mt-5 text-2xl font-extrabold text-navy">You&apos;re live!</h2>
+            <h2 className="mt-5 text-2xl font-extrabold text-navy">Profile submitted!</h2>
             <p className="mt-2 text-sm text-charcoal/60">
-              Your guide profile is now visible to travelers searching{" "}
-              {data.city || "your city"}.
+              {FORM_SUBMIT_SUCCESS_MESSAGE}
             </p>
 
             <div className="mt-6 space-y-2.5">

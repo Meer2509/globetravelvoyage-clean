@@ -7,7 +7,7 @@ import { Icon } from "@/components/Icon";
 import { Disclaimer } from "@/components/Disclaimer";
 import { areReferralRewardsLive, REFERRAL_LAUNCHING_SOON } from "@/lib/launch-trust";
 import { submitReferralSignup } from "@/lib/supabase/actions";
-import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
+import { FORM_SUBMIT_SUCCESS_MESSAGE, FORM_SUBMIT_ERROR_MESSAGE } from "@/lib/site-config";
 
 type CommissionStatus = "pending" | "approved" | "paid";
 
@@ -72,11 +72,7 @@ export default function ReferralsPage() {
     setSignupLoading(false);
 
     if (!result.ok) {
-      if (result.demo) {
-        setSignupDone(true);
-        return;
-      }
-      setSignupError(result.error);
+      setSignupError(result.error ?? FORM_SUBMIT_ERROR_MESSAGE);
       return;
     }
 

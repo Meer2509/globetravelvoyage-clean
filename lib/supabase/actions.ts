@@ -10,12 +10,13 @@ import type { UserRole } from "./types";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { requireAdmin, requireSession, SELF_ASSIGNABLE_ROLES } from "@/lib/auth-server";
 import { applyUserRole } from "./role-sync";
-import { sendEmail } from "@/lib/email/send-email";
-import { SITE_CONFIG } from "@/lib/site-config";
+import { notifyIntakeSubmission } from "@/lib/email/intake-notifications";
+import type { EmailField } from "@/lib/email/templates";
+import { FORM_SUBMIT_ERROR_MESSAGE } from "@/lib/site-config";
 
 export type ActionResult<T = { id: string }> =
   | { ok: true; data: T }
-  | { ok: false; error: string; demo?: boolean };
+  | { ok: false; error: string };
 
 async function getOptionalUserId(): Promise<string | null> {
   const supabase = await createServerSupabaseClient();
@@ -29,7 +30,7 @@ function dbClient() {
 }
 
 function notConfigured<T = { id: string }>(): ActionResult<T> {
-  return { ok: false, error: "Supabase is not configured.", demo: true };
+  return { ok: false, error: FORM_SUBMIT_ERROR_MESSAGE };
 }
 
 async function guardFormRateLimit(userId: string | null): Promise<{ ok: false; error: string } | null> {
@@ -119,7 +120,30 @@ export async function submitVisaRequest(input: VisaRequestInput): Promise<Action
     .select("id")
     .single();
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    console.error("[visa] insert failed", error.message);
+    return { ok: false, error: FORM_SUBMIT_ERROR_MESSAGE };
+  }
+
+  notifyIntakeSubmission({
+    kind: "visa_request",
+    requestId: data.id,
+    customerName: input.name,
+    customerEmail: input.email,
+    userId,
+    fields: [
+      { label: "Phone", value: input.phone },
+      { label: "WhatsApp", value: input.whatsapp },
+      { label: "Nationality", value: input.nationality },
+      { label: "Current country", value: input.currentCountry },
+      { label: "Destination", value: input.destination },
+      { label: "Purpose", value: input.purpose },
+      { label: "Travel date", value: input.travelDate },
+      { label: "Previous refusals", value: input.previousRefusals },
+      { label: "Message", value: input.message },
+    ],
+  });
+
   return { ok: true, data: { id: data.id } };
 }
 
@@ -238,47 +262,46 @@ function buildBookingRequestRow(input: {
   };
 }
 
-async function notifySupportFlightBooking(
-  input: FlightBookingRequestInput,
-  requestId: string,
-  userId: string | null
-): Promise<void> {
+function flightBookingEmailFields(input: FlightBookingRequestInput): EmailField[] {
   const priceLine =
     input.price && input.currency
       ? `${input.currency} ${input.price}`
-      : input.price ?? "—";
+      : input.price;
 
-  const html = `
-    <h2>New flight booking request</h2>
-    <p><strong>Request ID:</strong> ${requestId}</p>
-    <p><strong>Route:</strong> ${input.fromLocation} → ${input.toLocation}</p>
-    <p><strong>Subject:</strong> ${input.subject}</p>
-    ${input.airline ? `<p><strong>Airline:</strong> ${input.airline}</p>` : ""}
-    <p><strong>Quoted fare:</strong> ${priceLine}</p>
-    ${input.offerId ? `<p><strong>Duffel offer ID:</strong> ${input.offerId}</p>` : ""}
-    <p><strong>Travel date:</strong> ${input.travelDate ?? "—"}</p>
-    <p><strong>Return date:</strong> ${input.returnDate ?? "—"}</p>
-    <p><strong>Cabin:</strong> ${input.cabinClass ?? "—"}</p>
-    <p><strong>Passengers:</strong> ${input.passengerCount}</p>
-    <hr />
-    <p><strong>Customer:</strong> ${input.customerName}</p>
-    <p><strong>Email:</strong> ${input.customerEmail}</p>
-    <p><strong>Phone:</strong> ${input.customerPhone}</p>
-    ${input.details ? `<p><strong>Details:</strong> ${input.details}</p>` : ""}
-    ${input.message ? `<p><strong>Notes:</strong> ${input.message}</p>` : ""}
-  `;
+  return [
+    { label: "Route", value: `${input.fromLocation} → ${input.toLocation}` },
+    { label: "Subject", value: input.subject },
+    ...(input.airline ? [{ label: "Airline", value: input.airline }] : []),
+    { label: "Quoted fare", value: priceLine },
+    ...(input.offerId ? [{ label: "Duffel offer ID", value: input.offerId }] : []),
+    { label: "Travel date", value: input.travelDate },
+    { label: "Return date", value: input.returnDate },
+    { label: "Cabin class", value: input.cabinClass },
+    { label: "Passengers", value: String(input.passengerCount) },
+    { label: "Phone", value: input.customerPhone },
+    ...(input.details ? [{ label: "Details", value: input.details }] : []),
+    ...(input.message ? [{ label: "Notes", value: input.message }] : []),
+  ];
+}
 
-  try {
-    await sendEmail({
-      to: SITE_CONFIG.supportEmail,
-      subject: `Flight booking request: ${input.fromLocation} → ${input.toLocation}`,
-      html,
-      type: "booking_confirmation",
-      userId,
-    });
-  } catch (err) {
-    console.error("[booking] support notification failed", err);
-  }
+function bookingRequestEmailFields(
+  input: BookingRequestInput,
+  row: BookingRequestInsert
+): EmailField[] {
+  return [
+    { label: "Service", value: input.serviceType },
+    { label: "Subject", value: input.serviceName },
+    { label: "From", value: row.from_location },
+    { label: "To", value: row.to_location },
+    { label: "Details", value: row.details },
+    { label: "Phone", value: row.customer_phone },
+    { label: "Passengers", value: String(row.passenger_count) },
+    { label: "Travel date", value: row.travel_date },
+    { label: "Return date", value: row.return_date },
+    { label: "Cabin class", value: row.cabin_class },
+    { label: "Budget", value: input.budget },
+    { label: "Message", value: row.message },
+  ];
 }
 
 export async function submitFlightBookingRequest(
@@ -326,13 +349,19 @@ export async function submitFlightBookingRequest(
 
   if (error) {
     logBookingInsertError("flight", row, error);
-    return { ok: false, error: "submit_failed" };
+    return { ok: false, error: FORM_SUBMIT_ERROR_MESSAGE };
   }
 
   console.log("[booking] flight insert success", { id: data.id });
 
-  void notifySupportFlightBooking(input, data.id, userId).catch((err) => {
-    console.error("[booking] support notification failed (request saved)", err);
+  notifyIntakeSubmission({
+    kind: "flight_booking",
+    requestId: data.id,
+    customerName: input.customerName,
+    customerEmail: input.customerEmail,
+    userId,
+    supportSubject: `Flight booking request: ${input.fromLocation} → ${input.toLocation}`,
+    fields: flightBookingEmailFields(input),
   });
 
   return { ok: true, data: { id: data.id } };
@@ -379,10 +408,21 @@ export async function submitBookingRequest(input: BookingRequestInput): Promise<
 
   if (error) {
     logBookingInsertError("generic", row, error);
-    return { ok: false, error: "submit_failed" };
+    return { ok: false, error: FORM_SUBMIT_ERROR_MESSAGE };
   }
 
   console.log("[booking] insert success", { id: data.id });
+
+  const isFlight = input.serviceType === "flight";
+  notifyIntakeSubmission({
+    kind: isFlight ? "flight_booking" : "booking_request",
+    requestId: data.id,
+    customerName: input.name,
+    customerEmail: input.email,
+    userId,
+    fields: bookingRequestEmailFields(input, row),
+  });
+
   return { ok: true, data: { id: data.id } };
 }
 
@@ -433,7 +473,41 @@ export async function submitLeadRequest(input: LeadRequestInput): Promise<Action
     .select("id")
     .single();
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    console.error("[lead] insert failed", error.message);
+    return { ok: false, error: FORM_SUBMIT_ERROR_MESSAGE };
+  }
+
+  const extraFields: EmailField[] = input.extra
+    ? Object.entries(input.extra).map(([key, value]) => ({
+        label: key.replace(/_/g, " "),
+        value,
+      }))
+    : [];
+
+  notifyIntakeSubmission({
+    kind: "contact",
+    requestId: data.id,
+    customerName: input.name,
+    customerEmail: input.email,
+    userId,
+    supportSubject:
+      input.leadType === "general_contact"
+        ? `New contact form message${input.purpose ? `: ${input.purpose}` : ""}`
+        : `New inquiry: ${input.leadType ?? "contact"}`,
+    fields: [
+      { label: "Phone", value: input.phone },
+      { label: "Inquiry type", value: input.leadType },
+      { label: "Expert type", value: input.expertType },
+      { label: "Purpose / topic", value: input.purpose },
+      { label: "Preferred time", value: input.preferredTime },
+      { label: "Subject", value: input.subjectName },
+      { label: "Context", value: input.subjectMeta },
+      { label: "Message", value: input.message },
+      ...extraFields,
+    ],
+  });
+
   return { ok: true, data: { id: data.id } };
 }
 
@@ -467,7 +541,10 @@ export async function submitSupportTicket(input: SupportTicketInput): Promise<Ac
     .select("id")
     .single();
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    console.error("[support] insert failed", error.message);
+    return { ok: false, error: FORM_SUBMIT_ERROR_MESSAGE };
+  }
   return { ok: true, data: { id: data.id } };
 }
 
@@ -523,7 +600,10 @@ export async function submitPropertyListing(input: PropertyListingInput): Promis
     .select("id")
     .single();
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    console.error("[property] insert failed", error.message);
+    return { ok: false, error: FORM_SUBMIT_ERROR_MESSAGE };
+  }
   return { ok: true, data: { id: data.id } };
 }
 
@@ -558,7 +638,10 @@ export async function submitReferralSignup(input: ReferralSignupInput): Promise<
       .select("id")
       .single();
 
-    if (error) return { ok: false, error: error.message };
+    if (error) {
+      console.error("[referral] lead insert failed", error.message);
+      return { ok: false, error: FORM_SUBMIT_ERROR_MESSAGE };
+    }
     return { ok: true, data: { id: data.id, code } };
   }
 
@@ -573,7 +656,10 @@ export async function submitReferralSignup(input: ReferralSignupInput): Promise<
     .select("id")
     .single();
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    console.error("[referral] insert failed", error.message);
+    return { ok: false, error: FORM_SUBMIT_ERROR_MESSAGE };
+  }
   return { ok: true, data: { id: data.id, code } };
 }
 

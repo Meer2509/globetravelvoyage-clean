@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AuthLayout, StepProgress } from "@/components/AuthLayout";
+import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
+import { completeAgencyOnboarding } from "@/lib/supabase/onboarding-actions";
 
 const STEPS = ["Business Info", "Services", "Verification", "Done"];
 
@@ -14,6 +16,8 @@ const serviceTypes = [
 
 export default function AgencyOnboarding() {
   const [step, setStep] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [data, setData] = useState({
     agencyName: "",
     website: "",
@@ -37,6 +41,35 @@ export default function AgencyOnboarding() {
         ? p.selectedServices.filter((x) => x !== s)
         : [...p.selectedServices, s],
     }));
+  }
+
+  async function handleSubmit() {
+    setError("");
+    setLoading(true);
+    try {
+      const result = await completeAgencyOnboarding({
+        agencyName: data.agencyName,
+        website: data.website,
+        city: data.city,
+        country: data.country,
+        foundedYear: data.foundedYear,
+        teamSize: data.teamSize,
+        description: data.description,
+        selectedServices: data.selectedServices,
+        destinations: data.destinations,
+        annualBookings: data.annualBookings,
+        socialMedia: data.socialMedia,
+        licenseNumber: data.licenseNumber,
+        registrationCountry: data.registrationCountry,
+      });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setStep(3);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -224,9 +257,13 @@ export default function AgencyOnboarding() {
               <strong className="text-navy">Note:</strong> Verification badge is displayed once our team reviews your documents (within 48 hours). Listing is live immediately.
             </div>
 
+            {error && <p className="text-sm text-red-600">{error}</p>}
+
             <div className="flex gap-3">
-              <button onClick={() => setStep(1)} className="btn-outline flex-1 py-3">← Back</button>
-              <button onClick={() => setStep(3)} className="btn-primary flex-1 py-3">Launch profile →</button>
+              <button onClick={() => setStep(1)} className="btn-outline flex-1 py-3" disabled={loading}>← Back</button>
+              <button onClick={handleSubmit} className="btn-primary flex-1 py-3" disabled={loading}>
+                {loading ? "Saving…" : "Launch profile →"}
+              </button>
             </div>
           </div>
         )}
@@ -236,9 +273,9 @@ export default function AgencyOnboarding() {
             <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-blue/10 text-5xl">
               🏢
             </div>
-            <h2 className="mt-5 text-2xl font-extrabold text-navy">Agency profile live!</h2>
+            <h2 className="mt-5 text-2xl font-extrabold text-navy">Agency profile submitted!</h2>
             <p className="mt-2 text-sm text-charcoal/60">
-              Your agency is now listed on the Globe Travel Voyage marketplace. Travelers can find and contact you.
+              {FORM_SUBMIT_SUCCESS_MESSAGE}
             </p>
 
             <div className="mt-4 rounded-xl border border-soft-200 bg-soft p-4 text-left text-xs text-charcoal/60">

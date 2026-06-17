@@ -8,12 +8,15 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AdminAccessRequired } from "@/components/admin/AdminAccessRequired";
+import { requireAdmin } from "@/lib/auth-server";
 import { isSupabaseConfigured, isAdminClientConfigured } from "@/lib/supabase/server";
 import { getSupabaseSetupStatus } from "@/lib/supabase/setup-status";
 
 export const metadata: Metadata = {
   title: "Backend Setup — Globe Travel Voyage Admin",
   description: "Infrastructure status and backend configuration guide for Globe Travel Voyage.",
+  robots: { index: false, follow: false },
 };
 
 // ── Status helpers ────────────────────────────────────────────────────────────
@@ -108,6 +111,11 @@ function SetupSection({
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default async function AdminSetupPage() {
+  const adminAuth = await requireAdmin();
+  if (!adminAuth.ok) {
+    return <AdminAccessRequired message={adminAuth.error} />;
+  }
+
   const supabaseStatus = await getSupabaseSetupStatus();
 
   // Read env at server render time — no client exposure of secret keys

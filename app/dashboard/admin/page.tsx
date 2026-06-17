@@ -12,14 +12,26 @@ import {
   fetchAdminVisaCases,
   fetchAdminStripeBookings,
   fetchAdminEmailLogs,
+  fetchAdminVerificationQueue,
+  fetchAdminAgencies,
+  fetchAdminGuides,
+  fetchAdminExperts,
+  fetchAdminReferralRows,
+  fetchAdminReviewRows,
   type AdminDashboardCounts,
   type AdminProfileRow,
   type AdminPaymentRow,
   type AdminVisaCaseRow,
   type AdminStripeBookingRow,
   type AdminEmailLogRow,
+  type AdminVerificationItem,
+  type AdminAgencyRow,
+  type AdminGuideRow,
+  type AdminExpertRow,
+  type AdminReferralRow,
+  type AdminReviewRow,
 } from "@/lib/supabase/queries";
-import { fetchAdminProviders, fetchAdminProviderServices } from "@/lib/supabase/mvp-queries";
+import { fetchAdminProviderServices } from "@/lib/supabase/mvp-queries";
 import {
   fetchAdminConnectStats,
   fetchAdminConnectProviders,
@@ -27,6 +39,7 @@ import {
   type AdminConnectProviderRow,
 } from "@/lib/supabase/connect-queries";
 import { updateIntakeStatus } from "@/lib/supabase/mvp-actions";
+import { SEO_VISA_PAGES, SEO_TRAVEL_PAGES } from "@/lib/seo-pages";
 import { SITE_CONFIG } from "@/lib/site-config";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
@@ -62,72 +75,6 @@ const tabs: DashboardTab[] = [
   { key: "settings",      label: "Settings",          icon: "agent" },
 ];
 
-// ─── Mock data ─────────────────────────────────────────────────────────────────
-
-const verificationQueue = [
-  { name: "Global Visas Ltd.", type: "Agency", country: "🇦🇪 UAE", submitted: "Jun 10", docs: 4 },
-  { name: "Rania Hassan", type: "Visa Expert", country: "🇪🇬 Egypt", submitted: "Jun 9", docs: 3 },
-  { name: "Pearl Tours", type: "Agency", country: "🇵🇭 Philippines", submitted: "Jun 8", docs: 5 },
-  { name: "Ahmed Travels", type: "Agency", country: "🇵🇰 Pakistan", submitted: "Jun 7", docs: 4 },
-  { name: "Fatima Al-Ali", type: "Tour Guide", country: "🇦🇪 UAE", submitted: "Jun 7", docs: 2 },
-  { name: "Nadia F.", type: "Visa Expert", country: "🇲🇦 Morocco", submitted: "Jun 6", docs: 3 },
-  { name: "Dubai Luxury Stays", type: "Host", country: "🇦🇪 UAE", submitted: "Jun 5", docs: 6 },
-];
-
-const agencies = [
-  { name: "Voyage Pro Travels", country: "🇦🇪 UAE", packages: 3, tours: 7, bookings: 42, revenue: "$28.4k", verified: true, status: "Active" },
-  { name: "Orient Express Travel", country: "🇵🇰 Pakistan", packages: 5, tours: 12, bookings: 28, revenue: "$18.2k", verified: true, status: "Active" },
-  { name: "Global Wings Agency", country: "🇵🇭 Philippines", packages: 2, tours: 4, bookings: 15, revenue: "$9.8k", verified: false, status: "Active" },
-  { name: "Pearl of Asia Tours", country: "🇮🇳 India", packages: 4, tours: 9, bookings: 33, revenue: "$21.5k", verified: true, status: "Active" },
-];
-
-const referrals = [
-  { code: "GLOBE-ALI-4821", user: "Ali Hassan", referred: 3, tier: "Silver", earned: "$45", payout: "$15 pending" },
-  { code: "GLOBE-ZAI-2190", user: "Zainab R.", referred: 8, tier: "Gold", earned: "$180", payout: "$30 pending" },
-  { code: "GLOBE-TAR-0041", user: "Tariq M.", referred: 12, tier: "Platinum", earned: "$360", payout: "Settled" },
-];
-
-type CommissionStatus = "pending" | "approved" | "paid" | "fraud_review";
-
-interface AdminCommission {
-  id: string;
-  referrer: string;
-  referrerEmail: string;
-  referral: string;
-  action: string;
-  amount: number;
-  status: CommissionStatus;
-  date: string;
-  fraudFlag?: string;
-}
-
-const adminCommissions: AdminCommission[] = [
-  { id: "CM001", referrer: "Ali Hassan",  referrerEmail: "ali@example.com",    referral: "Sara Malik",   action: "AI Visa Guidance",  amount: 4.35,  status: "pending",      date: "Jun 10" },
-  { id: "CM002", referrer: "Zainab R.",   referrerEmail: "zainab@example.com", referral: "Omar Hassan",  action: "First purchase",    amount: 7.50,  status: "pending",      date: "Jun 10" },
-  { id: "CM003", referrer: "Tariq M.",    referrerEmail: "tariq@example.com",  referral: "Fatima Ali",   action: "Expert signup",     amount: 29.80, status: "approved",     date: "Jun 9"  },
-  { id: "CM004", referrer: "Sara J.",     referrerEmail: "sara@example.com",   referral: "Bilal Ahmed",  action: "Bundle purchase",   amount: 17.88, status: "paid",         date: "Jun 8"  },
-  { id: "CM005", referrer: "Omar F.",     referrerEmail: "omar@example.com",   referral: "Nadia Iqbal",  action: "User signup",       amount: 2.00,  status: "fraud_review", date: "Jun 7", fraudFlag: "Duplicate email detected" },
-  { id: "CM006", referrer: "Khalid R.",   referrerEmail: "khalid@example.com", referral: "Khalid Raza",  action: "Trip plan",         amount: 1.90,  status: "pending",      date: "Jun 6"  },
-  { id: "CM007", referrer: "Amira Y.",    referrerEmail: "amira@example.com",  referral: "Amira Yusuf",  action: "First purchase",    amount: 12.00, status: "paid",         date: "Jun 5"  },
-  { id: "CM008", referrer: "Ali Hassan",  referrerEmail: "ali@example.com",    referral: "Rashid Ali",   action: "Agency lead",       amount: 9.90,  status: "fraud_review", date: "Jun 4", fraudFlag: "Unusual referral pattern" },
-  { id: "CM009", referrer: "Zainab R.",   referrerEmail: "zainab@example.com", referral: "Layla M.",     action: "Property lead",     amount: 2.90,  status: "approved",     date: "Jun 3"  },
-  { id: "CM010", referrer: "Tariq M.",    referrerEmail: "tariq@example.com",  referral: "David L.",     action: "Featured listing",  amount: 29.80, status: "paid",         date: "Jun 2"  },
-];
-
-const flaggedReviews = [
-  { id: "REV-441", reviewer: "Anonymous", target: "Ahmed Travels", rating: 1, text: "Scam! Never delivered the package.", flag: "Spam/Fraud", date: "Jun 9" },
-  { id: "REV-440", reviewer: "User4821", target: "Orient Express Travel", rating: 2, text: "Overcharged me.", flag: "Pricing dispute", date: "Jun 8" },
-  { id: "REV-438", reviewer: "Maria L.", target: "Unknown Agent", rating: 1, text: "No response from agent.", flag: "Quality issue", date: "Jun 7" },
-];
-
-const seoPages = [
-  { slug: "/visa/usa-from-pakistan", title: "USA Visa from Pakistan Guide", views: 12400, rank: "3", lastEdited: "Jun 5", status: "Published" },
-  { slug: "/visa/usa", title: "USA Visa Information", views: 8900, rank: "8", lastEdited: "Jun 3", status: "Published" },
-  { slug: "/visa/schengen", title: "Schengen Visa Guide", views: 5200, rank: "12", lastEdited: "May 28", status: "Published" },
-  { slug: "/flights", title: "Cheap Flights — Comparison", views: 3100, rank: "—", lastEdited: "Jun 1", status: "Published" },
-  { slug: "/guides/best-time-to-visit-dubai", title: "Best Time to Visit Dubai", views: 2800, rank: "5", lastEdited: "May 20", status: "Draft" },
-];
-
 // ─── Visa Requests data ───────────────────────────────────────────────────────
 
 type VRStatus = "pending" | "reviewing" | "approved" | "rejected" | "submitted";
@@ -144,7 +91,7 @@ interface VisaRequestItem {
   email: string;
 }
 
-const EXPERTS_LIST = ["Sana Malik", "Hassan Al-Qadi", "Priya Sharma", "Rania Hassan"];
+const EXPERTS_LIST: string[] = [];
 
 // ─── Visa Requests Tab ────────────────────────────────────────────────────────
 
@@ -205,10 +152,8 @@ function VisaRequestsTab() {
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     fetchAdminVisaRequests().then((rows) => {
-      if (rows.length > 0) {
-        setRequests(rows.map(mapDbVisaRequest));
-        setLiveLoaded(true);
-      }
+      setRequests(rows.map(mapDbVisaRequest));
+      setLiveLoaded(true);
     });
   }, []);
 
@@ -289,7 +234,9 @@ function VisaRequestsTab() {
       </div>
 
       <Panel title="Visa Applications" subtitle={`Showing ${displayed.length} of ${requests.length} requests`} noPad>
-        {displayed.length === 0 ? (
+        {requests.length === 0 ? (
+          <div className="py-12 text-center text-charcoal/40 text-sm">No requests yet.</div>
+        ) : displayed.length === 0 ? (
           <div className="py-12 text-center text-charcoal/40 text-sm">No requests match this filter.</div>
         ) : (
           <div className="overflow-x-auto">
@@ -384,97 +331,73 @@ function VisaRequestsTab() {
 
 // ─── Tour Guides Tab ──────────────────────────────────────────────────────────
 
-const INITIAL_GUIDES = [
-  { id: "TG-01", name: "Khalid Raza",    city: "Dubai",     rating: 4.9, tours: 12, bookings: 84,  languages: "EN, AR", status: "Active",  verified: true },
-  { id: "TG-02", name: "Priya Nair",     city: "Dubai",     rating: 4.8, tours: 8,  bookings: 61,  languages: "EN, HI", status: "Active",  verified: true },
-  { id: "TG-03", name: "Hassan Salim",   city: "Istanbul",  rating: 4.7, tours: 6,  bookings: 45,  languages: "EN, TR", status: "Active",  verified: true },
-  { id: "TG-04", name: "Ana Reyes",      city: "Manila",    rating: 4.6, tours: 5,  bookings: 32,  languages: "EN, TL", status: "Active",  verified: false },
-  { id: "TG-05", name: "Omar Shaikh",    city: "Lahore",    rating: 4.5, tours: 4,  bookings: 18,  languages: "EN, UR", status: "Active",  verified: false },
-  { id: "TG-06", name: "Sofia Costa",    city: "Lisbon",    rating: 0,   tours: 0,  bookings: 0,   languages: "EN, PT", status: "Pending", verified: false },
-  { id: "TG-07", name: "Ali Abdullah",   city: "Riyadh",    rating: 4.8, tours: 9,  bookings: 70,  languages: "EN, AR", status: "Active",  verified: true },
-];
-
-type GuideStatus = "Active" | "Pending" | "Suspended";
-
 function GuidesTab() {
-  const [guides, setGuides] = useState(INITIAL_GUIDES);
-  const [toast, setToast]   = useState<string | null>(null);
+  const [guides, setGuides] = useState<AdminGuideRow[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
-  function toggleStatus(id: string, current: GuideStatus) {
-    const next: GuideStatus = current === "Active" ? "Suspended" : "Active";
-    setGuides((prev) => prev.map((g) => g.id === id ? { ...g, status: next } : g));
-    setToast(`Guide updated to "${next}"`);
-    setTimeout(() => setToast(null), 3000);
-  }
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    fetchAdminGuides().then((rows) => {
+      setGuides(rows);
+      setLoaded(true);
+    });
+  }, []);
 
-  function toggleVerify(id: string) {
-    setGuides((prev) => prev.map((g) => g.id === id ? { ...g, verified: !g.verified } : g));
-    setToast("Verification status updated");
-    setTimeout(() => setToast(null), 3000);
-  }
+  const verifiedCount = guides.filter((g) => g.verification_status === "verified").length;
+  const activeCount = guides.filter((g) => g.is_active).length;
+  const pendingCount = guides.filter((g) => g.verification_status === "pending" || g.verification_status === "under_review").length;
 
   return (
     <div className="space-y-4">
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-50 rounded-2xl bg-navy px-5 py-3 text-sm font-semibold text-white shadow-[var(--shadow-premium)] animate-fade-up">
-          ✓ {toast}
-        </div>
-      )}
-
       <div className="grid gap-4 sm:grid-cols-4">
         <StatCard label="Total guides" value={String(guides.length)} icon="planner" color="blue" />
-        <StatCard label="Verified" value={String(guides.filter((g) => g.verified).length)} icon="check" color="green" />
-        <StatCard label="Active" value={String(guides.filter((g) => g.status === "Active").length)} icon="globe" color="gold" />
-        <StatCard label="Pending review" value={String(guides.filter((g) => g.status === "Pending").length)} icon="shield" color="navy" />
+        <StatCard label="Verified" value={String(verifiedCount)} icon="check" color="green" />
+        <StatCard label="Active" value={String(activeCount)} icon="globe" color="gold" />
+        <StatCard label="Pending review" value={String(pendingCount)} icon="shield" color="navy" />
       </div>
 
       <Panel title="All Tour Guides" noPad>
-        <div className="divide-y divide-soft-200">
-          {guides.map((g) => (
-            <div key={g.id} className="flex items-center justify-between gap-4 p-5 flex-wrap">
-              <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy/8 text-sm font-bold text-navy">
-                  {g.name[0]}
-                </span>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-bold text-navy">{g.name}</p>
-                    {g.verified && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-blue/10 px-2 py-0.5 text-[11px] font-semibold text-blue">
-                        <Icon name="check" className="h-3 w-3" /> Verified
-                      </span>
-                    )}
+        {!loaded ? (
+          <p className="p-8 text-center text-sm text-charcoal/50">Loading guides…</p>
+        ) : guides.length === 0 ? (
+          <p className="p-8 text-center text-sm text-charcoal/50">No tour guides registered yet.</p>
+        ) : (
+          <div className="divide-y divide-soft-200">
+            {guides.map((g) => (
+              <div key={g.id} className="flex items-center justify-between gap-4 p-5 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy/8 text-sm font-bold text-navy">
+                    {g.name[0]}
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-navy">{g.name}</p>
+                      {g.verification_status === "verified" && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-blue/10 px-2 py-0.5 text-[11px] font-semibold text-blue">
+                          <Icon name="check" className="h-3 w-3" /> Verified
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-charcoal/50">
+                      {[g.city, g.country].filter(Boolean).join(", ") || "—"}
+                      {g.languages?.length ? ` · ${g.languages.join(", ")}` : ""}
+                      {g.total_tours_led > 0 ? ` · ${g.total_tours_led} tours led` : ""}
+                      {g.rating > 0 ? ` · ⭐ ${g.rating}` : ""}
+                    </p>
                   </div>
-                  <p className="text-xs text-charcoal/50">
-                    {g.city} · {g.languages} · {g.tours} tours · {g.bookings} bookings
-                    {g.rating > 0 && ` · ⭐ ${g.rating}`}
-                  </p>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`chip text-xs ${g.is_active ? "bg-emerald-50 text-emerald-700" : "bg-soft text-charcoal/50"}`}>
+                    {g.is_active ? "Active" : "Inactive"}
+                  </span>
+                  <span className={`chip text-xs ${g.verification_status === "verified" ? "bg-emerald-50 text-emerald-700" : g.verification_status === "pending" || g.verification_status === "under_review" ? "bg-gold/15 text-amber-700" : "bg-red-50 text-red-600"}`}>
+                    {g.verification_status.replace("_", " ")}
+                  </span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className={`chip text-xs ${g.status === "Active" ? "bg-emerald-50 text-emerald-700" : g.status === "Pending" ? "bg-gold/15 text-amber-700" : "bg-red-50 text-red-600"}`}>
-                  {g.status}
-                </span>
-                {!g.verified && g.status !== "Pending" && (
-                  <button onClick={() => toggleVerify(g.id)} className="rounded-lg border border-blue/30 bg-blue/5 px-2.5 py-1 text-[11px] font-semibold text-blue hover:bg-blue/10">
-                    Verify
-                  </button>
-                )}
-                  {g.status === "Pending" && (
-                  <button onClick={() => { setGuides((p) => p.map((x) => x.id === g.id ? { ...x, status: "Active", verified: true } : x)); setToast("Guide approved and verified"); setTimeout(() => setToast(null), 3000); }} className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100">
-                    ✓ Approve
-                  </button>
-                  )}
-                <button
-                  onClick={() => toggleStatus(g.id, g.status as GuideStatus)}
-                  className={`rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors ${g.status === "Active" ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100" : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"}`}
-                >
-                  {g.status === "Active" ? "Suspend" : "Activate"}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </Panel>
     </div>
   );
@@ -482,55 +405,48 @@ function GuidesTab() {
 
 // ─── Verification Queue Tab ──────────────────────────────────────────────────
 
-type VerifStatus = "pending" | "approved" | "rejected" | "reviewing";
-
-interface VerifItem {
-  name: string;
-  type: string;
-  country: string;
-  submitted: string;
-  docs: number;
-  status: VerifStatus;
-}
-
-const INITIAL_VERIF: VerifItem[] = verificationQueue.map((v) => ({ ...v, status: "pending" as VerifStatus }));
+type VerifStatus = "pending" | "under_review" | "verified" | "rejected";
 
 function VerificationQueueTab() {
-  const [items, setItems] = useState<VerifItem[]>(INITIAL_VERIF);
+  const [items, setItems] = useState<AdminVerificationItem[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [filter, setFilter] = useState<"all" | VerifStatus>("all");
 
-  function updateStatus(name: string, status: VerifStatus) {
-    setItems((prev) => prev.map((v) => v.name === name ? { ...v, status } : v));
-  }
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    fetchAdminVerificationQueue().then((rows) => {
+      setItems(rows);
+      setLoaded(true);
+    });
+  }, []);
 
   const filtered = filter === "all" ? items : items.filter((v) => v.status === filter);
 
   const counts = {
-    pending:   items.filter((v) => v.status === "pending").length,
-    approved:  items.filter((v) => v.status === "approved").length,
-    rejected:  items.filter((v) => v.status === "rejected").length,
-    reviewing: items.filter((v) => v.status === "reviewing").length,
+    pending: items.filter((v) => v.status === "pending").length,
+    under_review: items.filter((v) => v.status === "under_review").length,
+    verified: items.filter((v) => v.status === "verified").length,
+    rejected: items.filter((v) => v.status === "rejected").length,
   };
 
-  const STATUS_STYLE: Record<VerifStatus, string> = {
-    pending:   "bg-gold/10 text-gold",
-    approved:  "bg-emerald-50 text-emerald-700",
-    rejected:  "bg-red-50 text-red-600",
-    reviewing: "bg-blue/10 text-blue",
+  const STATUS_STYLE: Record<string, string> = {
+    pending: "bg-gold/10 text-gold",
+    under_review: "bg-blue/10 text-blue",
+    verified: "bg-emerald-50 text-emerald-700",
+    rejected: "bg-red-50 text-red-600",
   };
 
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-4">
         <StatCard label="Awaiting review" value={String(counts.pending)} icon="shield" color="gold" />
-        <StatCard label="Under review" value={String(counts.reviewing)} icon="doc" color="blue" />
-        <StatCard label="Approved (session)" value={String(counts.approved)} icon="check" color="green" />
-        <StatCard label="Rejected (session)" value={String(counts.rejected)} icon="globe" color="navy" />
+        <StatCard label="Under review" value={String(counts.under_review)} icon="doc" color="blue" />
+        <StatCard label="Verified" value={String(counts.verified)} icon="check" color="green" />
+        <StatCard label="Rejected" value={String(counts.rejected)} icon="globe" color="navy" />
       </div>
 
-      {/* Filter tabs */}
       <div className="flex gap-1 w-fit rounded-xl bg-soft border border-soft-200 p-1">
-        {(["all", "pending", "reviewing", "approved", "rejected"] as const).map((f) => (
+        {(["all", "pending", "under_review", "verified", "rejected"] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -538,18 +454,22 @@ function VerificationQueueTab() {
               filter === f ? "bg-white text-navy shadow-sm" : "text-charcoal/50 hover:text-navy"
             }`}
           >
-            {f === "all" ? `All (${items.length})` : `${f.charAt(0).toUpperCase() + f.slice(1)} (${counts[f]})`}
+            {f === "all" ? `All (${items.length})` : `${f.replace("_", " ")} (${counts[f] ?? 0})`}
           </button>
         ))}
       </div>
 
       <Panel title="Verification Queue" subtitle="Review and approve business verifications" noPad>
-        {filtered.length === 0 ? (
+        {!loaded ? (
+          <div className="py-12 text-center text-charcoal/40 text-sm">Loading verification queue…</div>
+        ) : items.length === 0 ? (
+          <div className="py-12 text-center text-charcoal/40 text-sm">No providers waiting for review.</div>
+        ) : filtered.length === 0 ? (
           <div className="py-12 text-center text-charcoal/40 text-sm">No items in this category.</div>
         ) : (
           <div className="divide-y divide-soft-200">
             {filtered.map((v) => (
-              <div key={v.name} className="flex items-center justify-between gap-4 p-5 flex-wrap">
+              <div key={v.id} className="flex items-center justify-between gap-4 p-5 flex-wrap">
                 <div className="flex items-start gap-3">
                   <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy/5 text-sm font-bold text-navy">
                     {v.type[0]}
@@ -557,41 +477,14 @@ function VerificationQueueTab() {
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="font-bold text-navy">{v.name}</p>
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_STYLE[v.status]}`}>
-                        {v.status.charAt(0).toUpperCase() + v.status.slice(1)}
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_STYLE[v.status] ?? "bg-soft text-charcoal/50"}`}>
+                        {v.status.replace("_", " ")}
                       </span>
                     </div>
                     <p className="text-sm text-charcoal/55">
-                      {v.country} · {v.type} · {v.docs} docs · Submitted {v.submitted}
+                      {v.country ?? "—"} · {v.type} · Submitted {v.submitted}
                     </p>
                   </div>
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                  {v.status === "pending" && (
-                    <button onClick={() => updateStatus(v.name, "reviewing")} className="btn-outline px-3 py-1.5 text-xs text-blue border-blue/30 hover:bg-blue/5">
-                      Start review
-                    </button>
-                  )}
-                  {(v.status === "pending" || v.status === "reviewing") && (
-                    <>
-                      <button onClick={() => updateStatus(v.name, "approved")} className="btn-outline px-3 py-1.5 text-xs text-emerald-600 border-emerald-200 hover:bg-emerald-50">
-                        ✓ Approve
-                      </button>
-                      <button onClick={() => updateStatus(v.name, "rejected")} className="btn-outline px-3 py-1.5 text-xs text-red-500 border-red-200 hover:bg-red-50">
-                        ✕ Reject
-                      </button>
-                    </>
-                  )}
-                  {v.status === "approved" && (
-                    <button onClick={() => updateStatus(v.name, "pending")} className="btn-outline px-3 py-1.5 text-xs text-charcoal/50">
-                      Undo
-                    </button>
-                  )}
-                  {v.status === "rejected" && (
-                    <button onClick={() => updateStatus(v.name, "pending")} className="btn-outline px-3 py-1.5 text-xs text-gold border-gold/30">
-                      Re-review
-                    </button>
-                  )}
                 </div>
               </div>
             ))}
@@ -604,46 +497,36 @@ function VerificationQueueTab() {
 
 // ─── Reviews Tab ─────────────────────────────────────────────────────────────
 
-type ReviewAction = "pending" | "approved" | "removed" | "contacted";
-
-interface AdminReview {
-  id: string;
-  reviewer: string;
-  target: string;
-  rating: number;
-  text: string;
-  flag: string;
-  date: string;
-  action: ReviewAction;
-}
-
-const INITIAL_REVIEWS: AdminReview[] = flaggedReviews.map((r) => ({ ...r, action: "pending" as ReviewAction }));
-
 function ReviewsManagementTab() {
-  const [reviews, setReviews] = useState<AdminReview[]>(INITIAL_REVIEWS);
+  const [reviews, setReviews] = useState<AdminReviewRow[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
-  function updateAction(id: string, action: ReviewAction) {
-    setReviews((prev) => prev.map((r) => r.id === id ? { ...r, action } : r));
-  }
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    fetchAdminReviewRows().then((rows) => {
+      setReviews(rows);
+      setLoaded(true);
+    });
+  }, []);
 
-  const ACTION_STYLE: Record<ReviewAction, string> = {
-    pending:   "bg-gold/10 text-gold",
-    approved:  "bg-emerald-50 text-emerald-700",
-    removed:   "bg-red-50 text-red-500",
-    contacted: "bg-blue/10 text-blue",
-  };
+  const avgRating =
+    reviews.length > 0
+      ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+      : "—";
 
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Total reviews" value="2,180" icon="star" color="blue" />
-        <StatCard label="Avg platform rating" value="4.7 ★" icon="star" color="gold" />
-        <StatCard label="Flagged / pending" value={String(reviews.filter((r) => r.action === "pending").length)} icon="shield" color="navy" />
+        <StatCard label="Total reviews" value={String(reviews.length)} icon="star" color="blue" />
+        <StatCard label="Avg platform rating" value={avgRating === "—" ? "—" : `${avgRating} ★`} icon="star" color="gold" />
+        <StatCard label="Verified purchases" value={String(reviews.filter((r) => r.is_verified).length)} icon="shield" color="navy" />
       </div>
 
-      <Panel title="Flagged Reviews — Requires Action" noPad>
-        {reviews.length === 0 ? (
-          <div className="py-12 text-center text-charcoal/40 text-sm">No flagged reviews.</div>
+      <Panel title="Platform Reviews" noPad>
+        {!loaded ? (
+          <div className="py-12 text-center text-charcoal/40 text-sm">Loading reviews…</div>
+        ) : reviews.length === 0 ? (
+          <div className="py-12 text-center text-charcoal/40 text-sm">No reviews yet.</div>
         ) : (
           <div className="divide-y divide-soft-200">
             {reviews.map((r) => (
@@ -651,14 +534,16 @@ function ReviewsManagementTab() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-bold text-navy">{r.reviewer}</p>
-                      <span className="chip bg-red-50 text-red-500 text-xs">{r.flag}</span>
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${ACTION_STYLE[r.action]}`}>
-                        {r.action.charAt(0).toUpperCase() + r.action.slice(1)}
-                      </span>
+                      <p className="font-bold text-navy">{r.reviewer_name ?? "Anonymous"}</p>
+                      {r.is_verified && (
+                        <span className="chip bg-emerald-50 text-emerald-700 text-xs">Verified purchase</span>
+                      )}
                     </div>
-                    <p className="text-xs text-charcoal/50">Target: {r.target} · {r.date}</p>
-                    <p className="mt-2 text-sm text-charcoal/70 italic">&ldquo;{r.text}&rdquo;</p>
+                    <p className="text-xs text-charcoal/50">
+                      Target: {r.target_type} · {formatJoinedDate(r.created_at)}
+                    </p>
+                    {r.title && <p className="mt-1 text-sm font-semibold text-navy">{r.title}</p>}
+                    {r.body && <p className="mt-2 text-sm text-charcoal/70 italic">&ldquo;{r.body}&rdquo;</p>}
                   </div>
                   <div className="flex shrink-0 items-center gap-0.5">
                     {Array.from({ length: 5 }).map((_, i) => (
@@ -666,26 +551,6 @@ function ReviewsManagementTab() {
                     ))}
                   </div>
                 </div>
-                {r.action === "pending" && (
-                  <div className="mt-3 flex gap-2 flex-wrap">
-                    <button onClick={() => updateAction(r.id, "approved")} className="btn-outline px-3 py-1.5 text-xs text-emerald-600 border-emerald-200 hover:bg-emerald-50">
-                      ✓ Approve review
-                    </button>
-                    <button onClick={() => updateAction(r.id, "removed")} className="btn-outline px-3 py-1.5 text-xs text-red-500 border-red-200 hover:bg-red-50">
-                      ✕ Remove review
-                    </button>
-                    <button onClick={() => updateAction(r.id, "contacted")} className="btn-outline px-3 py-1.5 text-xs text-blue border-blue/30 hover:bg-blue/5">
-                      📧 Contact reviewer
-                    </button>
-                  </div>
-                )}
-                {r.action !== "pending" && (
-                  <div className="mt-2">
-                    <button onClick={() => updateAction(r.id, "pending")} className="text-xs text-charcoal/40 hover:text-navy underline">
-                      Undo action
-                    </button>
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -695,70 +560,57 @@ function ReviewsManagementTab() {
   );
 }
 
-// ─── Admin Commissions Tab ─────────────────────────────────────────────────────
+// ─── Admin Referrals Tab ───────────────────────────────────────────────────────
 
-const COMM_STATUS_STYLES: Record<CommissionStatus, { badge: string; dot: string; label: string }> = {
-  pending:      { badge: "bg-gold/10 text-gold",          dot: "bg-gold",        label: "Pending"       },
-  approved:     { badge: "bg-blue/10 text-blue",          dot: "bg-blue",        label: "Approved"      },
-  paid:         { badge: "bg-emerald-50 text-emerald-700", dot: "bg-emerald-500", label: "Paid"          },
-  fraud_review: { badge: "bg-red-50 text-red-600",        dot: "bg-red-500",     label: "Fraud Review"  },
+const REFERRAL_STATUS_STYLES: Record<string, { badge: string; dot: string; label: string }> = {
+  pending: { badge: "bg-gold/10 text-gold", dot: "bg-gold", label: "Pending" },
+  converted: { badge: "bg-blue/10 text-blue", dot: "bg-blue", label: "Converted" },
+  paid: { badge: "bg-emerald-50 text-emerald-700", dot: "bg-emerald-500", label: "Paid" },
 };
 
 function AdminCommissionsTab() {
-  const [commissions, setCommissions] = useState<AdminCommission[]>(adminCommissions);
-  const [filter, setFilter] = useState<"all" | CommissionStatus>("all");
+  const [referrals, setReferrals] = useState<AdminReferralRow[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [filter, setFilter] = useState<"all" | string>("all");
 
-  function updateStatus(id: string, newStatus: CommissionStatus) {
-    setCommissions((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
-    );
-  }
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    fetchAdminReferralRows().then((rows) => {
+      setReferrals(rows);
+      setLoaded(true);
+    });
+  }, []);
 
-  const filtered = filter === "all" ? commissions : commissions.filter((c) => c.status === filter);
+  const filtered = filter === "all" ? referrals : referrals.filter((r) => r.status === filter);
 
   const totals = {
-    pending:      commissions.filter((c) => c.status === "pending").reduce((s, c) => s + c.amount, 0),
-    approved:     commissions.filter((c) => c.status === "approved").reduce((s, c) => s + c.amount, 0),
-    paid:         commissions.filter((c) => c.status === "paid").reduce((s, c) => s + c.amount, 0),
-    fraud_review: commissions.filter((c) => c.status === "fraud_review").length,
+    pending: referrals.filter((r) => r.status === "pending").reduce((s, r) => s + r.commission_usd, 0),
+    converted: referrals.filter((r) => r.status === "converted").reduce((s, r) => s + r.commission_usd, 0),
+    paid: referrals.filter((r) => r.status === "paid").reduce((s, r) => s + r.commission_usd, 0),
   };
 
-  const FILTERS: { key: "all" | CommissionStatus; label: string }[] = [
-    { key: "all",          label: `All (${commissions.length})`                                    },
-    { key: "pending",      label: `Pending (${commissions.filter((c) => c.status === "pending").length})` },
-    { key: "approved",     label: `Approved (${commissions.filter((c) => c.status === "approved").length})` },
-    { key: "paid",         label: `Paid (${commissions.filter((c) => c.status === "paid").length})` },
-    { key: "fraud_review", label: `Fraud Review (${totals.fraud_review})`                          },
+  const statusCounts = {
+    pending: referrals.filter((r) => r.status === "pending").length,
+    converted: referrals.filter((r) => r.status === "converted").length,
+    paid: referrals.filter((r) => r.status === "paid").length,
+  };
+
+  const FILTERS = [
+    { key: "all", label: `All (${referrals.length})` },
+    { key: "pending", label: `Pending (${statusCounts.pending})` },
+    { key: "converted", label: `Converted (${statusCounts.converted})` },
+    { key: "paid", label: `Paid (${statusCounts.paid})` },
   ];
 
   return (
     <div className="space-y-5">
-      {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-4">
-        <StatCard label="Pending payout"  value={`$${totals.pending.toFixed(2)}`}  icon="doc"    color="gold"  />
-        <StatCard label="Approved"        value={`$${totals.approved.toFixed(2)}`} icon="check"  color="blue"  />
-        <StatCard label="Total paid out"  value={`$${totals.paid.toFixed(2)}`}     icon="star"   color="green" />
-        <StatCard label="Fraud review"    value={String(totals.fraud_review)}      icon="shield" color="navy"  />
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard label="Pending commission" value={`$${totals.pending.toFixed(2)}`} icon="doc" color="gold" />
+        <StatCard label="Converted" value={`$${totals.converted.toFixed(2)}`} icon="check" color="blue" />
+        <StatCard label="Total paid out" value={`$${totals.paid.toFixed(2)}`} icon="star" color="green" />
       </div>
 
-      {/* Fraud alerts */}
-      {commissions.some((c) => c.status === "fraud_review") && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-          <div className="flex items-start gap-3">
-            <span className="text-xl">⚠️</span>
-            <div>
-              <p className="font-bold text-red-700">Fraud review required</p>
-              <p className="mt-0.5 text-sm text-red-600">
-                {totals.fraud_review} commission{totals.fraud_review !== 1 ? "s" : ""} flagged for review. Investigate before approving.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Commission table */}
-      <Panel title="Commission Approval Queue" subtitle="Review and approve referral commissions" noPad>
-        {/* Filter tabs */}
+      <Panel title="Referral Commissions" subtitle="Live referral records from Supabase" noPad>
         <div className="flex border-b border-soft-200 px-5 overflow-x-auto">
           {FILTERS.map((f) => (
             <button
@@ -775,129 +627,59 @@ function AdminCommissionsTab() {
           ))}
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="border-b border-soft-200 bg-soft/50">
-                <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Referrer</th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Referral</th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Action</th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Date</th>
-                <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Amount</th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Status</th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-soft-200">
-              {filtered.map((c) => {
-                const st = COMM_STATUS_STYLES[c.status];
-                return (
-                  <tr key={c.id} className={`transition-colors hover:bg-soft/30 ${c.status === "fraud_review" ? "bg-red-50/40" : ""}`}>
-                    <td className="px-5 py-4">
-                      <p className="font-semibold text-navy">{c.referrer}</p>
-                      <p className="text-xs text-charcoal/40">{c.referrerEmail}</p>
-                    </td>
-                    <td className="px-4 py-4 text-charcoal/65 text-sm">{c.referral}</td>
-                    <td className="px-4 py-4 text-charcoal/65 text-sm">{c.action}</td>
-                    <td className="px-4 py-4 text-charcoal/45 text-xs">{c.date}</td>
-                    <td className="px-4 py-4 text-right font-bold text-navy">${c.amount.toFixed(2)}</td>
-                    <td className="px-4 py-4">
-                      <div className="flex flex-col gap-1">
+        {!loaded ? (
+          <div className="py-10 text-center text-sm text-charcoal/50">Loading referrals…</div>
+        ) : referrals.length === 0 ? (
+          <div className="py-10 text-center text-sm text-charcoal/50">No referral commissions yet.</div>
+        ) : filtered.length === 0 ? (
+          <div className="py-10 text-center text-sm text-charcoal/50">No referrals in this view.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="border-b border-soft-200 bg-soft/50">
+                  <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Referrer</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Referred</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Code</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Date</th>
+                  <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Commission</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-soft-200">
+                {filtered.map((r) => {
+                  const st = REFERRAL_STATUS_STYLES[r.status] ?? {
+                    badge: "bg-soft text-charcoal/60",
+                    dot: "bg-charcoal/30",
+                    label: r.status,
+                  };
+                  return (
+                    <tr key={r.id} className="transition-colors hover:bg-soft/30">
+                      <td className="px-5 py-4">
+                        <p className="font-semibold text-navy">{r.referrer_name ?? "—"}</p>
+                        <p className="text-xs text-charcoal/40">{r.referrer_email ?? "—"}</p>
+                      </td>
+                      <td className="px-4 py-4 text-charcoal/65 text-sm">{r.referred_name ?? "—"}</td>
+                      <td className="px-4 py-4 text-charcoal/65 text-sm font-mono text-xs">{r.referral_code}</td>
+                      <td className="px-4 py-4 text-charcoal/45 text-xs">{formatJoinedDate(r.created_at)}</td>
+                      <td className="px-4 py-4 text-right font-bold text-navy">${r.commission_usd.toFixed(2)}</td>
+                      <td className="px-4 py-4">
                         <span className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${st.badge}`}>
                           <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />
                           {st.label}
                         </span>
-                        {c.fraudFlag && (
-                          <span className="text-[10px] text-red-500 font-medium">⚠ {c.fraudFlag}</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {c.status === "pending" && (
-                          <>
-                            <button
-                              onClick={() => updateStatus(c.id, "approved")}
-                              className="rounded-lg bg-blue/10 px-2.5 py-1 text-xs font-semibold text-blue hover:bg-blue hover:text-white transition-colors"
-                            >
-                              Approve
-                            </button>
-                            <button
-                              onClick={() => updateStatus(c.id, "fraud_review")}
-                              className="rounded-lg bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors"
-                            >
-                              Flag fraud
-                            </button>
-                          </>
-                        )}
-                        {c.status === "approved" && (
-                          <button
-                            onClick={() => updateStatus(c.id, "paid")}
-                            className="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
-                          >
-                            Mark paid
-                          </button>
-                        )}
-                        {c.status === "fraud_review" && (
-                          <>
-                            <button
-                              onClick={() => updateStatus(c.id, "approved")}
-                              className="rounded-lg bg-blue/10 px-2.5 py-1 text-xs font-semibold text-blue hover:bg-blue hover:text-white transition-colors"
-                            >
-                              Clear & approve
-                            </button>
-                            <button
-                              onClick={() => updateStatus(c.id, "pending")}
-                              className="rounded-lg bg-soft px-2.5 py-1 text-xs font-semibold text-charcoal/60 hover:bg-soft-200 transition-colors"
-                            >
-                              Reset
-                            </button>
-                          </>
-                        )}
-                        {c.status === "paid" && (
-                          <span className="text-xs text-emerald-600 font-semibold">✓ Settled</span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {filtered.length === 0 && (
-          <div className="py-10 text-center">
-            <div className="text-4xl mb-3">📭</div>
-            <p className="font-semibold text-navy">No commissions in this view</p>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
 
         <div className="border-t border-soft-200 px-5 py-3 flex items-center justify-between text-xs text-charcoal/40">
-          <span>Showing {filtered.length} of {commissions.length} commissions</span>
-          <span>Stripe payments — updated via webhook</span>
-        </div>
-      </Panel>
-
-      {/* Top referrers */}
-      <Panel title="Top Referrers" noPad>
-        <div className="divide-y divide-soft-200">
-          {referrals.map((r) => (
-            <div key={r.code} className="flex items-center justify-between p-5">
-              <div>
-                <p className="font-bold text-navy">{r.user}</p>
-                <p className="text-sm text-charcoal/55">Code: {r.code} · {r.referred} referrals · {r.tier} tier</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <p className="font-bold text-navy">{r.earned} earned</p>
-                  <p className="text-xs text-charcoal/50">{r.payout}</p>
-                </div>
-                <button className="btn-outline px-3 py-1.5 text-xs">Process</button>
-              </div>
-            </div>
-          ))}
+          <span>Showing {filtered.length} of {referrals.length} referrals</span>
+          <span>From Supabase referrals table</span>
         </div>
       </Panel>
     </div>
@@ -937,7 +719,8 @@ export default function AdminDashboard() {
     status: string;
     created_at: string;
   }>>([]);
-  const [liveExperts, setLiveExperts] = useState<Array<{ id: string; is_verified: boolean; is_active: boolean }>>([]);
+  const [liveExperts, setLiveExperts] = useState<AdminExpertRow[]>([]);
+  const [liveAgencies, setLiveAgencies] = useState<AdminAgencyRow[]>([]);
   const [liveServices, setLiveServices] = useState<Array<{ id: string; title: string; category: string | null; price: number; is_active: boolean }>>([]);
   const [liveVisaCases, setLiveVisaCases] = useState<AdminVisaCaseRow[]>([]);
   const [liveStripeBookings, setLiveStripeBookings] = useState<AdminStripeBookingRow[]>([]);
@@ -961,7 +744,8 @@ export default function AdminDashboard() {
       }),
       fetchAdminBookingRequests().then((rows) => setLiveBookings(rows as typeof liveBookings)),
       fetchAdminSupportTickets().then((rows) => setLiveSupport(rows as typeof liveSupport)),
-      fetchAdminProviders().then((res) => setLiveExperts(res.experts as typeof liveExperts)),
+      fetchAdminExperts().then(setLiveExperts),
+      fetchAdminAgencies().then(setLiveAgencies),
       fetchAdminProviderServices().then((rows) => setLiveServices(rows as typeof liveServices)),
       fetchAdminVisaCases().then((res) => {
         if (!res.tableMissing) setLiveVisaCases(res.cases);
@@ -1224,36 +1008,47 @@ export default function AdminDashboard() {
     agencies: (
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-3">
-          <StatCard label="Total agencies" value="38" icon="agent" color="blue" />
-          <StatCard label="Verified" value="29" icon="check" color="green" />
-          <StatCard label="Pending" value="9" icon="shield" color="gold" />
+          <StatCard label="Total agencies" value={String(liveAgencies.length)} icon="agent" color="blue" />
+          <StatCard label="Verified" value={String(liveAgencies.filter((a) => a.verification_status === "verified").length)} icon="check" color="green" />
+          <StatCard label="Pending" value={String(liveAgencies.filter((a) => a.verification_status === "pending" || a.verification_status === "under_review").length)} icon="shield" color="gold" />
         </div>
 
         <Panel title="All Agencies" noPad>
-          <div className="divide-y divide-soft-200">
-            {agencies.map((a) => (
-              <div key={a.name} className="flex items-center justify-between p-5">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-bold text-navy">{a.name}</p>
-                    {a.verified && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-blue/10 px-2 py-0.5 text-xs font-semibold text-blue">
-                        <Icon name="check" className="h-3 w-3" /> Verified
-                      </span>
-                    )}
+          {liveAgencies.length === 0 ? (
+            <p className="p-8 text-center text-sm text-charcoal/50">No agencies registered yet.</p>
+          ) : (
+            <div className="divide-y divide-soft-200">
+              {liveAgencies.map((a) => (
+                <div key={a.id} className="flex items-center justify-between p-5">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-navy">{a.agency_name}</p>
+                      {a.verification_status === "verified" && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-blue/10 px-2 py-0.5 text-xs font-semibold text-blue">
+                          <Icon name="check" className="h-3 w-3" /> Verified
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-charcoal/55">
+                      {a.country ?? "—"}
+                      {a.services?.length ? ` · ${a.services.length} services` : ""}
+                      {a.total_packages > 0 ? ` · ${a.total_packages} packages` : ""}
+                      {a.review_count > 0 ? ` · ${a.review_count} reviews` : ""}
+                    </p>
                   </div>
-                  <p className="text-sm text-charcoal/55">
-                    {a.country} · {a.packages} packages · {a.tours} tours · {a.bookings} bookings
-                  </p>
+                  <div className="flex items-center gap-3">
+                    {a.rating > 0 && <span className="font-bold text-navy">⭐ {a.rating}</span>}
+                    <span className={`chip text-xs ${a.is_active ? "bg-emerald-50 text-emerald-700" : "bg-soft text-charcoal/50"}`}>
+                      {a.is_active ? "Active" : "Inactive"}
+                    </span>
+                    <span className={`chip text-xs ${a.verification_status === "verified" ? "bg-emerald-50 text-emerald-700" : a.verification_status === "pending" || a.verification_status === "under_review" ? "bg-gold/15 text-navy" : "bg-red-50 text-red-600"}`}>
+                      {a.verification_status.replace("_", " ")}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="font-bold text-navy">{a.revenue}</span>
-                  <button className="btn-outline px-3 py-1.5 text-xs">View</button>
-                  <span className={`chip text-xs ${a.status === "Active" ? "bg-emerald-50 text-emerald-700" : "bg-gold/15 text-navy"}`}>{a.status}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </Panel>
       </div>
     ),
@@ -1262,7 +1057,7 @@ export default function AdminDashboard() {
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-3">
           <StatCard label="Total experts" value={String(liveExperts.length)} icon="visa" color="blue" />
-          <StatCard label="Verified" value={String(liveExperts.filter((e) => e.is_verified).length)} icon="check" color="green" />
+          <StatCard label="Verified" value={String(liveExperts.filter((e) => e.verification_status === "verified").length)} icon="check" color="green" />
           <StatCard label="Active" value={String(liveExperts.filter((e) => e.is_active).length)} icon="shield" color="gold" />
         </div>
 
@@ -1274,12 +1069,14 @@ export default function AdminDashboard() {
               {liveExperts.map((e) => (
                 <div key={e.id} className="flex items-center justify-between p-5">
                   <div>
-                    <p className="font-bold text-navy font-mono text-sm">{e.id.slice(0, 8)}…</p>
-                    <p className="text-sm text-charcoal/55">Expert profile in Supabase</p>
+                    <p className="font-bold text-navy">{e.name}</p>
+                    <p className="text-sm text-charcoal/55">
+                      {[e.city, e.country].filter(Boolean).join(", ") || "—"}
+                    </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className={`chip text-xs ${e.is_verified ? "bg-emerald-50 text-emerald-700" : "bg-gold/15 text-navy"}`}>
-                      {e.is_verified ? "Verified" : "Unverified"}
+                    <span className={`chip text-xs ${e.verification_status === "verified" ? "bg-emerald-50 text-emerald-700" : "bg-gold/15 text-navy"}`}>
+                      {e.verification_status === "verified" ? "Verified" : e.verification_status.replace("_", " ")}
                     </span>
                     <span className={`chip text-xs ${e.is_active ? "bg-blue/10 text-blue" : "bg-soft text-charcoal/50"}`}>
                       {e.is_active ? "Active" : "Inactive"}
@@ -1659,42 +1456,44 @@ export default function AdminDashboard() {
       </div>
     ),
 
-    seo: (
+    seo: (() => {
+      const seoPages = [
+        ...Object.entries(SEO_VISA_PAGES).map(([slug, page]) => ({
+          slug: `/visa/${slug}`,
+          title: page.title,
+        })),
+        ...Object.entries(SEO_TRAVEL_PAGES).map(([slug, page]) => ({
+          slug: `/travel/${slug}`,
+          title: page.title,
+        })),
+      ];
+
+      return (
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-3">
-          <StatCard label="Published pages" value="24" icon="globe" color="blue" />
-          <StatCard label="Total views (mo.)" value="42,800" icon="users" delta="+31%" color="green" />
-          <StatCard label="Avg search rank" value="8.4" icon="star" color="gold" />
+          <StatCard label="Configured pages" value={String(seoPages.length)} icon="globe" color="blue" />
+          <StatCard label="Visa guides" value={String(Object.keys(SEO_VISA_PAGES).length)} icon="visa" color="green" />
+          <StatCard label="Travel guides" value={String(Object.keys(SEO_TRAVEL_PAGES).length)} icon="star" color="gold" />
         </div>
 
-        <Panel title="SEO Pages" subtitle="Manage content and search rankings">
-          <div className="mb-4 flex gap-3">
-            <input className="input flex-1 text-sm" placeholder="Search pages..." />
-            <button className="btn-primary px-4 py-2.5 text-sm">+ New page</button>
-          </div>
+        <Panel title="SEO Pages" subtitle="Static content pages defined in the codebase">
           <div className="divide-y divide-soft-200">
             {seoPages.map((p) => (
               <div key={p.slug} className="flex items-center justify-between py-4">
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-navy truncate">{p.title}</p>
-                  <p className="text-xs text-charcoal/50 font-mono">{p.slug} · Edited {p.lastEdited}</p>
+                  <p className="text-xs text-charcoal/50 font-mono">{p.slug}</p>
                 </div>
-                <div className="flex items-center gap-4 shrink-0">
-                  <div className="text-right text-sm">
-                    <p className="font-bold text-navy">{p.views.toLocaleString()} views</p>
-                    <p className="text-xs text-charcoal/50">Rank: #{p.rank}</p>
-                  </div>
-                  <span className={`chip text-xs ${p.status === "Published" ? "bg-emerald-50 text-emerald-700" : "bg-gold/15 text-navy"}`}>
-                    {p.status}
-                  </span>
-                  <button className="text-xs text-blue font-semibold hover:underline">Edit</button>
-                </div>
+                <Link href={p.slug} className="text-xs text-blue font-semibold hover:underline shrink-0">
+                  View
+                </Link>
               </div>
             ))}
           </div>
         </Panel>
       </div>
-    ),
+      );
+    })(),
 
     settings: (
       <div className="space-y-5">

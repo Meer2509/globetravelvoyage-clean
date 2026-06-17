@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AuthLayout, StepProgress } from "@/components/AuthLayout";
+import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
+import { completeCustomerOnboarding } from "@/lib/supabase/onboarding-actions";
 
 const STEPS = ["Preferences", "Travel Style", "AI Settings", "Done"];
 
@@ -14,6 +16,8 @@ const interests = [
 
 export default function CustomerOnboarding() {
   const [step, setStep] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [data, setData] = useState({
     nationality: "",
     passportCountry: "",
@@ -36,6 +40,34 @@ export default function CustomerOnboarding() {
         ? prev.selectedInterests.filter((i) => i !== item)
         : [...prev.selectedInterests, item],
     }));
+  }
+
+  async function handleSubmit() {
+    setError("");
+    setLoading(true);
+    try {
+      const result = await completeCustomerOnboarding({
+        nationality: data.nationality,
+        passportCountry: data.passportCountry,
+        basedIn: data.basedIn,
+        currency: data.currency,
+        selectedInterests: data.selectedInterests,
+        travelFreq: data.travelFreq,
+        groupType: data.groupType,
+        budgetRange: data.budgetRange,
+        visaCountries: data.visaCountries,
+        notifications: data.notifications,
+        aiSuggestions: data.aiSuggestions,
+        language: data.language,
+      });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setStep(3);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -263,9 +295,13 @@ export default function CustomerOnboarding() {
               </label>
             </div>
 
+            {error && <p className="text-sm text-red-600">{error}</p>}
+
             <div className="flex gap-3">
-              <button onClick={() => setStep(1)} className="btn-outline flex-1 py-3">← Back</button>
-              <button onClick={() => setStep(3)} className="btn-primary flex-1 py-3">Complete setup →</button>
+              <button onClick={() => setStep(1)} className="btn-outline flex-1 py-3" disabled={loading}>← Back</button>
+              <button onClick={handleSubmit} className="btn-primary flex-1 py-3" disabled={loading}>
+                {loading ? "Saving…" : "Complete setup →"}
+              </button>
             </div>
           </div>
         )}
@@ -277,7 +313,7 @@ export default function CustomerOnboarding() {
             </div>
             <h2 className="mt-5 text-2xl font-extrabold text-navy">Your profile is ready!</h2>
             <p className="mt-2 text-sm text-charcoal/60">
-              Welcome to Globe Travel Voyage. Your AI travel assistant is ready.
+              {FORM_SUBMIT_SUCCESS_MESSAGE}
             </p>
 
             <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs">

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { AuthLayout, StepProgress } from "@/components/AuthLayout";
 import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
+import { completeAgentOnboarding } from "@/lib/supabase/onboarding-actions";
 
 const STEPS = ["Profile", "Services", "Documents", "Done"];
 
@@ -16,6 +17,8 @@ const languages = ["English", "Urdu", "Arabic", "Hindi", "Tagalog", "Bengali", "
 
 export default function AgentOnboarding() {
   const [step, setStep] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [data, setData] = useState({
     fullName: "",
     email: "",
@@ -39,6 +42,38 @@ export default function AgentOnboarding() {
   function toggle<K extends keyof typeof data>(key: K, item: string) {
     const arr = data[key] as string[];
     setData((p) => ({ ...p, [key]: arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item] }));
+  }
+
+  async function handleSubmit() {
+    setError("");
+    setLoading(true);
+    try {
+      const result = await completeAgentOnboarding({
+        fullName: data.fullName,
+        email: data.email,
+        phone: data.phone,
+        city: data.city,
+        country: data.country,
+        yearsExp: data.yearsExp,
+        bio: data.bio,
+        specializations: data.specializations,
+        spokenLanguages: data.spokenLanguages,
+        priceFrom: data.priceFrom,
+        priceTo: data.priceTo,
+        turnaround: data.turnaround,
+        successRate: data.successRate,
+        offersConsultation: data.offersConsultation,
+        availableOnWeekends: data.availableOnWeekends,
+        acceptedDocs: data.acceptedDocs,
+      });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setStep(3);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -270,9 +305,13 @@ export default function AgentOnboarding() {
               </p>
             </div>
 
+            {error && <p className="text-sm text-red-600">{error}</p>}
+
             <div className="flex gap-3">
-              <button onClick={() => setStep(1)} className="btn-outline flex-1 py-3">← Back</button>
-              <button onClick={() => setStep(3)} className="btn-primary flex-1 py-3">Submit profile →</button>
+              <button onClick={() => setStep(1)} className="btn-outline flex-1 py-3" disabled={loading}>← Back</button>
+              <button onClick={handleSubmit} className="btn-primary flex-1 py-3" disabled={loading}>
+                {loading ? "Saving…" : "Submit profile →"}
+              </button>
             </div>
           </div>
         )}

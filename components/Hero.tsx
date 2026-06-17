@@ -5,8 +5,6 @@ import Link from "next/link";
 import { Icon } from "./Icon";
 import { useCatalog } from "@/lib/catalog/context";
 import { bookingRequestPath, rentalsBrowseHref } from "@/lib/marketplace-routes";
-import { PRICE_ESTIMATE_LABEL } from "@/lib/launch-trust";
-import { SamplePrice } from "@/components/PriceEstimateLabel";
 import { analyzeVisaWithAi, getTravelAssistantReply, AiUnavailableError } from "@/lib/ai-api";
 import type { VisaResult } from "@/lib/ai-types";
 import { VISA_AI_DISCLAIMER } from "@/lib/ai-types";
@@ -101,47 +99,46 @@ const RENTAL_LOCATIONS = [
   "London", "New York", "Istanbul", "Other",
 ];
 
-// ─── Mock result data ─────────────────────────────────────────────────────────
+// ─── Concierge quote panel (non-flight tabs) ───────────────────────────────────
 
-const MOCK_HOTELS = [
-  { name: "Atlantis The Palm",    city: "Dubai",    stars: 5, price: "$450/night", type: "Resort" },
-  { name: "Grand Hyatt Makkah",   city: "Makkah",   stars: 5, price: "$320/night", type: "Hotel" },
-  { name: "The Ritz-Carlton Doha",city: "Doha",     stars: 5, price: "$380/night", type: "Hotel" },
-  { name: "Pullman Istanbul",     city: "Istanbul", stars: 5, price: "$195/night", type: "Hotel" },
-  { name: "Pearl Continental",   city: "Lahore",   stars: 5, price: "$140/night", type: "Hotel" },
-];
-
-const MOCK_CRUISES = [
-  { name: "Arabian Gulf Explorer", nights: "4 nights", region: "Dubai · Abu Dhabi · Qatar", price: "from $420", type: "Cruise" },
-  { name: "Dubai Marina Sunset",   nights: "Day charter", region: "Dubai Marina",           price: "from $300", type: "Yacht" },
-  { name: "Mediterranean Jewel",  nights: "7 nights",   region: "Italy · Greece · Spain",  price: "from $890", type: "Cruise" },
-  { name: "Nile Heritage Voyage",  nights: "3 nights",   region: "Luxor · Aswan, Egypt",    price: "from $260", type: "River boat" },
-  { name: "Palawan Island Hop",    nights: "Day trip",    region: "El Nido, Philippines",    price: "from $45",  type: "Boat" },
-];
-
-const MOCK_TOURS = [
-  { title: "Old Dubai Heritage Walk",     city: "Dubai",     price: "$45/pp",  duration: "4 hrs",  tag: "Heritage" },
-  { title: "Desert Safari & BBQ",         city: "Dubai",     price: "$55/pp",  duration: "6 hrs",  tag: "Adventure" },
-  { title: "Bosphorus Sunset Cruise",     city: "Istanbul",  price: "$38/pp",  duration: "2 hrs",  tag: "Cruise" },
-  { title: "Hunza Valley Day Trip",       city: "Islamabad", price: "$65/pp",  duration: "Full day", tag: "Nature" },
-  { title: "Taal Volcano Boat Tour",      city: "Manila",    price: "$30/pp",  duration: "5 hrs",  tag: "Boat tour" },
-];
-
-const MOCK_RENTALS = [
-  { title: "Toyota Corolla — self drive",     type: "Car",      city: "Dubai",     price: "$32/day",   tag: "Economy" },
-  { title: "Nissan Patrol — with driver",     type: "Car",      city: "Riyadh",    price: "$95/day",   tag: "SUV + chauffeur" },
-  { title: "2BR Furnished Apartment",         type: "Apartment",city: "Dubai Marina", price: "$1,400/mo", tag: "Monthly" },
-  { title: "Beachfront Villa",                type: "Villa",    city: "Karachi",   price: "$180/night",tag: "Vacation stay" },
-  { title: "Studio — short stay",             type: "Studio",   city: "Islamabad", price: "$45/night", tag: "Nightly" },
-];
-
-// ─── Disclaimer banner ────────────────────────────────────────────────────────
-
-function ResultDisclaimer() {
+function QuoteRequestPanel({
+  title,
+  description,
+  browseHref,
+  browseLabel,
+  quoteHref,
+  onClose,
+}: {
+  title: string;
+  description: string;
+  browseHref: string;
+  browseLabel: string;
+  quoteHref: string;
+  onClose: () => void;
+}) {
   return (
-    <p className="mt-2 px-4 pb-2 text-center text-[10px] text-charcoal/40 leading-relaxed">
-      {PRICE_ESTIMATE_LABEL} Globe Travel Voyage is not an airline, hotel, immigration authority, or official visa body.
-    </p>
+    <div className="mt-1 rounded-xl border border-soft-200 overflow-hidden">
+      <div className="bg-navy/5 px-4 py-2.5 flex items-center justify-between">
+        <p className="text-xs font-bold text-navy">{title}</p>
+        <button type="button" onClick={onClose} className="text-xs text-charcoal/40 hover:text-navy">
+          ✕
+        </button>
+      </div>
+      <div className="px-4 py-5 text-center">
+        <p className="text-sm leading-relaxed text-charcoal/70">{description}</p>
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
+          <Link href={browseHref} className="btn-outline px-4 py-2.5 text-sm">
+            {browseLabel}
+          </Link>
+          <Link href={quoteHref} className="btn-primary px-4 py-2.5 text-sm">
+            Request a custom quote
+          </Link>
+        </div>
+        <p className="mt-3 text-[10px] text-charcoal/45 leading-relaxed">
+          Verified providers confirm availability and pricing before you commit.
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -355,42 +352,20 @@ function HotelsForm() {
       </form>
 
       {results && (
-        <div className="mt-1 rounded-xl border border-soft-200 overflow-hidden">
-          <div className="bg-navy/5 px-4 py-2.5 flex items-center justify-between">
-            <p className="text-xs font-bold text-navy">Featured stays {dest ? `in ${dest}` : "— featured properties"}</p>
-            <button onClick={() => setResults(false)} className="text-xs text-charcoal/40 hover:text-navy">✕</button>
-          </div>
-          <div className="divide-y divide-soft-200">
-            {MOCK_HOTELS.map((h) => (
-              <div key={h.name} className="flex items-center justify-between gap-3 px-4 py-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-xl">🏨</span>
-                  <div className="min-w-0">
-                    <p className="font-bold text-navy text-sm">{h.name}</p>
-                    <p className="text-xs text-charcoal/50">{h.city} · {h.type} · {"⭐".repeat(h.stars)}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <SamplePrice value={h.price} size="sm" />
-                  <Link
-                    href={bookingRequestPath({
-                      service: "hotel",
-                      subject: h.name,
-                      destination: dest || h.city,
-                    })}
-                    className="btn-blue px-3 py-1.5 text-xs"
-                  >
-                    Request quote
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-          <ResultDisclaimer />
-          <div className="p-3 text-center border-t border-soft-200">
-            <Link href="/hotels" className="text-xs font-semibold text-blue hover:underline">View all stays on hotels page →</Link>
-          </div>
-        </div>
+        <QuoteRequestPanel
+          title={dest ? `Stays in ${dest}` : "Luxury stays & hotels"}
+          description="Tell us your dates, guest count, and preferences. Our concierge matches you with verified hotels, resorts, and furnished stays — with confirmed pricing before you book."
+          browseHref="/hotels"
+          browseLabel="Browse hotels & stays"
+          quoteHref={bookingRequestPath({
+            service: "hotel",
+            destination: dest || undefined,
+            details: [stayType, guests, budget, checkin && `Check-in: ${checkin}`, checkout && `Check-out: ${checkout}`]
+              .filter(Boolean)
+              .join(" · "),
+          })}
+          onClose={() => setResults(false)}
+        />
       )}
     </div>
   );
@@ -601,42 +576,18 @@ function CruisesForm() {
       </form>
 
       {results && (
-        <div className="mt-1 rounded-xl border border-soft-200 overflow-hidden">
-          <div className="bg-navy/5 px-4 py-2.5 flex items-center justify-between">
-            <p className="text-xs font-bold text-navy">Featured cruises {region ? `— ${region}` : "— featured options"}</p>
-            <button onClick={() => setResults(false)} className="text-xs text-charcoal/40 hover:text-navy">✕</button>
-          </div>
-          <div className="divide-y divide-soft-200">
-            {MOCK_CRUISES.map((c) => (
-              <div key={c.name} className="flex items-center justify-between gap-3 px-4 py-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-xl">🛳️</span>
-                  <div className="min-w-0">
-                    <p className="font-bold text-navy text-sm">{c.name}</p>
-                    <p className="text-xs text-charcoal/50">{c.region} · {c.nights} · {c.type}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <SamplePrice value={c.price} size="sm" />
-                  <Link
-                    href={bookingRequestPath({
-                      service: "cruise",
-                      subject: c.name,
-                      destination: c.region,
-                    })}
-                    className="btn-blue px-3 py-1.5 text-xs"
-                  >
-                    Request quote
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-          <ResultDisclaimer />
-          <div className="p-3 text-center border-t border-soft-200">
-            <Link href="/cruises" className="text-xs font-semibold text-blue hover:underline">View all cruises →</Link>
-          </div>
-        </div>
+        <QuoteRequestPanel
+          title={region ? `Cruises — ${region}` : "Cruises & yacht charters"}
+          description="Share your preferred region, dates, and group size. We coordinate with verified cruise and yacht operators to deliver a tailored quote."
+          browseHref="/cruises"
+          browseLabel="Browse cruises & yachts"
+          quoteHref={bookingRequestPath({
+            service: "cruise",
+            destination: region || undefined,
+            details: [type, dur, guests, dep && `Departure: ${dep}`].filter(Boolean).join(" · "),
+          })}
+          onClose={() => setResults(false)}
+        />
       )}
     </div>
   );
@@ -694,42 +645,18 @@ function ToursForm() {
       </form>
 
       {results && (
-        <div className="mt-1 rounded-xl border border-soft-200 overflow-hidden">
-          <div className="bg-navy/5 px-4 py-2.5 flex items-center justify-between">
-            <p className="text-xs font-bold text-navy">Featured tours {dest ? `in ${dest}` : "— featured experiences"}</p>
-            <button onClick={() => setResults(false)} className="text-xs text-charcoal/40 hover:text-navy">✕</button>
-          </div>
-          <div className="divide-y divide-soft-200">
-            {MOCK_TOURS.map((t) => (
-              <div key={t.title} className="flex items-center justify-between gap-3 px-4 py-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-xl">🗺️</span>
-                  <div className="min-w-0">
-                    <p className="font-bold text-navy text-sm">{t.title}</p>
-                    <p className="text-xs text-charcoal/50">{t.city} · {t.duration} · {t.tag}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <SamplePrice value={t.price} size="sm" />
-                  <Link
-                    href={bookingRequestPath({
-                      service: "tour",
-                      subject: t.title,
-                      destination: dest || t.city,
-                    })}
-                    className="btn-blue px-3 py-1.5 text-xs"
-                  >
-                    Request quote
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-          <ResultDisclaimer />
-          <div className="p-3 text-center border-t border-soft-200">
-            <Link href="/tours" className="text-xs font-semibold text-blue hover:underline">View all tours →</Link>
-          </div>
-        </div>
+        <QuoteRequestPanel
+          title={dest ? `Tours in ${dest}` : "Guided experiences & tours"}
+          description="Describe your destination, travel date, and group size. We connect you with verified local guides and curated experiences."
+          browseHref="/tours"
+          browseLabel="Browse tours & experiences"
+          quoteHref={bookingRequestPath({
+            service: "tour",
+            destination: dest || undefined,
+            details: [tourType, group, date && `Date: ${date}`].filter(Boolean).join(" · "),
+          })}
+          onClose={() => setResults(false)}
+        />
       )}
     </div>
   );
@@ -792,44 +719,18 @@ function RentalsForm() {
       </form>
 
       {results && (
-        <div className="mt-1 rounded-xl border border-soft-200 overflow-hidden">
-          <div className="bg-navy/5 px-4 py-2.5 flex items-center justify-between">
-            <p className="text-xs font-bold text-navy">Featured rentals {location ? `in ${location}` : "— featured options"}</p>
-            <button onClick={() => setResults(false)} className="text-xs text-charcoal/40 hover:text-navy">✕</button>
-          </div>
-          <div className="divide-y divide-soft-200">
-            {MOCK_RENTALS.map((r) => (
-              <div key={r.title} className="flex items-center justify-between gap-3 px-4 py-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-xl">{r.type === "Car" ? "🚗" : r.type === "Villa" ? "🏡" : "🏢"}</span>
-                  <div className="min-w-0">
-                    <p className="font-bold text-navy text-sm">{r.title}</p>
-                    <p className="text-xs text-charcoal/50">{r.city} · {r.tag}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <SamplePrice value={r.price} size="sm" />
-                  <Link
-                    href={bookingRequestPath({
-                      service: r.type === "Car" ? "car_rental" : "property",
-                      subject: r.title,
-                      destination: location || r.city,
-                    })}
-                    className="btn-blue px-3 py-1.5 text-xs"
-                  >
-                    Request quote
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-          <ResultDisclaimer />
-          <div className="p-3 text-center border-t border-soft-200">
-            <Link href={rentalsBrowseHref(rentalType)} className="text-xs font-semibold text-blue hover:underline">
-              View all properties & rentals →
-            </Link>
-          </div>
-        </div>
+        <QuoteRequestPanel
+          title={location ? `Rentals in ${location}` : "Rentals & furnished stays"}
+          description="Share your rental type, location, and dates. Our team sources verified cars, apartments, and properties with confirmed terms."
+          browseHref={rentalsBrowseHref(rentalType)}
+          browseLabel="Browse rentals & properties"
+          quoteHref={bookingRequestPath({
+            service: rentalType.toLowerCase().includes("car") ? "car_rental" : "property",
+            destination: location || undefined,
+            details: [rentalType, duration, from && `From: ${from}`].filter(Boolean).join(" · "),
+          })}
+          onClose={() => setResults(false)}
+        />
       )}
     </div>
   );

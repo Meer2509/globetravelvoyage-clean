@@ -1,45 +1,89 @@
-import { getSiteUrl } from "@/lib/site-url";
+import { SITE_CONFIG } from "@/lib/site-config";
 
-function shell(content: string): string {
+export interface EmailField {
+  label: string;
+  value?: string | null;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function formatValue(value?: string | null): string {
+  const trimmed = value?.trim();
+  return trimmed ? escapeHtml(trimmed) : "—";
+}
+
+export function renderFieldTable(fields: EmailField[]): string {
+  const rows = fields
+    .filter((f) => f.value !== undefined)
+    .map(
+      (f) => `
+        <tr>
+          <td style="padding:10px 12px;border-bottom:1px solid #E2E8F0;color:#64748B;font-size:13px;width:38%;vertical-align:top;">
+            ${escapeHtml(f.label)}
+          </td>
+          <td style="padding:10px 12px;border-bottom:1px solid #E2E8F0;color:#072B61;font-size:13px;font-weight:600;vertical-align:top;">
+            ${formatValue(f.value)}
+          </td>
+        </tr>`
+    )
+    .join("");
+
+  return `
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:16px;">
+      ${rows}
+    </table>`;
+}
+
+export function renderBrandedEmail(input: {
+  title: string;
+  intro: string;
+  fields?: EmailField[];
+  bodyHtml?: string;
+  footerNote?: string;
+}): string {
+  const fieldsBlock = input.fields?.length ? renderFieldTable(input.fields) : "";
+  const extra = input.bodyHtml ?? "";
+  const footer = input.footerNote ?? `Questions? Reply to ${SITE_CONFIG.supportEmail}.`;
+
   return `<!DOCTYPE html>
-<html><head><meta charset="utf-8"></head>
-<body style="margin:0;background:#f4f6f9;font-family:Georgia,serif;">
-  <table width="100%" style="background:#081c3a;padding:32px 20px;"><tr><td align="center">
-    <p style="color:#c9a227;font-size:11px;letter-spacing:3px;margin:0;">GLOBE TRAVEL VOYAGE</p>
-  </td></tr></table>
-  <table width="100%" style="max-width:600px;margin:0 auto;background:#fff;"><tr><td style="padding:36px;">${content}</td></tr></table>
-  <p style="text-align:center;color:#8896a8;font-size:11px;margin:24px;">Not a government agency. No visa approval guarantee.</p>
-</body></html>`;
-}
-
-export function welcomeEmail(name: string): { subject: string; html: string } {
-  const site = getSiteUrl();
-  return {
-    subject: "Welcome to Globe Travel Voyage",
-    html: shell(`
-      <h2 style="color:#081c3a;">Welcome${name ? `, ${name}` : ""}</h2>
-      <p style="color:#4a5568;line-height:1.7;">Your account is ready. Explore free visa guides, save trips, and upgrade to premium services when you need expert help.</p>
-      <p><a href="${site}/dashboard/customer" style="color:#c9a227;">Open your dashboard →</a></p>
-    `),
-  };
-}
-
-export function paymentConfirmationEmail(input: {
-  name?: string;
-  serviceName: string;
-  amount: string;
-  invoiceNumber: string;
-  dashboardUrl: string;
-}): { subject: string; html: string } {
-  return {
-    subject: "Payment confirmed — Globe Travel Voyage",
-    html: shell(`
-      <h2 style="color:#081c3a;">Payment confirmed</h2>
-      <p style="color:#4a5568;">Thank you${input.name ? `, ${input.name}` : ""}. Your order is saved to your account.</p>
-      <p><strong>${input.serviceName}</strong><br>${input.amount}<br>Invoice ${input.invoiceNumber}</p>
-      <p><a href="${input.dashboardUrl}" style="color:#c9a227;">View dashboard →</a></p>
-    `),
-  };
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
+<body style="margin:0;padding:0;background:#F8FAFC;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+    <tr>
+      <td style="background:linear-gradient(135deg,#072B61 0%,#041C43 100%);padding:28px 24px;text-align:center;">
+        <p style="margin:0;color:#D4AF37;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;font-weight:700;">Globe Travel Voyage</p>
+        <h1 style="margin:8px 0 0;color:#F8FAFC;font-size:22px;font-weight:800;line-height:1.3;">${escapeHtml(input.title)}</h1>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:32px 20px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#FFFFFF;border-radius:14px;border:1px solid #E2E8F0;overflow:hidden;box-shadow:0 8px 30px rgba(7,43,97,0.08);">
+          <tr>
+            <td style="padding:28px 24px;">
+              <p style="margin:0 0 16px;color:#334155;font-size:15px;line-height:1.6;">${escapeHtml(input.intro)}</p>
+              ${extra}
+              ${fieldsBlock}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 20px 32px;text-align:center;">
+        <p style="margin:0;color:#94A3B8;font-size:12px;line-height:1.5;">${escapeHtml(footer)}</p>
+        <p style="margin:8px 0 0;color:#94A3B8;font-size:11px;">© ${new Date().getFullYear()} ${SITE_CONFIG.name}</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 }
 
 export function visaCaseCreatedEmail(input: {
@@ -47,49 +91,18 @@ export function visaCaseCreatedEmail(input: {
   serviceName: string;
   dashboardUrl: string;
 }): { subject: string; html: string } {
+  const dashboardUrl = escapeHtml(input.dashboardUrl);
   return {
-    subject: `Visa case ${input.caseNumber} created`,
-    html: shell(`
-      <h2 style="color:#081c3a;">Your visa case is open</h2>
-      <p style="color:#4a5568;">Case <strong>${input.caseNumber}</strong> for ${input.serviceName}.</p>
-      <p>Upload documents from your dashboard when ready. Visa approval is never guaranteed.</p>
-      <p><a href="${input.dashboardUrl}" style="color:#c9a227;">Open My Visa Case →</a></p>
-    `),
-  };
-}
-
-export function documentReminderEmail(dashboardUrl: string): { subject: string; html: string } {
-  return {
-    subject: "Documents needed for your visa case",
-    html: shell(`
-      <h2 style="color:#081c3a;">Document reminder</h2>
-      <p style="color:#4a5568;">Please upload remaining documents for your visa case.</p>
-      <p><a href="${dashboardUrl}" style="color:#c9a227;">Upload documents →</a></p>
-    `),
-  };
-}
-
-export function expertAssignedEmail(expertName: string, dashboardUrl: string): { subject: string; html: string } {
-  return {
-    subject: "Expert assigned to your visa case",
-    html: shell(`
-      <h2 style="color:#081c3a;">Expert assigned</h2>
-      <p style="color:#4a5568;">${expertName} has been assigned to your case. Message support through your dashboard.</p>
-      <p><a href="${dashboardUrl}" style="color:#c9a227;">View case →</a></p>
-    `),
-  };
-}
-
-export function bookingConfirmationEmail(input: {
-  serviceName: string;
-  dashboardUrl: string;
-}): { subject: string; html: string } {
-  return {
-    subject: "Booking confirmed — Globe Travel Voyage",
-    html: shell(`
-      <h2 style="color:#081c3a;">Booking confirmed</h2>
-      <p style="color:#4a5568;">${input.serviceName} is confirmed. Track details in your dashboard.</p>
-      <p><a href="${input.dashboardUrl}" style="color:#c9a227;">View bookings →</a></p>
-    `),
+    subject: `${SITE_CONFIG.name} — visa case ${input.caseNumber} created`,
+    html: renderBrandedEmail({
+      title: "Your visa case is open",
+      intro: `Your ${input.serviceName} case (${input.caseNumber}) has been created. Track progress and upload documents from your dashboard.`,
+      bodyHtml: `<p style="margin:20px 0 0;text-align:center;">
+        <a href="${dashboardUrl}" style="display:inline-block;padding:12px 24px;background:#072B61;color:#F8FAFC;text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;">
+          View your case
+        </a>
+      </p>`,
+      footerNote: `Need help? Contact ${SITE_CONFIG.supportEmail}.`,
+    }),
   };
 }

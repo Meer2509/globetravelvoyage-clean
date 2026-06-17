@@ -390,17 +390,44 @@ export async function fetchAdminProviders() {
   if (!admin) return { experts: [], agencies: [], guides: [], hosts: [] };
 
   const [expertsRes, agenciesRes, guidesRes, hostsRes] = await Promise.all([
-    admin.from("visa_experts").select("id, user_id, is_verified, is_active, created_at").order("created_at", { ascending: false }).limit(50),
-    admin.from("agencies").select("id, user_id, name, is_verified, is_active, created_at").order("created_at", { ascending: false }).limit(50),
-    admin.from("tour_guides").select("id, user_id, is_verified, is_active, created_at").order("created_at", { ascending: false }).limit(50),
-    admin.from("property_hosts").select("id, user_id, is_verified, is_active, created_at").order("created_at", { ascending: false }).limit(50),
+    admin
+      .from("visa_experts")
+      .select("id, user_id, verification_status, is_active, created_at")
+      .order("created_at", { ascending: false })
+      .limit(50),
+    admin
+      .from("agencies")
+      .select("id, user_id, agency_name, verification_status, is_active, created_at")
+      .order("created_at", { ascending: false })
+      .limit(50),
+    admin
+      .from("tour_guides")
+      .select("id, user_id, verification_status, is_active, created_at")
+      .order("created_at", { ascending: false })
+      .limit(50),
+    admin
+      .from("property_hosts")
+      .select("id, user_id, verification_status, is_active, created_at")
+      .order("created_at", { ascending: false })
+      .limit(50),
   ]);
 
+  const mapRow = (row: { id: string; verification_status: string; is_active: boolean }) => ({
+    id: row.id,
+    is_verified: row.verification_status === "verified",
+    is_active: row.is_active,
+  });
+
   return {
-    experts: expertsRes.data ?? [],
-    agencies: agenciesRes.data ?? [],
-    guides: guidesRes.data ?? [],
-    hosts: hostsRes.data ?? [],
+    experts: (expertsRes.data ?? []).map(mapRow),
+    agencies: (agenciesRes.data ?? []).map((a) => ({
+      id: (a as { id: string }).id,
+      agency_name: (a as { agency_name: string }).agency_name,
+      is_verified: (a as { verification_status: string }).verification_status === "verified",
+      is_active: (a as { is_active: boolean }).is_active,
+    })),
+    guides: (guidesRes.data ?? []).map(mapRow),
+    hosts: (hostsRes.data ?? []).map(mapRow),
   };
 }
 
