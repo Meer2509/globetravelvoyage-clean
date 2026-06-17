@@ -185,13 +185,22 @@ export async function updateIntakeStatus(
   const admin = createAdminClient();
   if (!admin) return { ok: false, error: "Supabase is not configured." };
 
-  const { error } = await admin
-    .from(table)
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq("id", id);
+  const payload =
+    table === "booking_requests"
+      ? { status }
+      : { status, updated_at: new Date().toISOString() };
+
+  const { error } = await admin.from(table).update(payload).eq("id", id);
 
   if (error) return { ok: false, error: error.message };
   return { ok: true, data: { id } };
+}
+
+export async function updateBookingRequestStatus(
+  id: string,
+  status: string
+): Promise<MvpActionResult> {
+  return updateIntakeStatus("booking_requests", id, status);
 }
 
 export async function updateUserActiveStatus(
