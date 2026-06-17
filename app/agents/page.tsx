@@ -7,7 +7,7 @@ import { FilterBar } from "@/components/FilterBar";
 import { TrustBadge } from "@/components/TrustBadge";
 import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
-import { ContactModal } from "@/components/ContactModal";
+import { AgencyContactModal } from "@/components/marketplace/AgencyContactModal";
 import { StripeCheckoutButton } from "@/components/StripeCheckoutButton";
 import { useCatalog } from "@/lib/catalog/context";
 import { fetchMarketplaceExperts, type MarketplaceExpertRow } from "@/lib/supabase/mvp-queries";
@@ -17,6 +17,7 @@ import { ProviderOnboardingCta } from "@/components/ProviderOnboardingCta";
 
 type AgentCard = {
   id: string;
+  userId: string;
   name: string;
   title: string;
   specialties: string[];
@@ -35,6 +36,7 @@ function mapExpert(e: MarketplaceExpertRow): AgentCard {
   const specialties = (e.services ?? []).slice(0, 4).map((s) => s.replace(/^[^:]+:/, "").trim() || s);
   return {
     id: e.id,
+    userId: e.user_id,
     name,
     title: e.bio?.slice(0, 60) ?? "Visa preparation expert",
     specialties: specialties.length ? specialties : ["Visa preparation"],
@@ -203,11 +205,21 @@ export default function AgentsPage() {
         </div>
       </section>
 
-      <ContactModal
+      <AgencyContactModal
         open={modal.open}
         onClose={() => setModal({ open: false, agent: null })}
-        mode="contact_expert"
-        subjectName={modal.agent?.name}
+        targetType="visa_agent"
+        agency={
+          modal.agent
+            ? {
+                id: modal.agent.id,
+                userId: modal.agent.userId,
+                name: modal.agent.name,
+                city: modal.agent.location.split(",")[0]?.trim() ?? "—",
+                country: modal.agent.location.split(",")[1]?.trim() ?? "—",
+              }
+            : null
+        }
       />
     </>
   );

@@ -13,7 +13,7 @@ import { DashboardEmpty } from "@/components/DashboardEmpty";
 import { ProviderServicesPanel } from "@/components/ProviderServicesPanel";
 import { PayoutSetupPanel } from "@/components/PayoutSetupPanel";
 import { ProviderEarningsSummary } from "@/components/ProviderEarningsSummary";
-import { MessagesInbox } from "@/components/MessagesInbox";
+import { ConversationsInbox } from "@/components/messaging/ConversationsInbox";
 import { formatPaymentAmount } from "@/lib/payments-display";
 import {
   DashboardLayout,
@@ -143,7 +143,7 @@ export default function GuideDashboard() {
       </div>
     ),
 
-    messages: <MessagesInbox title="Guide messages" />,
+    messages: <ConversationsInbox title="Guide messages" />,
   };
 
   return (

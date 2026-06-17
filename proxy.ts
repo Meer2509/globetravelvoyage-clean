@@ -52,11 +52,12 @@ const ROLE_DASHBOARD_PREFIXES: Record<UserRole, string[]> = {
     "/dashboard/support",
     "/dashboard/documents",
     "/dashboard/profile",
+    "/dashboard/messages",
   ],
-  visa_agent: ["/dashboard/agent", "/dashboard/profile", "/dashboard/payouts"],
-  travel_agency: ["/dashboard/agency", "/dashboard/profile", "/dashboard/payouts"],
-  tour_guide: ["/dashboard/guide", "/dashboard/profile", "/dashboard/payouts"],
-  property_host: ["/dashboard/host", "/dashboard/profile", "/dashboard/payouts"],
+  visa_agent: ["/dashboard/agent", "/dashboard/profile", "/dashboard/payouts", "/dashboard/messages"],
+  travel_agency: ["/dashboard/agency", "/dashboard/profile", "/dashboard/payouts", "/dashboard/messages"],
+  tour_guide: ["/dashboard/guide", "/dashboard/profile", "/dashboard/payouts", "/dashboard/messages"],
+  property_host: ["/dashboard/host", "/dashboard/profile", "/dashboard/payouts", "/dashboard/messages"],
   admin: ["/dashboard"],
 };
 

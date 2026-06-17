@@ -5,7 +5,7 @@ import { PremiumMarketplaceEmpty } from "@/components/PremiumMarketplaceEmpty";
 import { FilterBar } from "@/components/FilterBar";
 import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
-import { ContactModal } from "@/components/ContactModal";
+import { PropertyInquiryModal } from "@/components/properties/PropertyInquiryModal";
 import { SaveButton } from "@/components/SaveButton";
 import { PROVIDER_ONBOARDING_HEADLINE } from "@/lib/launch-trust";
 import type { MarketplacePropertyRow } from "@/lib/supabase/mvp-queries";
@@ -216,16 +216,10 @@ export function PropertiesCatalog({
         />
       </div>
 
-      <ContactModal
+      <PropertyInquiryModal
         open={modal.open}
         onClose={() => setModal({ open: false, property: null })}
-        mode="property_inquiry"
-        subjectName={modal.property?.title}
-        subjectMeta={
-          modal.property
-            ? `${modal.property.city}${modal.property.country ? `, ${modal.property.country}` : ""} · ${formatPrice(modal.property.price, modal.property.price_period, modal.property.listing_type)}`
-            : undefined
-        }
+        property={modal.property ? { id: modal.property.id, title: modal.property.title } : null}
       />
     </>
   );

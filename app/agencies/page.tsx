@@ -6,7 +6,7 @@ import { MarketplaceCard } from "@/components/MarketplaceCard";
 import { FilterBar } from "@/components/FilterBar";
 import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
-import { ContactModal } from "@/components/ContactModal";
+import { AgencyContactModal } from "@/components/marketplace/AgencyContactModal";
 import { PremiumMarketplaceEmpty } from "@/components/PremiumMarketplaceEmpty";
 import { ProviderOnboardingCta } from "@/components/ProviderOnboardingCta";
 import { fetchMarketplaceAgencies, type MarketplaceAgencyRow } from "@/lib/supabase/mvp-queries";
@@ -14,6 +14,7 @@ import { isSupabaseConfigured } from "@/lib/auth";
 
 type AgencyCard = {
   id: string;
+  userId: string;
   name: string;
   city: string;
   country: string;
@@ -29,6 +30,7 @@ function mapAgency(a: MarketplaceAgencyRow): AgencyCard {
   const name = a.agency_name;
   return {
     id: a.id,
+    userId: a.user_id,
     name,
     city: "—",
     country: a.registration_country ?? "—",
@@ -188,12 +190,10 @@ export default function AgenciesPage() {
         </div>
       </section>
 
-      <ContactModal
+      <AgencyContactModal
         open={modal.open}
         onClose={() => setModal({ open: false, agency: null })}
-        mode="request_quote"
-        subjectName={modal.agency?.name}
-        subjectMeta={modal.agency ? `${modal.agency.city}, ${modal.agency.country}` : undefined}
+        agency={modal.agency}
       />
     </>
   );

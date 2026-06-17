@@ -39,6 +39,7 @@ import {
   type AdminConnectProviderRow,
 } from "@/lib/supabase/connect-queries";
 import { updateIntakeStatus } from "@/lib/supabase/mvp-actions";
+import { updateAdminIntakeStatus } from "@/lib/admin/admin-intake-actions";
 import { SEO_VISA_PAGES, SEO_TRAVEL_PAGES } from "@/lib/seo-pages";
 import { SITE_CONFIG } from "@/lib/site-config";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
@@ -158,14 +159,28 @@ function VisaRequestsTab() {
     });
   }, []);
 
-  function updateStatus(id: string, status: VRStatus) {
-    setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status } : r));
-    setToast(`Request ${id} updated to "${VR_STATUS_LABELS[status]}"`);
+  async function updateStatus(id: string, status: VRStatus) {
+    const result = await updateAdminIntakeStatus("visa_requests", id, status);
+    if (!result.ok) {
+      setToast(result.error);
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+    setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+    setToast(`Request updated to "${VR_STATUS_LABELS[status]}"`);
     setTimeout(() => setToast(null), 3000);
   }
 
-  function assignExpert(id: string, expert: string) {
-    setRequests((prev) => prev.map((r) => r.id === id ? { ...r, assignedTo: expert, status: "reviewing" } : r));
+  async function assignExpert(id: string, expert: string) {
+    const result = await updateAdminIntakeStatus("visa_requests", id, "reviewing");
+    if (!result.ok) {
+      setToast(result.error);
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+    setRequests((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, assignedTo: expert, status: "reviewing" } : r))
+    );
     setToast(`${id} assigned to ${expert}`);
     setTimeout(() => setToast(null), 3000);
   }
@@ -808,6 +823,9 @@ export default function AdminDashboard() {
               { href: "/admin/properties", label: "Property requests" },
               { href: "/admin/providers", label: "Provider applications" },
               { href: "/admin/referrals", label: "Referrals" },
+              { href: "/admin/reviews", label: "Reviews" },
+              { href: "/admin/messages", label: "Messaging" },
+              { href: "/admin/ai-trips", label: "AI saved trips" },
               { href: "/admin/setup", label: "Environment setup" },
             ].map((link) => (
               <Link

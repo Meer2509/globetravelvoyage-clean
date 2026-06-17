@@ -18,7 +18,7 @@ import { DashboardEmpty } from "@/components/DashboardEmpty";
 import { ProviderServicesPanel } from "@/components/ProviderServicesPanel";
 import { PayoutSetupPanel } from "@/components/PayoutSetupPanel";
 import { ProviderEarningsSummary } from "@/components/ProviderEarningsSummary";
-import { MessagesInbox } from "@/components/MessagesInbox";
+import { ConversationsInbox } from "@/components/messaging/ConversationsInbox";
 import { joinCommaList } from "@/lib/supabase/profile-utils";
 import { parseExpertServices } from "@/lib/expert-services";
 import {
@@ -490,7 +490,7 @@ export default function AgentDashboard() {
       </div>
     ),
 
-    messages: <MessagesInbox title="Expert messages" />,
+    messages: <ConversationsInbox title="Expert messages" />,
 
     settings: (
       <div className="space-y-5">

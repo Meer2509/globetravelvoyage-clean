@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { type TripInput, type TripResult } from "@/lib/ai-types";
 import { generateTripPlanWithAi, AiUnavailableError } from "@/lib/ai-api";
+import { SaveTripButton } from "@/components/ai/SaveTripButton";
 import { StripeCheckoutButton } from "@/components/StripeCheckoutButton";
 
 function DownloadItineraryButton({ destination, totalDays }: { destination: string; totalDays: number }) {
@@ -459,6 +460,7 @@ export default function AITripPlannerPage() {
 
             {/* Actions */}
             <div className="flex flex-wrap gap-3 pt-2">
+              <SaveTripButton form={form} result={result} />
               <StripeCheckoutButton
                 productKey="premium_ai_trip_plan"
                 checkoutMeta={{ listingTitle: result.destination }}

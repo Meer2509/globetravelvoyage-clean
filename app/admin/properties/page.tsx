@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { AdminAccessRequired } from "@/components/admin/AdminAccessRequired";
-import { AdminIntakeConsole } from "@/components/admin/AdminIntakeConsole";
+import { AdminPropertyConsole } from "@/components/admin/AdminPropertyConsole";
 import { requireAdmin } from "@/lib/auth-server";
 import { fetchAdminIntakeRows } from "@/lib/admin/fetch-intake";
+import { fetchPropertyInquiriesForAdmin } from "@/lib/supabase/property-actions";
 
 export const metadata: Metadata = {
   title: "Properties — Globe Travel Voyage Admin",
@@ -13,22 +14,18 @@ export default async function AdminPropertiesPage() {
   const auth = await requireAdmin();
   if (!auth.ok) return <AdminAccessRequired message={auth.error} />;
 
-  const { rows, error } = await fetchAdminIntakeRows("property_listings");
+  const [{ rows: listings, error: listingsError }, { rows: inquiries, error: inquiriesError }] =
+    await Promise.all([
+      fetchAdminIntakeRows("property_listings"),
+      fetchPropertyInquiriesForAdmin(),
+    ]);
 
   return (
-    <AdminIntakeConsole
-      title="Property listing requests"
-      subtitle="Pending property intake submissions from hosts."
-      table="property_listings"
-      initialRows={rows}
-      fetchError={error}
-      primaryFields={[
-        { label: "Title", key: "title" },
-        { label: "City", key: "city" },
-        { label: "Contact", key: "contact_name" },
-        { label: "Email", key: "contact_email" },
-        { label: "Type", key: "listing_type" },
-      ]}
+    <AdminPropertyConsole
+      listings={listings}
+      inquiries={inquiries}
+      listingsError={listingsError}
+      inquiriesError={inquiriesError}
     />
   );
 }

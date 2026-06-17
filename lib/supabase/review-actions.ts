@@ -57,5 +57,105 @@ export async function submitReview(input: SubmitReviewInput): Promise<ReviewResu
     .single();
 
   if (error) return { ok: false, error: error.message };
-  return { ok: true, id: (data as { id: string }).id };
+  const reviewId = (data as { id: string }).id;
+
+  await recalculateTargetRating(admin, input.targetType, input.targetId);
+
+  return { ok: true, id: reviewId };
+}
+
+async function recalculateTargetRating(
+  admin: ReturnType<typeof createAdminClient>,
+  targetType: string,
+  targetId: string
+) {
+  if (!admin) return;
+
+  const { data: reviews } = await admin
+    .from("reviews")
+    .select("rating")
+    .eq("target_type", targetType)
+    .eq("target_id", targetId)
+    .eq("is_hidden", false);
+
+  const ratings = (reviews ?? []).map((r) => Number((r as { rating: number }).rating));
+  const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
+
+  const tableMap: Record<string, string> = {
+    agency: "agencies",
+    visa_agent: "visa_experts",
+    tour_guide: "tour_guides",
+    property: "property_listings",
+    tour: "tours",
+  };
+
+  const table = tableMap[targetType];
+  if (!table) return;
+
+  await admin
+    .from(table)
+    .update({ rating: Math.round(avg * 100) / 100, review_count: ratings.length })
+    .eq("id", targetId);
+}
+
+export async function fetchReviewsForTarget(
+  targetType: SubmitReviewInput["targetType"],
+  targetId: string
+): Promise<
+  Array<{
+    id: string;
+    rating: number;
+    title: string | null;
+    body: string | null;
+    is_verified: boolean;
+    created_at: string;
+    reviewer_name: string;
+  }>
+> {
+  const admin = createAdminClient();
+  if (!admin) return [];
+
+  const { data } = await admin
+    .from("reviews")
+    .select("id, rating, title, body, is_verified, created_at, reviewer_id")
+    .eq("target_type", targetType)
+    .eq("target_id", targetId)
+    .eq("is_hidden", false)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  if (!data?.length) return [];
+
+  const reviewerIds = [...new Set(data.map((r) => (r as { reviewer_id: string }).reviewer_id))];
+  const { data: profiles } = await admin
+    .from("profiles")
+    .select("id, full_name, email")
+    .in("id", reviewerIds);
+
+  const nameMap = new Map<string, string>();
+  for (const p of profiles ?? []) {
+    const row = p as { id: string; full_name: string | null; email: string };
+    nameMap.set(row.id, row.full_name ?? row.email.split("@")[0]);
+  }
+
+  return data.map((r) => {
+    const row = r as {
+      id: string;
+      rating: number;
+      title: string | null;
+      body: string | null;
+      is_verified: boolean;
+      created_at: string;
+      reviewer_id: string;
+    };
+    return {
+      id: row.id,
+      rating: row.rating,
+      title: row.title,
+      body: row.body,
+      is_verified: row.is_verified,
+      created_at: row.created_at,
+      reviewer_name: nameMap.get(row.reviewer_id) ?? "Traveler",
+    };
+  });
 }

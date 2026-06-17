@@ -13,7 +13,7 @@ import { DashboardEmpty } from "@/components/DashboardEmpty";
 import { ProviderServicesPanel } from "@/components/ProviderServicesPanel";
 import { PayoutSetupPanel } from "@/components/PayoutSetupPanel";
 import { ProviderEarningsSummary } from "@/components/ProviderEarningsSummary";
-import { MessagesInbox } from "@/components/MessagesInbox";
+import { ConversationsInbox } from "@/components/messaging/ConversationsInbox";
 import { Disclaimer } from "@/components/Disclaimer";
 import { formatPaymentAmount } from "@/lib/payments-display";
 import {
@@ -155,7 +155,7 @@ export default function HostDashboard() {
       </div>
     ),
 
-    messages: <MessagesInbox title="Host messages" />,
+    messages: <ConversationsInbox title="Host messages" />,
   };
 
   return (

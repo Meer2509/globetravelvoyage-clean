@@ -604,6 +604,22 @@ export async function submitPropertyListing(input: PropertyListingInput): Promis
     console.error("[property] insert failed", error.message);
     return { ok: false, error: FORM_SUBMIT_ERROR_MESSAGE };
   }
+
+  notifyIntakeSubmission({
+    kind: "contact",
+    requestId: data.id,
+    customerName: input.name,
+    customerEmail: input.email,
+    userId,
+    supportSubject: `Property listing request: ${input.title}`,
+    fields: [
+      { label: "Property", value: input.title },
+      { label: "City", value: input.city },
+      { label: "Type", value: `${input.listingType} / ${input.propertyType}` },
+      { label: "Phone", value: input.phone ?? "—" },
+    ],
+  }).catch((e) => console.error("[property] email failed", e));
+
   return { ok: true, data: { id: data.id } };
 }
 

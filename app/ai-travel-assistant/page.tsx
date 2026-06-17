@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AIChatUI } from "@/components/AIChatUI";
-import { getTravelAssistantReply } from "@/lib/ai-api";
+import { PersistentTravelAssistantChat } from "@/components/ai/PersistentTravelAssistantChat";
 
 const PROMPTS = [
   "Which visa do I need for the USA from Pakistan?",
@@ -82,20 +81,9 @@ Disclaimer: For guidance only. Verify all requirements with official sources.`;
 
           {/* ── Chat panel ── */}
           <div>
-            <AIChatUI
-              initialMessages={[{
-                id: "welcome",
-                role: "ai",
-                text: "Hello! I'm your AI Travel Assistant. I can help with visa requirements, trip planning, flight routes, hotel recommendations, document checklists and more. What would you like to explore today?",
-                cards: [
-                  { type: "tip", title: "What I can help with", items: ["🛂 Visa requirements for any destination", "🗺️ Trip planning with day-by-day itinerary", "✈️ Flight routes and live fare search", "🏨 Hotel and accommodation recommendations", "📋 Document checklists for visa applications"], color: "blue" },
-                ],
-                timestamp: new Date(),
-              }]}
+            <PersistentTravelAssistantChat
               suggestedPrompts={PROMPTS}
-              onUserMessage={(text) => getTravelAssistantReply(text)}
               placeholder="Ask about visas, flights, hotels, trip planning…"
-              maxHeight="520px"
               disclaimer="AI responses are informational only. Not legal, immigration, or financial advice. No guarantees on visa approvals, prices, or availability."
             />
 

@@ -32,6 +32,8 @@ import { visaCaseWorkspacePath, dashboardPaymentsPath, dashboardSupportPath } fr
 import { customerDashboardPath, hashToCustomerTab, normalizeCustomerTab } from "@/lib/dashboard-routes";
 import { summarizeChecklistStatus } from "@/lib/visa-case-progress";
 import { CaseDocumentChecklist } from "@/components/CaseDocumentChecklist";
+import { ConversationsInbox } from "@/components/messaging/ConversationsInbox";
+import { SavedTripsPanel } from "@/components/ai/SavedTripsPanel";
 import { Disclaimer } from "@/components/Disclaimer";
 import {
   DashboardLayout,
@@ -44,6 +46,7 @@ import {
 
 const tabs: DashboardTab[] = [
   { key: "overview", label: "Overview", icon: "globe" },
+  { key: "messages", label: "Messages", icon: "users" },
   { key: "visa-cases", label: "My Visa Cases", icon: "visa" },
   { key: "documents", label: "Documents", icon: "doc" },
   { key: "payments", label: "Payments", icon: "star" },
@@ -235,6 +238,8 @@ function CustomerDashboardContent() {
           </Panel>
         )}
 
+        <SavedTripsPanel />
+
         <div className="grid gap-4 sm:grid-cols-2">
           <Panel title="Payment history" subtitle="Recent transactions">
             {customerPayments.length === 0 ? (
@@ -261,8 +266,8 @@ function CustomerDashboardContent() {
               <Link href={dashboardSupportPath()} className="btn-outline px-4 py-2 text-sm">
                 Support
               </Link>
-              <Link href={customerDashboardPath("settings")} className="btn-outline px-4 py-2 text-sm">
-                Settings
+              <Link href="/dashboard/messages/inbox" className="btn-outline px-4 py-2 text-sm">
+                Messages
               </Link>
             </div>
           </Panel>
@@ -509,6 +514,8 @@ function CustomerDashboardContent() {
         </Panel>
       </div>
     ),
+
+    messages: <ConversationsInbox title="Your messages" />,
 
     settings: (
       <div className="space-y-5">
