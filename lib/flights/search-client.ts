@@ -12,11 +12,11 @@ export async function searchFlightsClient(
     });
 
     const data = (await res.json()) as FlightSearchResponse;
-    if (!data.ok) {
+    if (!data.ok || data.source !== "duffel") {
       return {
         ok: false,
         flights: [],
-        message: data.message ?? FLIGHT_QUOTE_FALLBACK,
+        message: data.ok === false ? (data.message ?? FLIGHT_QUOTE_FALLBACK) : FLIGHT_QUOTE_FALLBACK,
       };
     }
     return data;

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import type { FlightOffer } from "@/lib/flights/types";
 
+export const LIVE_DUFFEL_BADGE = "Live flight results powered by Duffel.";
+
 function formatPrice(price: number, currency: string): string {
   try {
     return new Intl.NumberFormat("en-US", {
@@ -21,11 +23,13 @@ export function FlightOfferList({
   loading,
   fallbackMessage,
   compact = false,
+  searched = false,
 }: {
   flights: FlightOffer[];
   loading?: boolean;
   fallbackMessage?: string | null;
   compact?: boolean;
+  searched?: boolean;
 }) {
   if (loading) {
     return (
@@ -48,6 +52,15 @@ export function FlightOfferList({
   }
 
   if (flights.length === 0) {
+    if (searched) {
+      return (
+        <div className={`rounded-xl border-2 border-dashed border-soft-200 text-center ${compact ? "p-6" : "py-16"}`}>
+          <span className="text-4xl mb-3 block">✈️</span>
+          <p className="font-semibold text-navy">No flights match your search</p>
+          <p className="mt-1 text-sm text-charcoal/45">Try different airports, dates, or filters.</p>
+        </div>
+      );
+    }
     return (
       <div className={`rounded-xl border-2 border-dashed border-soft-200 text-center ${compact ? "p-6" : "py-16"}`}>
         <span className="text-4xl mb-3 block">✈️</span>
@@ -61,6 +74,12 @@ export function FlightOfferList({
 
   return (
     <div className="space-y-3">
+      <div className="flex justify-center">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
+          {LIVE_DUFFEL_BADGE}
+        </span>
+      </div>
       {flights.map((f) => (
         <div
           key={f.id}

@@ -277,8 +277,11 @@ function FlightsForm() {
             loading={loading}
             fallbackMessage={fallbackMessage}
             compact
+            searched={showResults}
           />
-          <ResultDisclaimer />
+          <p className="mt-2 text-center text-[10px] text-charcoal/40 leading-relaxed">
+            Live fares via Duffel. Request a verified quote — provider confirmation required before booking.
+          </p>
           <div className="mt-3 text-center border-t border-soft-200 pt-3">
             <Link href="/flights" className="text-xs font-semibold text-blue hover:underline">View all routes on flights page →</Link>
           </div>

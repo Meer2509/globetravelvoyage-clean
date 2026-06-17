@@ -222,7 +222,7 @@ export const SEO_TRAVEL_PAGES: Record<string, SeoPageConfig> = {
     steps: [
       { title: "Entry requirements", text: "Many visitors qualify for visa on arrival — verify for your passport." },
       { title: "Plan cities", text: "Free AI itinerary for multi-emirate trips." },
-      { title: "Compare flights", text: "Browse routes — prices are estimates until confirmed." },
+      { title: "Compare flights", text: "Search live fares on the flights page — or browse popular route examples." },
       { title: "Book stays", text: "Hotels and monthly furnished apartments." },
       { title: "Local tours", text: "Verified guides and experiences." },
       { title: "Concierge", text: "Luxury Concierge Planning ($299) for complex trips." },

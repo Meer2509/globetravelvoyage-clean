@@ -199,6 +199,7 @@ export default function AIFlightFinderPage() {
               flights={flights}
               loading={loading}
               fallbackMessage={fallbackMessage}
+              searched={hasSearched}
             />
 
             {!loading && flights.length > 0 && (

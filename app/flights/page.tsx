@@ -10,7 +10,6 @@ import { ContactModal } from "@/components/ContactModal";
 import { FlightOfferList } from "@/components/FlightOfferList";
 import { useCatalog } from "@/lib/catalog/context";
 import type { Route } from "@/lib/data";
-import { SampleCatalogBanner } from "@/components/SampleCatalogBanner";
 import { parsePassengerCount } from "@/lib/flights/airport";
 import { searchFlightsClient } from "@/lib/flights/search-client";
 import type { FlightCabinClass, FlightOffer } from "@/lib/flights/types";
@@ -78,7 +77,6 @@ export default function FlightsPage() {
       </div>
 
       <div className="container-px space-y-4">
-        <SampleCatalogBanner />
         <FilterBar
           fields={[
             { key: "from", placeholder: "From (city or airport, e.g. Dubai (DXB))" },
@@ -97,7 +95,7 @@ export default function FlightsPage() {
             <span className="eyebrow mb-1">Live search</span>
             <h2 className="text-xl font-extrabold text-navy">
               Flight results{" "}
-              {hasSearched && !loading && !fallbackMessage && (
+              {hasSearched && !loading && !fallbackMessage && flights.length > 0 && (
                 <span className="text-sm font-normal text-charcoal/40">({flights.length} offers)</span>
               )}
             </h2>
@@ -107,17 +105,19 @@ export default function FlightsPage() {
             flights={hasSearched ? flights : []}
             loading={loading}
             fallbackMessage={hasSearched ? fallbackMessage : null}
+            searched={hasSearched}
           />
         </div>
       </section>
 
-      {/* Cheap routes */}
       <section className="section bg-soft/50">
         <div className="container-px">
           <div className="mb-6">
-            <span className="eyebrow mb-1">Hot routes</span>
-            <h2 className="text-xl font-extrabold text-navy">Cheapest: Middle East → Asia</h2>
-            <p className="text-sm text-charcoal/50">Budget routes to Pakistan, India, the Philippines and Bangladesh.</p>
+            <span className="eyebrow mb-1">Popular route examples</span>
+            <h2 className="text-xl font-extrabold text-navy">Middle East → Asia</h2>
+            <p className="text-sm text-charcoal/50">
+              Example routes for inspiration — not live fares. Use the search above for current pricing.
+            </p>
           </div>
           <ListingGrid
             columns={4}
@@ -126,11 +126,10 @@ export default function FlightsPage() {
               emoji: "✈️",
               title: `${r.from} → ${r.to}`,
               subtitle: `${r.fromCode} – ${r.toCode} · ${r.stops}`,
-              price: r.priceFrom,
               priceNote: r.duration,
-              badge: r.tag,
+              badge: "Example route",
               tags: r.airlines,
-              ctaLabel: "View deal",
+              ctaLabel: "Request quote",
             }))}
             onCta={(id) => {
               const route = cheapRoutes.find((r) => r.id === id);
@@ -140,13 +139,15 @@ export default function FlightsPage() {
         </div>
       </section>
 
-      {/* USA routes */}
       <section className="section">
         <div className="container-px">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <span className="eyebrow mb-1">Long-haul focus</span>
-              <h2 className="text-xl font-extrabold text-navy">Pakistan → USA routes</h2>
+              <span className="eyebrow mb-1">Popular route examples</span>
+              <h2 className="text-xl font-extrabold text-navy">Pakistan → USA</h2>
+              <p className="mt-1 text-sm text-charcoal/50">
+                Example long-haul routes — not live fares. Search above for current pricing.
+              </p>
             </div>
             <Link href="/visa/usa-from-pakistan" className="btn-outline py-2 px-4 text-sm">USA visa from Pakistan →</Link>
           </div>
@@ -157,11 +158,10 @@ export default function FlightsPage() {
               emoji: "🛫",
               title: `${r.from} → ${r.to}`,
               subtitle: `${r.fromCode} – ${r.toCode} · ${r.stops}`,
-              price: r.priceFrom,
               priceNote: r.duration,
-              badge: r.tag,
+              badge: "Example route",
               tags: r.airlines,
-              ctaLabel: "View route",
+              ctaLabel: "Request quote",
             }))}
             onCta={(id) => {
               const route = usaRoutes.find((r) => r.id === id);
@@ -170,9 +170,8 @@ export default function FlightsPage() {
           />
           <div className="mt-8">
             <Disclaimer>
-              Globe Travel Voyage is not an airline or ticketing authority. Live pricing is sourced via Duffel.
-              Request a verified quote — provider confirmation required before booking.
-              We do not guarantee ticket prices or availability.
+              Globe Travel Voyage is not an airline or ticketing authority. Live search results are sourced via Duffel.
+              Popular route examples are not live prices. Request a verified quote — provider confirmation required before booking.
             </Disclaimer>
           </div>
         </div>
@@ -190,7 +189,7 @@ export default function FlightsPage() {
         onClose={() => setSelectedRoute(null)}
         mode="buy_ticket"
         subjectName={selectedRoute ? `${selectedRoute.from} → ${selectedRoute.to}` : undefined}
-        subjectMeta={selectedRoute ? `From ${selectedRoute.priceFrom} · ${selectedRoute.stops}` : undefined}
+        subjectMeta={selectedRoute ? `Example route · ${selectedRoute.stops} · ${selectedRoute.duration}` : undefined}
       />
     </>
   );

@@ -94,7 +94,7 @@ Disclaimer: For guidance only. Verify all requirements with official sources.`;
                 role: "ai",
                 text: "Hello! I'm your AI Travel Assistant. I can help with visa requirements, trip planning, flight routes, hotel recommendations, document checklists and more. What would you like to explore today?",
                 cards: [
-                  { type: "tip", title: "What I can help with", items: ["🛂 Visa requirements for any destination", "🗺️ Trip planning with day-by-day itinerary", "✈️ Flight routes and price estimates", "🏨 Hotel and accommodation recommendations", "📋 Document checklists for visa applications"], color: "blue" },
+                  { type: "tip", title: "What I can help with", items: ["🛂 Visa requirements for any destination", "🗺️ Trip planning with day-by-day itinerary", "✈️ Flight routes and live fare search", "🏨 Hotel and accommodation recommendations", "📋 Document checklists for visa applications"], color: "blue" },
                 ],
                 timestamp: new Date(),
               }]}

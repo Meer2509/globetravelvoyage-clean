@@ -12,6 +12,8 @@ export interface ListingItem {
   subtitle?: string;
   price?: string;
   priceNote?: string;
+  priceFootnote?: string;
+  hidePriceEstimate?: boolean;
   badge?: string;
   rating?: number;
   reviews?: number;
@@ -85,7 +87,12 @@ function ListingCard({
             {item.price && (
               <>
                 <p className="text-lg font-extrabold text-navy">{item.price}</p>
-                <PriceEstimateLabel />
+                {!item.hidePriceEstimate &&
+                  (item.priceFootnote ? (
+                    <p className="text-[10px] leading-snug text-charcoal/45">{item.priceFootnote}</p>
+                  ) : (
+                    <PriceEstimateLabel />
+                  ))}
               </>
             )}
             {item.priceNote && (

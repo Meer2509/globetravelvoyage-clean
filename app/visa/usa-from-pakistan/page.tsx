@@ -89,11 +89,11 @@ export default async function UsaFromPakistanPage() {
       <section className="section">
         <div className="container-px">
           <SectionHeader
-            eyebrow="Cheapest routes"
+            eyebrow="Popular route examples"
             title="Pakistan → USA ticket routes"
-            subtitle="Illustrative fares from major Pakistani cities to the USA. Request a verified quote — provider confirmation required before booking."
+            subtitle="Example routes for planning — not live fares. Search on the flights page for current pricing."
             linkHref="/flights"
-            linkLabel="Search all flights"
+            linkLabel="Search live flights"
           />
           <ListingGrid
             columns={3}
@@ -102,11 +102,10 @@ export default async function UsaFromPakistanPage() {
               emoji: "✈️",
               title: `${r.from} → ${r.to}`,
               subtitle: `${r.fromCode} – ${r.toCode} · ${r.stops}`,
-              price: r.priceFrom,
               priceNote: r.duration,
-              badge: r.tag,
+              badge: "Example route",
               tags: r.airlines,
-              ctaLabel: "View route",
+              ctaLabel: "Request quote",
             }))}
           />
           <div className="mt-8">
