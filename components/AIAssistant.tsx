@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Icon } from "./Icon";
+import { getTravelAssistantReply, AiUnavailableError } from "@/lib/ai-api";
+import { VISA_AI_DISCLAIMER } from "@/lib/ai-types";
 
 interface Msg {
   role: "user" | "ai";
@@ -15,24 +17,10 @@ const quickPrompts = [
   "Documents for a UK visitor visa",
 ];
 
-function reply(input: string): string {
-  const q = input.toLowerCase();
-  if (q.includes("visa") && q.includes("usa"))
-    return "For the USA, most travelers use the B1/B2 visitor visa (tourism/business) or the F-1 student visa. You'll need a valid passport, DS-160, fee receipt and proof of ties. I can open the full guide and connect you with a verified agent. Note: no one can guarantee approval.";
-  if (q.includes("visa"))
-    return "Tell me your nationality, destination and purpose, and I'll suggest the right visa type plus a document checklist. Try the Visa Wizard on the Visa page. This is guidance only — not legal advice.";
-  if (q.includes("flight") || q.includes("cheap"))
-    return "I can compare popular routes — for example, Dubai → Manila from $320 direct, or Abu Dhabi → Delhi from $150. These are planning figures only; request a verified quote for confirmed fares.";
-  if (q.includes("plan") || q.includes("budget") || q.includes("days"))
-    return "Great — head to the AI Trip Planner. Enter destination, days and budget, and I'll split your budget across flights, stay, food and tours, then draft a day-by-day itinerary.";
-  if (q.includes("hotel") || q.includes("stay"))
-    return "I can suggest hotels, apartments and long-stay rentals. For Dubai, the Burj Vista Residences from $180/night is popular. Open Hotels & Stays to filter by area and price.";
-  return "I can help with visas, flights, hotels, cars, cruises, tours, properties and full trip planning. What would you like to do? Informational guidance only — provider confirmation required for quotes.";
-}
-
 export function AIAssistant() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([
     {
       role: "ai",
@@ -40,11 +28,28 @@ export function AIAssistant() {
     },
   ]);
 
-  function send(text: string) {
+  async function send(text: string) {
     const value = text.trim();
-    if (!value) return;
-    setMsgs((m) => [...m, { role: "user", text: value }, { role: "ai", text: reply(value) }]);
+    if (!value || loading) return;
+
+    setMsgs((m) => [...m, { role: "user", text: value }]);
     setInput("");
+    setLoading(true);
+
+    try {
+      const { text: reply } = await getTravelAssistantReply(value);
+      setMsgs((m) => [...m, { role: "ai", text: reply }]);
+    } catch (err) {
+      const message =
+        err instanceof AiUnavailableError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Sorry, I couldn't reach the AI service. Please try again.";
+      setMsgs((m) => [...m, { role: "ai", text: message }]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -66,7 +71,7 @@ export function AIAssistant() {
             </span>
             <div>
               <p className="text-sm font-bold">AI Travel Assistant</p>
-              <p className="text-xs text-white/60">AI travel guidance</p>
+              <p className="text-xs text-white/60">Live AI travel guidance</p>
             </div>
           </div>
 
@@ -87,12 +92,20 @@ export function AIAssistant() {
                 </div>
               </div>
             ))}
-            {msgs.length === 1 && (
+            {loading && (
+              <div className="flex justify-start">
+                <div className="rounded-2xl bg-soft px-3.5 py-2.5 text-sm text-navy/50">
+                  Thinking…
+                </div>
+              </div>
+            )}
+            {msgs.length === 1 && !loading && (
               <div className="space-y-2 pt-2">
                 {quickPrompts.map((p) => (
                   <button
                     key={p}
-                    onClick={() => send(p)}
+                    type="button"
+                    onClick={() => void send(p)}
                     className="block w-full rounded-xl border border-soft-200 px-3 py-2 text-left text-xs font-medium text-navy/70 hover:border-blue hover:text-navy"
                   >
                     {p}
@@ -105,23 +118,30 @@ export function AIAssistant() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              send(input);
+              void send(input);
             }}
-            className="flex items-center gap-2 border-t border-soft-200 p-3"
+            className="border-t border-soft-200 p-3"
           >
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask anything about travel…"
-              className="flex-1 rounded-full border border-soft-200 bg-soft/60 px-4 py-2 text-sm focus:border-blue focus:outline-none"
-            />
-            <button
-              type="submit"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-navy text-white"
-              aria-label="Send"
-            >
-              <Icon name="flight" className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask anything about travel…"
+                disabled={loading}
+                className="flex-1 rounded-full border border-soft-200 bg-soft/60 px-4 py-2 text-sm focus:border-blue focus:outline-none disabled:opacity-60"
+              />
+              <button
+                type="submit"
+                disabled={loading || !input.trim()}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-navy text-white disabled:opacity-50"
+                aria-label="Send"
+              >
+                <Icon name="flight" className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="mt-2 text-[10px] leading-relaxed text-charcoal/40 text-center">
+              {VISA_AI_DISCLAIMER}
+            </p>
           </form>
         </div>
       )}

@@ -7,6 +7,9 @@ import { useCatalog } from "@/lib/catalog/context";
 import { bookingRequestPath, rentalsBrowseHref } from "@/lib/marketplace-routes";
 import { PRICE_ESTIMATE_LABEL } from "@/lib/launch-trust";
 import { SamplePrice } from "@/components/PriceEstimateLabel";
+import { analyzeVisaWithAi, getTravelAssistantReply, AiUnavailableError } from "@/lib/ai-api";
+import type { VisaResult } from "@/lib/ai-types";
+import { VISA_AI_DISCLAIMER } from "@/lib/ai-types";
 import type { ReactNode } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -112,14 +115,6 @@ const MOCK_HOTELS = [
   { name: "Pearl Continental",   city: "Lahore",   stars: 5, price: "$140/night", type: "Hotel" },
 ];
 
-const MOCK_VISAS = [
-  { dest: "🇺🇸 USA B1/B2", fee: "$185", processing: "3–12 wks", difficulty: "Complex",  tip: "Strong bank statements + ties to home country required." },
-  { dest: "🇬🇧 UK Visitor", fee: "£115",  processing: "3–6 wks",  difficulty: "Moderate", tip: "Show sufficient funds + onward travel plans." },
-  { dest: "🇨🇦 Canada Visitor", fee: "CA$100", processing: "4–8 wks", difficulty: "Moderate", tip: "Biometric fingerprints required at VAC." },
-  { dest: "🇦🇪 UAE Tourist", fee: "$120", processing: "3–5 days", difficulty: "Easy",    tip: "e-Visa available online. Often approved in 48 hours." },
-  { dest: "🇸🇦 Saudi Tourist", fee: "$120", processing: "2–5 days",difficulty: "Easy",   tip: "e-Visa at visa.visitsaudi.com — 90-day validity." },
-];
-
 const MOCK_CRUISES = [
   { name: "Arabian Gulf Explorer", nights: "4 nights", region: "Dubai · Abu Dhabi · Qatar", price: "from $420", type: "Cruise" },
   { name: "Dubai Marina Sunset",   nights: "Day charter", region: "Dubai Marina",           price: "from $300", type: "Yacht" },
@@ -143,33 +138,6 @@ const MOCK_RENTALS = [
   { title: "Beachfront Villa",                type: "Villa",    city: "Karachi",   price: "$180/night",tag: "Vacation stay" },
   { title: "Studio — short stay",             type: "Studio",   city: "Islamabad", price: "$45/night", tag: "Nightly" },
 ];
-
-// ─── AI response logic ────────────────────────────────────────────────────────
-
-function getAiResponse(q: string): string {
-  const lq = q.toLowerCase();
-  if (lq.includes("usa") || lq.includes("b1") || lq.includes("b2") || lq.includes("tourist visa"))
-    return "For a USA B1/B2 visitor visa: DS-160 form ($185 fee), 6 months bank statements, employment letter and strong ties to home country. Processing: 3–12 weeks. Connect with a verified agent for best preparation. ⚠️ No platform guarantees visa approval.";
-  if (lq.includes("dubai") || lq.includes("uae"))
-    return "Dubai offers an easy e-visa for most South Asian passports. Flights from Pakistan start from $145. Stays at Dubai Marina from $120/night. Estimated 5-day Dubai budget: $2,200 including flights, hotel and tours. Want the full itinerary?";
-  if (lq.includes("flight") || lq.includes("ticket") || lq.includes("cheap"))
-    return "Cheapest routes this week: Dubai → Lahore from $145 ✈️, Riyadh → Karachi from $170, Abu Dhabi → Delhi from $130. For PK → USA, Turkish Airlines via IST from $720. Prices are estimates — confirm before booking.";
-  if (lq.includes("europe") || lq.includes("switzerland") || lq.includes("schengen"))
-    return "For Europe you need a Schengen visa (€90 fee). Switzerland: flights from $640, 10-day budget $2,800–$3,500 mid-range. Apply at your main destination's consulate. I can draft a full Schengen itinerary.";
-  if (lq.includes("cruise"))
-    return "Top picks: Arabian Gulf Explorer (4 nights from $420 all-inclusive), Mediterranean Jewel (7 nights from $890). Under $2,000? Gulf cruise is perfect. Private Dubai Marina yacht charters from $300.";
-  if (lq.includes("umrah") || lq.includes("hajj"))
-    return "Umrah packages from Lahore: 10 nights from $1,650 including flights, 5★ near Haram and visa. Browse verified travel agencies on our marketplace for current packages and quotes.";
-  if (lq.includes("student") || lq.includes("f-1") || lq.includes("f1"))
-    return "For the US F-1 student visa: accepted I-20 form, SEVIS fee ($350), DS-160, financial proof and transcripts. Apply as soon as your I-20 arrives. Processing: 4–10 weeks. Connect with a verified visa expert for document review.";
-  if (lq.includes("london") || lq.includes("uk") || lq.includes("england"))
-    return "UK Standard Visitor Visa: £115 fee, 3–6 weeks processing. Flights from Lahore from $580. London 7-day budget: $2,800–$4,500. Book early for summer — July/August rates spike 40%.";
-  if (lq.includes("hotel") || lq.includes("stay"))
-    return "Best value luxury: Dubai Marina from $120/night, Istanbul Bosphorus from $85/night, Bangkok Sukhumvit from $55/night, KL Twin Towers area from $65/night. Filter by budget and dates.";
-  if (lq.includes("budget") || lq.includes("cheap trip"))
-    return "Top budget destinations from Middle East: Thailand (7 days ~$1,200), Malaysia (7 days ~$950), Georgia (5 days ~$800), Egypt (5 days ~$700). I can create a full itinerary for any of these.";
-  return `I can help with visas, flights, hotels, cruises, car rentals, local tours, properties and full AI trip planning. Try asking about "${q}" with more specifics — destination, budget, nationality or dates for best results. Informational guidance only — provider confirmation required for quotes.`;
-}
 
 // ─── Disclaimer banner ────────────────────────────────────────────────────────
 
@@ -419,14 +387,45 @@ function HotelsForm() {
 // ─── Visa Form ────────────────────────────────────────────────────────────────
 
 function VisaForm() {
-  const [nat, setNat]     = useState("");
-  const [dest, setDest]   = useState("");
+  const [nat, setNat]         = useState("");
+  const [dest, setDest]       = useState("");
   const [purpose, setPurpose] = useState("");
-  const [results, setResults] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState("");
+  const [result, setResult]   = useState<VisaResult | null>(null);
 
-  function search(e: React.FormEvent) {
+  async function search(e: React.FormEvent) {
     e.preventDefault();
-    setResults(true);
+    if (!nat || !dest) return;
+
+    setLoading(true);
+    setError("");
+    setResult(null);
+
+    try {
+      const analysis = await analyzeVisaWithAi({
+        nationality: nat,
+        currentCountry: nat,
+        destination: dest,
+        purpose: purpose || "Tourism / Holiday",
+        previousVisaRefusals: false,
+        travelHistory: "limited",
+        employmentStatus: "employed",
+        financialSituation: "moderate",
+      });
+      setResult(analysis);
+    } catch (err) {
+      setResult(null);
+      setError(
+        err instanceof AiUnavailableError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Could not run visa analysis. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -434,14 +433,14 @@ function VisaForm() {
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="label">Your nationality / passport</label>
-          <select className="input select" value={nat} onChange={(e) => setNat(e.target.value)}>
+          <select className="input select" value={nat} onChange={(e) => setNat(e.target.value)} required>
             <option value="">Select passport</option>
             {NATIONALITIES.map((n) => <option key={n} value={n}>{n}</option>)}
           </select>
         </div>
         <div>
           <label className="label">Destination country</label>
-          <select className="input select" value={dest} onChange={(e) => setDest(e.target.value)}>
+          <select className="input select" value={dest} onChange={(e) => setDest(e.target.value)} required>
             <option value="">Select destination</option>
             {VISA_DESTINATIONS.map((d) => <option key={d} value={d}>{d}</option>)}
           </select>
@@ -454,43 +453,70 @@ function VisaForm() {
           {VISA_PURPOSES.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
       </div>
-      <form onSubmit={search} className="flex flex-col gap-2 sm:flex-row">
-        <button type="submit" className="btn-primary flex-1 py-3 flex items-center justify-center gap-2">
-          <Icon name="visa" className="h-4 w-4" />
-          Check requirements
+      <form onSubmit={(e) => void search(e)} className="flex flex-col gap-2 sm:flex-row">
+        <button type="submit" disabled={loading || !nat || !dest} className="btn-primary flex-1 py-3 flex items-center justify-center gap-2 disabled:opacity-60">
+          {loading ? (
+            <>
+              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z" />
+              </svg>
+              Analyzing…
+            </>
+          ) : (
+            <>
+              <Icon name="visa" className="h-4 w-4" />
+              Check requirements
+            </>
+          )}
         </button>
         <Link href="/ai-visa-assistant" className="btn-gold px-5 py-3 text-center text-sm">
           Start AI Visa Check →
         </Link>
       </form>
       <p className="text-center text-[11px] text-charcoal/45">
-        ⚠ Visa approval is never guaranteed. Globe Travel Voyage is not an immigration authority.
+        ⚠ {VISA_AI_DISCLAIMER}
       </p>
 
-      {results && (
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {result && (
         <div className="mt-1 rounded-xl border border-soft-200 overflow-hidden">
           <div className="bg-navy/5 px-4 py-2.5 flex items-center justify-between">
-            <p className="text-xs font-bold text-navy">Visa overview {dest ? `— ${dest}` : "— top destinations"}</p>
-            <button onClick={() => setResults(false)} className="text-xs text-charcoal/40 hover:text-navy">✕</button>
+            <p className="text-xs font-bold text-navy">
+              AI visa overview — {result.visaType}
+            </p>
+            <button type="button" onClick={() => setResult(null)} className="text-xs text-charcoal/40 hover:text-navy">✕</button>
           </div>
-          <div className="divide-y divide-soft-200">
-            {MOCK_VISAS.map((v) => (
-              <div key={v.dest} className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0">
-                  <p className="font-bold text-navy text-sm">{v.dest}</p>
-                  <p className="text-xs text-charcoal/50">Fee: {v.fee} · Processing: {v.processing}</p>
-                  <p className="text-xs text-charcoal/50">{v.tip}</p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0 mt-1 sm:mt-0">
-                  <Diff d={v.difficulty} />
-                  <Link href="/visa/start" className="btn-blue px-3 py-1.5 text-xs">Apply</Link>
-                </div>
+          <div className="px-4 py-3 space-y-3">
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              <span className="text-charcoal/60">Fee: <strong className="text-navy">{result.fee}</strong></span>
+              <span className="text-charcoal/60">Processing: <strong className="text-navy">{result.processingTime}</strong></span>
+              <span className="text-charcoal/60">Readiness: <strong className="text-navy">{result.approvalScore}%</strong></span>
+            </div>
+            <p className="text-xs text-charcoal/60 leading-relaxed">{result.approvalNote}</p>
+            {result.requiredDocs.length > 0 && (
+              <div>
+                <p className="text-xs font-bold text-navy mb-1.5">Key documents</p>
+                <ul className="space-y-1">
+                  {result.requiredDocs.slice(0, 5).map((doc) => (
+                    <li key={doc} className="text-xs text-charcoal/60 flex items-start gap-1.5">
+                      <span className="text-blue shrink-0">•</span>
+                      {doc}
+                    </li>
+                  ))}
+                </ul>
               </div>
-            ))}
+            )}
+            <p className="text-[10px] text-charcoal/45 leading-relaxed">{result.disclaimer}</p>
           </div>
-          <ResultDisclaimer />
-          <div className="p-3 text-center border-t border-soft-200">
-            <Link href="/visa" className="text-xs font-semibold text-blue hover:underline">Full visa guides for all countries →</Link>
+          <div className="p-3 text-center border-t border-soft-200 flex flex-wrap justify-center gap-3">
+            <Link href="/ai-visa-assistant" className="text-xs font-semibold text-blue hover:underline">Full AI analysis →</Link>
+            <Link href="/visa/start" className="text-xs font-semibold text-blue hover:underline">Apply with an expert →</Link>
           </div>
         </div>
       )}
@@ -808,23 +834,37 @@ function AiPlannerForm() {
   const [style, setStyle]         = useState("");
   const [dest, setDest]           = useState("");
   const [response, setResponse]   = useState("");
+  const [error, setError]         = useState("");
   const [loading, setLoading]     = useState(false);
 
-  function submit(q: string) {
-    if (!q.trim()) return;
+  async function submit(q: string) {
+    if (!q.trim() || loading) return;
     setLoading(true);
     setResponse("");
-    setTimeout(() => {
-      setResponse(getAiResponse(q));
+    setError("");
+
+    try {
+      const { text } = await getTravelAssistantReply(q);
+      setResponse(text);
+    } catch (err) {
+      setResponse("");
+      setError(
+        err instanceof AiUnavailableError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Could not reach the AI service. Please try again."
+      );
+    } finally {
       setLoading(false);
-    }, 900);
+    }
   }
 
   function submitForm(e: React.FormEvent) {
     e.preventDefault();
     const q = `${days} days trip to ${dest} with ${budget} budget, ${style} style`;
     setQuery(q);
-    submit(q);
+    void submit(q);
   }
 
   return (
@@ -840,7 +880,7 @@ function AiPlannerForm() {
       </div>
 
       {mode === "quick" && (
-        <form onSubmit={(e) => { e.preventDefault(); submit(query); }} className="flex gap-2">
+        <form onSubmit={(e) => { e.preventDefault(); void submit(query); }} className="flex gap-2">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -913,11 +953,17 @@ function AiPlannerForm() {
       {!response && mode === "quick" && (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {aiPrompts.slice(0, 4).map((p) => (
-            <button key={p} type="button" onClick={() => { setQuery(p); submit(p); }}
+            <button key={p} type="button" onClick={() => { setQuery(p); void submit(p); }}
               className="rounded-full border border-soft-200 bg-soft px-3 py-1 text-xs text-charcoal/60 transition-colors hover:border-blue/30 hover:text-navy">
               {p}
             </button>
           ))}
+        </div>
+      )}
+
+      {error && (
+        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {error}
         </div>
       )}
 
@@ -933,7 +979,7 @@ function AiPlannerForm() {
             <Link href="/trip-planner" className="btn-primary py-2 px-4 text-xs">Full trip planner →</Link>
             <Link href="/visa/start" className="btn-outline py-2 px-4 text-xs">Apply for visa →</Link>
           </div>
-          <p className="mt-2 text-[10px] text-charcoal/40">Informational guidance only. Request a verified quote for prices — visa outcomes and availability are not guaranteed.</p>
+          <p className="mt-2 text-[10px] text-charcoal/40">{VISA_AI_DISCLAIMER}</p>
         </div>
       )}
     </div>
