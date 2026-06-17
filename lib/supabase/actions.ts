@@ -10,6 +10,8 @@ import type { UserRole } from "./types";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { requireAdmin, requireSession, SELF_ASSIGNABLE_ROLES } from "@/lib/auth-server";
 import { applyUserRole } from "./role-sync";
+import { sendEmail } from "@/lib/email/send-email";
+import { SITE_CONFIG } from "@/lib/site-config";
 
 export type ActionResult<T = { id: string }> =
   | { ok: true; data: T }
@@ -135,6 +137,168 @@ export interface BookingRequestInput {
   budget?: string;
   message?: string;
   providerUserId?: string;
+  fromLocation?: string;
+  toLocation?: string;
+  details?: string;
+  cabinClass?: string;
+}
+
+export interface FlightBookingRequestInput {
+  subject: string;
+  fromLocation: string;
+  toLocation: string;
+  details?: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  passengerCount: number;
+  travelDate?: string;
+  returnDate?: string;
+  cabinClass?: string;
+  message?: string;
+  airline?: string;
+  price?: string;
+  currency?: string;
+  offerId?: string;
+}
+
+function bookingInsertRow(
+  input: {
+    service: string;
+    subject?: string | null;
+    fromLocation?: string | null;
+    toLocation?: string | null;
+    details?: string | null;
+    customerName: string;
+    customerEmail: string;
+    customerPhone?: string | null;
+    passengerCount?: number;
+    travelDate?: string | null;
+    returnDate?: string | null;
+    cabinClass?: string | null;
+    message?: string | null;
+    budget?: string | null;
+    providerUserId?: string;
+  },
+  userId: string | null
+) {
+  const passengers = Math.min(9, Math.max(1, input.passengerCount ?? 1));
+  return {
+    user_id: userId,
+    customer_id: userId,
+    service: input.service,
+    subject: input.subject ?? null,
+    from_location: input.fromLocation ?? null,
+    to_location: input.toLocation ?? null,
+    details: input.details ?? null,
+    customer_name: input.customerName,
+    customer_email: input.customerEmail,
+    customer_phone: input.customerPhone ?? null,
+    passenger_count: passengers,
+    travel_date: input.travelDate || null,
+    return_date: input.returnDate || null,
+    cabin_class: input.cabinClass ?? null,
+    message: input.message ?? null,
+    status: "pending",
+    service_type: input.service,
+    service_name: input.subject ?? null,
+    title: input.subject ?? null,
+    full_name: input.customerName,
+    email: input.customerEmail,
+    phone: input.customerPhone ?? null,
+    start_date: input.travelDate || null,
+    end_date: input.returnDate || null,
+    travelers: passengers,
+    budget: input.budget ?? null,
+    provider_user_id: input.providerUserId ?? null,
+  };
+}
+
+async function notifySupportFlightBooking(
+  input: FlightBookingRequestInput,
+  requestId: string,
+  userId: string | null
+): Promise<void> {
+  const priceLine =
+    input.price && input.currency
+      ? `${input.currency} ${input.price}`
+      : input.price ?? "—";
+
+  const html = `
+    <h2>New flight booking request</h2>
+    <p><strong>Request ID:</strong> ${requestId}</p>
+    <p><strong>Route:</strong> ${input.fromLocation} → ${input.toLocation}</p>
+    <p><strong>Subject:</strong> ${input.subject}</p>
+    ${input.airline ? `<p><strong>Airline:</strong> ${input.airline}</p>` : ""}
+    <p><strong>Quoted fare:</strong> ${priceLine}</p>
+    ${input.offerId ? `<p><strong>Duffel offer ID:</strong> ${input.offerId}</p>` : ""}
+    <p><strong>Travel date:</strong> ${input.travelDate ?? "—"}</p>
+    <p><strong>Return date:</strong> ${input.returnDate ?? "—"}</p>
+    <p><strong>Cabin:</strong> ${input.cabinClass ?? "—"}</p>
+    <p><strong>Passengers:</strong> ${input.passengerCount}</p>
+    <hr />
+    <p><strong>Customer:</strong> ${input.customerName}</p>
+    <p><strong>Email:</strong> ${input.customerEmail}</p>
+    <p><strong>Phone:</strong> ${input.customerPhone}</p>
+    ${input.details ? `<p><strong>Details:</strong> ${input.details}</p>` : ""}
+    ${input.message ? `<p><strong>Notes:</strong> ${input.message}</p>` : ""}
+  `;
+
+  try {
+    await sendEmail({
+      to: SITE_CONFIG.supportEmail,
+      subject: `Flight booking request: ${input.fromLocation} → ${input.toLocation}`,
+      html,
+      type: "booking_confirmation",
+      userId,
+    });
+  } catch (err) {
+    console.error("[booking] support notification failed", err);
+  }
+}
+
+export async function submitFlightBookingRequest(
+  input: FlightBookingRequestInput
+): Promise<ActionResult> {
+  const admin = dbClient();
+  if (!admin) return notConfigured();
+
+  const userId = await getOptionalUserId();
+  const rateBlocked = await guardFormRateLimit(userId);
+  if (rateBlocked) return rateBlocked;
+
+  const row = bookingInsertRow(
+    {
+      service: "flight",
+      subject: input.subject,
+      fromLocation: input.fromLocation,
+      toLocation: input.toLocation,
+      details: input.details,
+      customerName: input.customerName,
+      customerEmail: input.customerEmail,
+      customerPhone: input.customerPhone,
+      passengerCount: input.passengerCount,
+      travelDate: input.travelDate,
+      returnDate: input.returnDate,
+      cabinClass: input.cabinClass,
+      message: input.message,
+    },
+    userId
+  );
+
+  const { data, error } = await admin
+    .from("booking_requests")
+    .insert(row)
+    .select("id")
+    .single();
+
+  if (error) {
+    console.error("[booking] flight insert failed", error.message);
+    return { ok: false, error: "submit_failed" };
+  }
+
+  await notifySupportFlightBooking(input, data.id, userId);
+  return { ok: true, data: { id: data.id } };
 }
 
 export async function submitBookingRequest(input: BookingRequestInput): Promise<ActionResult> {
@@ -145,26 +309,37 @@ export async function submitBookingRequest(input: BookingRequestInput): Promise<
   const rateBlocked = await guardFormRateLimit(userId);
   if (rateBlocked) return rateBlocked;
 
+  const row = bookingInsertRow(
+    {
+      service: input.serviceType,
+      subject: input.serviceName,
+      fromLocation: input.fromLocation,
+      toLocation: input.toLocation,
+      details: input.details,
+      customerName: input.name,
+      customerEmail: input.email,
+      customerPhone: input.phone,
+      passengerCount: parseInt(input.travelers ?? "1", 10) || 1,
+      travelDate: input.date,
+      returnDate: input.endDate,
+      cabinClass: input.cabinClass,
+      message: input.message,
+      budget: input.budget,
+      providerUserId: input.providerUserId,
+    },
+    userId
+  );
+
   const { data, error } = await admin
     .from("booking_requests")
-    .insert({
-      user_id: userId,
-      service_type: input.serviceType,
-      service_name: input.serviceName ?? null,
-      full_name: input.name,
-      email: input.email,
-      phone: input.phone ?? null,
-      start_date: input.date || null,
-      end_date: input.endDate || null,
-      travelers: parseInt(input.travelers ?? "1", 10) || 1,
-      budget: input.budget ?? null,
-      message: input.message ?? null,
-      status: "pending",
-    })
+    .insert(row)
     .select("id")
     .single();
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    console.error("[booking] insert failed", error.message);
+    return { ok: false, error: "submit_failed" };
+  }
   return { ok: true, data: { id: data.id } };
 }
 

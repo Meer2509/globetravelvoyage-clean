@@ -123,7 +123,7 @@ export function FlightOfferList({
               <p className="text-[11px] text-charcoal/40">total quote</p>
             </div>
             <Link href={f.bookingLink} className="btn-blue px-5 py-2 text-sm shrink-0">
-              Request booking
+              Continue to booking
             </Link>
           </div>
         </div>

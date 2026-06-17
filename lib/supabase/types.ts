@@ -389,6 +389,18 @@ export interface VisaRequest {
 export interface BookingRequest {
   id: string;
   user_id: string | null;
+  service: string | null;
+  subject: string | null;
+  from_location: string | null;
+  to_location: string | null;
+  details: string | null;
+  customer_name: string | null;
+  customer_email: string | null;
+  customer_phone: string | null;
+  passenger_count: number | null;
+  travel_date: string | null;
+  return_date: string | null;
+  cabin_class: string | null;
   service_type: string;
   service_name: string | null;
   full_name: string;

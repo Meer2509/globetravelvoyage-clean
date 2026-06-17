@@ -83,9 +83,17 @@ function buildBookingLink(offer: FlightOffer): string {
   return bookingRequestPath({
     service: "flight",
     subject: `${offer.airline} ${offer.origin} → ${offer.destination}`,
+    airline: offer.airline,
     from: offer.origin,
     to: offer.destination,
-    details: `Duffel offer ${offer.id} · ${offer.price} ${offer.currency}`,
+    price: offer.price,
+    currency: offer.currency,
+    offerId: offer.id,
+    depart: offer.departureTime,
+    arrive: offer.arrivalTime,
+    duration: offer.duration,
+    stops: offer.stops,
+    details: `Duffel offer ${offer.id}`,
   });
 }
 

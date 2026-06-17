@@ -46,6 +46,18 @@ export function bookingRequestPath(params?: {
   to?: string;
   destination?: string;
   details?: string;
+  airline?: string;
+  price?: string | number;
+  currency?: string;
+  offerId?: string;
+  depart?: string;
+  arrive?: string;
+  duration?: string;
+  travelDate?: string;
+  returnDate?: string;
+  cabin?: string;
+  passengers?: string | number;
+  stops?: string | number;
 }): string {
   if (!params) return "/booking/request";
   const sp = new URLSearchParams();
@@ -55,6 +67,18 @@ export function bookingRequestPath(params?: {
   if (params.to) sp.set("to", params.to);
   if (params.destination) sp.set("destination", params.destination);
   if (params.details) sp.set("details", params.details);
+  if (params.airline) sp.set("airline", params.airline);
+  if (params.price != null) sp.set("price", String(params.price));
+  if (params.currency) sp.set("currency", params.currency);
+  if (params.offerId) sp.set("offerId", params.offerId);
+  if (params.depart) sp.set("depart", params.depart);
+  if (params.arrive) sp.set("arrive", params.arrive);
+  if (params.duration) sp.set("duration", params.duration);
+  if (params.travelDate) sp.set("travelDate", params.travelDate);
+  if (params.returnDate) sp.set("returnDate", params.returnDate);
+  if (params.cabin) sp.set("cabin", params.cabin);
+  if (params.passengers != null) sp.set("passengers", String(params.passengers));
+  if (params.stops != null) sp.set("stops", String(params.stops));
   const q = sp.toString();
   return q ? `/booking/request?${q}` : "/booking/request";
 }
