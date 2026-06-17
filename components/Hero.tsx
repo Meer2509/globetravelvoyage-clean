@@ -10,6 +10,10 @@ import { SamplePrice } from "@/components/PriceEstimateLabel";
 import { analyzeVisaWithAi, getTravelAssistantReply, AiUnavailableError } from "@/lib/ai-api";
 import type { VisaResult } from "@/lib/ai-types";
 import { VISA_AI_DISCLAIMER } from "@/lib/ai-types";
+import { FlightOfferList } from "@/components/FlightOfferList";
+import { parsePassengerCount } from "@/lib/flights/airport";
+import { searchFlightsClient } from "@/lib/flights/search-client";
+import type { FlightCabinClass, FlightOffer } from "@/lib/flights/types";
 import type { ReactNode } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -99,14 +103,6 @@ const RENTAL_LOCATIONS = [
 
 // ─── Mock result data ─────────────────────────────────────────────────────────
 
-const MOCK_FLIGHTS = [
-  { airline: "Emirates", from: "DXB", to: "LHE", price: "$145", duration: "3h 10m", stops: "Direct" },
-  { airline: "PIA",      from: "DXB", to: "KHI", price: "$138", duration: "3h 5m",  stops: "Direct" },
-  { airline: "FlyDubai", from: "DXB", to: "ISB", price: "$162", duration: "3h 40m", stops: "Direct" },
-  { airline: "Air Arabia", from: "AUH", to: "LHE", price: "$129", duration: "3h 15m", stops: "Direct" },
-  { airline: "Turkish Airlines", from: "IST", to: "JFK", price: "$720", duration: "10h 30m", stops: "via IST" },
-];
-
 const MOCK_HOTELS = [
   { name: "Atlantis The Palm",    city: "Dubai",    stars: 5, price: "$450/night", type: "Resort" },
   { name: "Grand Hyatt Makkah",   city: "Makkah",   stars: 5, price: "$320/night", type: "Hotel" },
@@ -162,6 +158,13 @@ function Diff({ d }: { d: string }) {
 
 // ─── Flights Form ─────────────────────────────────────────────────────────────
 
+function mapHeroCabin(cabin: string): FlightCabinClass {
+  if (cabin === "Premium Economy") return "premium_economy";
+  if (cabin === "Business") return "business";
+  if (cabin === "First Class") return "first";
+  return "economy";
+}
+
 function FlightsForm() {
   const [from, setFrom]     = useState("");
   const [to, setTo]         = useState("");
@@ -169,11 +172,36 @@ function FlightsForm() {
   const [cabin, setCabin]   = useState("Economy");
   const [pax, setPax]       = useState("1 Adult");
   const [dep, setDep]       = useState("");
-  const [results, setResults] = useState(false);
+  const [ret, setRet]       = useState("");
+  const [showResults, setShowResults] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [flights, setFlights] = useState<FlightOffer[]>([]);
+  const [fallbackMessage, setFallbackMessage] = useState<string | null>(null);
 
-  function search(e: React.FormEvent) {
+  async function search(e: React.FormEvent) {
     e.preventDefault();
-    setResults(true);
+    setShowResults(true);
+    setLoading(true);
+    setFallbackMessage(null);
+    setFlights([]);
+    try {
+      const result = await searchFlightsClient({
+        origin: from,
+        destination: to,
+        departureDate: dep,
+        returnDate: tripType === "Round-trip" ? ret : undefined,
+        passengers: parsePassengerCount(pax),
+        cabinClass: mapHeroCabin(cabin),
+      });
+      if (!result.ok) {
+        setFallbackMessage(result.message);
+        setFlights([]);
+      } else {
+        setFlights(result.flights);
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -236,41 +264,22 @@ function FlightsForm() {
         <Link href="/flights" className="btn-outline px-5 py-3">Browse all →</Link>
       </form>
 
-      {results && (
-        <div className="mt-1 rounded-xl border border-soft-200 overflow-hidden">
-          <div className="bg-navy/5 px-4 py-2.5 flex items-center justify-between">
-            <p className="text-xs font-bold text-navy">Featured routes {from && to ? `${from} → ${to}` : "— popular routes"}</p>
-            <button onClick={() => setResults(false)} className="text-xs text-charcoal/40 hover:text-navy">✕</button>
+      {showResults && (
+        <div className="mt-1 rounded-xl border border-soft-200 overflow-hidden p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-xs font-bold text-navy">
+              Live flights {from && to ? `${from} → ${to}` : ""}
+            </p>
+            <button onClick={() => setShowResults(false)} className="text-xs text-charcoal/40 hover:text-navy">✕</button>
           </div>
-          <div className="divide-y divide-soft-200">
-            {MOCK_FLIGHTS.map((f) => (
-              <div key={f.airline + f.to} className="flex items-center justify-between gap-3 px-4 py-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-xl">✈️</span>
-                  <div className="min-w-0">
-                    <p className="font-bold text-navy text-sm">{f.airline}</p>
-                    <p className="text-xs text-charcoal/50">{f.from} → {f.to} · {f.duration} · {f.stops}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <SamplePrice value={f.price} size="sm" />
-                  <Link
-                    href={bookingRequestPath({
-                      service: "flight",
-                      subject: `${f.airline} ${f.from} → ${f.to}`,
-                      from: from || f.from,
-                      to: to || f.to,
-                    })}
-                    className="btn-blue px-3 py-1.5 text-xs"
-                  >
-                    Request quote
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
+          <FlightOfferList
+            flights={flights}
+            loading={loading}
+            fallbackMessage={fallbackMessage}
+            compact
+          />
           <ResultDisclaimer />
-          <div className="p-3 text-center border-t border-soft-200">
+          <div className="mt-3 text-center border-t border-soft-200 pt-3">
             <Link href="/flights" className="text-xs font-semibold text-blue hover:underline">View all routes on flights page →</Link>
           </div>
         </div>
