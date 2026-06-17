@@ -25,7 +25,7 @@ const sections = [
   },
   {
     title: "No price guarantee on flights or tickets",
-    body: "All flight prices, ticket prices, hotel rates, car rental rates, cruise prices, and tour prices displayed on this platform are illustrative figures for planning purposes. Live pricing is not displayed — request a verified quote and confirm with the provider before booking. Rates may change based on availability, season, airline policy, and other factors.",
+    body: "Flight, ticket, hotel, car rental, cruise, and tour prices on browse pages are not live pricing. Request a custom quote — a Globe Travel Voyage specialist will review your request with a verified provider before booking. Rates may change based on availability, season, airline policy, and other factors.",
   },
   {
     title: "Third-party providers",

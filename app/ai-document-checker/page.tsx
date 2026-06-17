@@ -8,46 +8,26 @@ import { VISA_TYPES, VISA_DOCUMENT_SETS, type DocumentCheckResult } from "@/lib/
 // ── Document upload UI ─────────────────────────────────────────────────────────
 
 function UploadSlot({ label, required }: { label: string; required?: boolean }) {
-  const [status, setStatus] = useState<"idle" | "uploading" | "done">("idle");
-
-  function simulate() {
-    setStatus("uploading");
-    setTimeout(() => setStatus("done"), 1200 + Math.random() * 800);
-  }
-
   return (
-    <div className={`rounded-xl border-2 border-dashed p-4 transition-all cursor-pointer select-none ${
-      status === "done"
-        ? "border-emerald-300 bg-emerald-50"
-        : status === "uploading"
-        ? "border-blue/40 bg-blue/3 animate-pulse"
-        : "border-soft-200 bg-soft/50 hover:border-blue/30 hover:bg-blue/3"
-    }`} onClick={status === "idle" ? simulate : undefined}>
+    <Link
+      href="/visa/start"
+      className="block rounded-xl border-2 border-dashed border-soft-200 bg-soft/50 p-4 transition-all hover:border-blue/30 hover:bg-blue/3"
+    >
       <div className="flex items-center gap-3">
-        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xl ${
-          status === "done" ? "bg-emerald-100" : "bg-white border border-soft-200"
-        }`}>
-          {status === "done" ? "✅" : status === "uploading" ? "⏳" : "📄"}
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white border border-soft-200 text-xl">
+          📄
         </span>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-navy truncate">{label}</p>
           <p className="text-[11px] text-charcoal/45">
-            {status === "done" ? "Uploaded successfully" : status === "uploading" ? "Uploading…" : "Click to upload (PDF, JPG, PNG — max 10MB)"}
+            Secure upload available after you submit a visa request and open your case.
           </p>
         </div>
-        {required && status === "idle" && (
+        {required && (
           <span className="shrink-0 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-500">Required</span>
         )}
-        {status === "done" && (
-          <button
-            onClick={(e) => { e.stopPropagation(); setStatus("idle"); }}
-            className="shrink-0 text-charcoal/30 hover:text-red-500 text-sm font-bold"
-          >
-            ✕
-          </button>
-        )}
       </div>
-    </div>
+    </Link>
   );
 }
 

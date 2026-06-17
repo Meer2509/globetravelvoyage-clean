@@ -4,13 +4,13 @@ export const PRICE_ESTIMATE_LABEL =
 
 /** Secondary line on catalog browse banners. */
 export const CATALOG_BANNER_DETAIL =
-  "Illustrative listings for planning only. Submit a request for a verified quote from a confirmed provider.";
+  "Request a custom quote. A Globe Travel Voyage specialist will review your request with a verified provider.";
 
 /** Default badge on marketplace listing cards. */
 export const QUOTE_BADGE_LABEL = "Request quote";
 
-/** When referral payouts are not yet live. */
-export const REFERRAL_LAUNCHING_SOON = "Referral rewards — early member onboarding";
+/** Referral program headline. */
+export const REFERRAL_LAUNCHING_SOON = "Referral rewards for verified members";
 
 export const PROVIDER_ONBOARDING_HEADLINE =
   "Become one of the first verified providers.";

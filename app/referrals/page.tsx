@@ -407,7 +407,7 @@ export default function ReferralsPage() {
         </div>
 
         <Disclaimer>
-          Referral commissions are credits subject to full program terms, identity verification, and minimum payout thresholds ($25 USD). Commission rates shown are illustrative and may change without notice. Commissions are reviewed for fraud before approval. This is not investment or income advice. Globe Travel Voyage reserves the right to suspend accounts suspected of referral abuse.
+          Referral commissions are credits subject to full program terms, identity verification, and minimum payout thresholds ($25 USD). Commission rates are subject to program terms and may change. Commissions are reviewed for fraud before approval. This is not investment or income advice. Globe Travel Voyage reserves the right to suspend accounts suspected of referral abuse.
         </Disclaimer>
       </div>
     </>

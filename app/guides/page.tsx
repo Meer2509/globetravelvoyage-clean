@@ -146,7 +146,7 @@ export default async function GuidesPage() {
               </Link>
             </div>
             <p className="mt-3 text-xs text-charcoal/40">
-              Newsletter signup opens soon. Contact us to request destination guides.
+              Subscribe via our contact form to receive destination guides from Globe Travel Voyage.
             </p>
           </div>
         </div>

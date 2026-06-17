@@ -15,7 +15,7 @@ export function Disclaimer({
       <strong className="font-semibold">not</strong> a government agency, embassy,
       immigration lawyer, airline, cruise company, real estate broker, or official
       visa authority. We do not guarantee visa approval, legal outcomes, or ticket
-      prices. Browse prices are illustrative — request a verified quote and obtain
+      prices. Browse pages do not show live pricing — request a custom quote and obtain
       provider confirmation before booking. All information is for guidance only.
     </>
   );

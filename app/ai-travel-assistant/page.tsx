@@ -24,13 +24,7 @@ const AI_SERVICES = [
 ];
 
 export default function AITravelAssistantPage() {
-  const [saved, setSaved]           = useState(false);
   const [downloaded, setDownloaded] = useState(false);
-
-  function handleSave() {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
-  }
 
   function handleDownload() {
     const text = `Globe Travel Voyage — AI Travel Checklist
@@ -107,12 +101,6 @@ Disclaimer: For guidance only. Verify all requirements with official sources.`;
 
             {/* ── Action bar ── */}
             <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                onClick={handleSave}
-                className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-semibold transition-all ${saved ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-soft-200 bg-white text-charcoal/60 hover:border-blue/30 hover:text-navy"}`}
-              >
-                {saved ? "✓ Saved to dashboard" : "🔖 Save this conversation"}
-              </button>
               <button
                 onClick={handleDownload}
                 className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-semibold transition-all ${downloaded ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-soft-200 bg-white text-charcoal/60 hover:border-blue/30 hover:text-navy"}`}

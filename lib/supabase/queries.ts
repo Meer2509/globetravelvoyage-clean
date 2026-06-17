@@ -49,7 +49,7 @@ export interface AdminProfileRow {
 export async function fetchDashboardUser(): Promise<DashboardUserResult> {
   const supabase = await createServerSupabaseClient();
   if (!supabase) {
-    return { ok: false, reason: "not_configured", message: "Supabase is not configured. Dashboards are in demo mode." };
+    return { ok: false, reason: "not_configured", message: "Supabase is not configured. Sign in is required to view your dashboard." };
   }
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -668,6 +668,7 @@ export interface AdminVerificationItem {
   country: string | null;
   submitted: string;
   status: string;
+  providerTable: "agencies" | "visa_experts" | "tour_guides" | "property_hosts";
 }
 
 export interface AdminAgencyRow {
@@ -815,6 +816,7 @@ export async function fetchAdminVerificationQueue(): Promise<AdminVerificationIt
       country: row.registration_country ?? profile?.country ?? null,
       submitted: formatAdminDate(row.created_at),
       status: row.verification_status,
+      providerTable: "agencies",
     });
   }
 
@@ -834,6 +836,7 @@ export async function fetchAdminVerificationQueue(): Promise<AdminVerificationIt
       country: row.country ?? profile?.country ?? null,
       submitted: formatAdminDate(row.created_at),
       status: row.verification_status,
+      providerTable: "visa_experts",
     });
   }
 
@@ -852,6 +855,7 @@ export async function fetchAdminVerificationQueue(): Promise<AdminVerificationIt
       country: row.guide_country ?? profile?.country ?? null,
       submitted: formatAdminDate(row.created_at),
       status: row.verification_status,
+      providerTable: "tour_guides",
     });
   }
 
@@ -869,6 +873,7 @@ export async function fetchAdminVerificationQueue(): Promise<AdminVerificationIt
       country: profile?.country ?? null,
       submitted: formatAdminDate(row.created_at),
       status: row.verification_status,
+      providerTable: "property_hosts",
     });
   }
 

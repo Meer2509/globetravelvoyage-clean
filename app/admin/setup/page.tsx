@@ -127,6 +127,7 @@ export default async function AdminSetupPage() {
   const hasStripeWebhook  = Boolean(process.env.STRIPE_WEBHOOK_SECRET);
   const hasStripeConnect  = Boolean(process.env.STRIPE_CONNECT_CLIENT_ID);
   const hasPlatformFee    = Boolean(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENT?.trim());
+  const hasDuffelToken     = Boolean(process.env.DUFFEL_ACCESS_TOKEN);
   const hasEmailKey       = Boolean(process.env.RESEND_API_KEY);
   const hasOpenAI         = Boolean(process.env.OPENAI_API_KEY);
   const hasAnalytics      = Boolean(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID) ||
@@ -441,6 +442,33 @@ export default async function AdminSetupPage() {
                 ? "/api/stripe/connect/create-account · account-link · status · /dashboard/payouts"
                 : "Requires STRIPE_SECRET_KEY for Express Connect onboarding",
               status: hasStripeSecret ? "done" : "todo",
+            },
+          ]}
+        />
+
+        {/* ── Flights (Duffel) ── */}
+        <SetupSection
+          emoji="✈️"
+          title="Live Flights (Duffel)"
+          note={hasDuffelToken ? "Live flight search is enabled on /flights." : "Add DUFFEL_ACCESS_TOKEN to enable live flight search."}
+          items={[
+            {
+              label: "DUFFEL_ACCESS_TOKEN",
+              detail: hasDuffelToken
+                ? "Duffel API token configured — live offers on /flights and /api/flights/search"
+                : "Get an access token from app.duffel.com to power live flight search",
+              status: hasDuffelToken ? "done" : "todo",
+              docsUrl: "https://duffel.com/docs",
+            },
+            {
+              label: "Flight search API",
+              detail: "/api/flights/search — server-side Duffel integration",
+              status: hasDuffelToken ? "done" : "todo",
+            },
+            {
+              label: "Booking flow",
+              detail: "Continue to booking saves a concierge request — no direct ticketing until payment is implemented",
+              status: "done",
             },
           ]}
         />

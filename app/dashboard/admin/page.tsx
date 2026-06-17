@@ -43,6 +43,7 @@ import { SEO_VISA_PAGES, SEO_TRAVEL_PAGES } from "@/lib/seo-pages";
 import { SITE_CONFIG } from "@/lib/site-config";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DatabaseStatusBanner } from "@/components/DatabaseStatusBanner";
+import { AdminProviderQueue } from "@/components/admin/AdminProviderQueue";
 import { ROLE_LABELS } from "@/lib/auth";
 import type { UserRole } from "@/lib/supabase/types";
 import Link from "next/link";
@@ -429,13 +430,6 @@ function VerificationQueueTab() {
     rejected: items.filter((v) => v.status === "rejected").length,
   };
 
-  const STATUS_STYLE: Record<string, string> = {
-    pending: "bg-gold/10 text-gold",
-    under_review: "bg-blue/10 text-blue",
-    verified: "bg-emerald-50 text-emerald-700",
-    rejected: "bg-red-50 text-red-600",
-  };
-
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-4">
@@ -462,32 +456,9 @@ function VerificationQueueTab() {
       <Panel title="Verification Queue" subtitle="Review and approve business verifications" noPad>
         {!loaded ? (
           <div className="py-12 text-center text-charcoal/40 text-sm">Loading verification queue…</div>
-        ) : items.length === 0 ? (
-          <div className="py-12 text-center text-charcoal/40 text-sm">No providers waiting for review.</div>
-        ) : filtered.length === 0 ? (
-          <div className="py-12 text-center text-charcoal/40 text-sm">No items in this category.</div>
         ) : (
-          <div className="divide-y divide-soft-200">
-            {filtered.map((v) => (
-              <div key={v.id} className="flex items-center justify-between gap-4 p-5 flex-wrap">
-                <div className="flex items-start gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy/5 text-sm font-bold text-navy">
-                    {v.type[0]}
-                  </span>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-bold text-navy">{v.name}</p>
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_STYLE[v.status] ?? "bg-soft text-charcoal/50"}`}>
-                        {v.status.replace("_", " ")}
-                      </span>
-                    </div>
-                    <p className="text-sm text-charcoal/55">
-                      {v.country ?? "—"} · {v.type} · Submitted {v.submitted}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="p-5">
+            <AdminProviderQueue initialItems={filtered} />
           </div>
         )}
       </Panel>
@@ -826,6 +797,30 @@ export default function AdminDashboard() {
           <StatCard label="Visa requests" value={liveCounts ? String(liveCounts.visaRequests) : "0"} icon="visa" hint="Live intake table" color="green" />
           <StatCard label="Support tickets" value={liveCounts ? String(liveCounts.supportTickets) : "0"} icon="shield" hint="Live from DB" color="navy" />
         </div>
+
+        <Panel title="Intake consoles">
+          <div className="grid gap-2 sm:grid-cols-2">
+            {[
+              { href: "/admin/leads", label: "Leads & contact" },
+              { href: "/admin/visa", label: "Visa requests" },
+              { href: "/admin/bookings", label: "Booking requests" },
+              { href: "/admin/support", label: "Support tickets" },
+              { href: "/admin/properties", label: "Property requests" },
+              { href: "/admin/providers", label: "Provider applications" },
+              { href: "/admin/referrals", label: "Referrals" },
+              { href: "/admin/setup", label: "Environment setup" },
+            ].map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="flex items-center justify-between rounded-xl bg-soft px-4 py-3 text-sm font-semibold text-navy hover:bg-navy/5 transition-colors"
+              >
+                {link.label}
+                <span className="text-blue">→</span>
+              </Link>
+            ))}
+          </div>
+        </Panel>
 
         <div className="grid gap-6 lg:grid-cols-3">
           <Panel title="Platform activity">

@@ -5,7 +5,7 @@ export function formatStatsForHero(stats: MarketplaceStats): Array<{ value: stri
     return [
       { value: "Open", label: "Verified provider onboarding open", icon: "🚀" },
       { value: "—", label: "Reviews appear after completed bookings", icon: "⭐" },
-      { value: "Live", label: "Live marketplace launching", icon: "✨" },
+      { value: "Live", label: "Secure requests reviewed by specialists", icon: "✨" },
       { value: "0", label: "Verified providers", icon: "✅" },
     ];
   }

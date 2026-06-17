@@ -133,7 +133,7 @@ export const SEO_TRAVEL_PAGES: Record<string, SeoPageConfig> = {
       { title: "Concierge", text: "Luxury Concierge Planning ($299) for complex trips." },
     ],
     faqs: [
-      { q: "Are prices guaranteed?", a: "No. Browse pages show illustrative planning figures, not live pricing. Request a verified quote — provider confirmation required before booking." },
+      { q: "Are prices guaranteed?", a: "No. Browse pages do not show live pricing. Request a custom quote — a Globe Travel Voyage specialist will review your request before booking." },
       ...BASE_FAQ.slice(1),
     ],
     freeCta: { label: "Free AI trip planner", href: "/trip-planner" },

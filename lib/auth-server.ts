@@ -42,6 +42,22 @@ export async function resolveUserRole(userId: string): Promise<UserRole> {
   return "customer";
 }
 
+/** Platform owner email — granted admin access when signed in (also set admin role in Supabase). */
+export function getPlatformAdminEmail(): string {
+  return (
+    process.env.PLATFORM_ADMIN_EMAIL?.trim() ||
+    process.env.ADMIN_EMAIL?.trim() ||
+    "meerhamzakhan2020@gmail.com"
+  ).toLowerCase();
+}
+
+export async function isPlatformAdminUser(userId: string, email?: string | null): Promise<boolean> {
+  const role = await resolveUserRole(userId);
+  if (role === "admin") return true;
+  const normalized = email?.trim().toLowerCase();
+  return Boolean(normalized && normalized === getPlatformAdminEmail());
+}
+
 export async function requireSession(): Promise<AuthCheckResult> {
   const supabase = await createServerSupabaseClient();
   if (!supabase) {
@@ -57,7 +73,9 @@ export async function requireSession(): Promise<AuthCheckResult> {
   }
 
   const role = await resolveUserRole(user.id);
-  return { ok: true, userId: user.id, role };
+  const effectiveRole =
+    (await isPlatformAdminUser(user.id, user.email)) && role !== "admin" ? "admin" : role;
+  return { ok: true, userId: user.id, role: effectiveRole };
 }
 
 export async function requireAdmin(): Promise<AuthCheckResult> {

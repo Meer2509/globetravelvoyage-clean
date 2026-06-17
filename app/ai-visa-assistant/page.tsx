@@ -25,15 +25,6 @@ function DownloadChecklistButton({ docs, visaType }: { docs: string[]; visaType:
   );
 }
 
-function SavePlanButton() {
-  const [saved, setSaved] = useState(false);
-  return (
-    <button onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 3000); }} className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all ${saved ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-soft-200 bg-white text-charcoal/60 hover:border-blue/30 hover:text-navy"}`}>
-      {saved ? "✓ Saved to dashboard" : "🔖 Save this analysis"}
-    </button>
-  );
-}
-
 // ── Step progress ─────────────────────────────────────────────────────────────
 
 const STEPS = ["Your profile", "Destination", "Travel history", "AI analysis"];
@@ -482,7 +473,9 @@ export default function AIVisaAssistantPage() {
               {/* Action bar */}
               <div className="flex flex-wrap gap-2">
                 <DownloadChecklistButton docs={result.requiredDocs} visaType={result.visaType} />
-                <SavePlanButton />
+                <Link href="/visa/start" className="flex items-center gap-2 rounded-xl border border-blue/30 bg-blue/5 px-4 py-2.5 text-sm font-semibold text-navy hover:bg-blue/10 transition-colors">
+                  Submit visa request
+                </Link>
                 <Link href="/lead/contact" className="flex items-center gap-2 rounded-xl border border-gold/30 bg-gold/5 px-4 py-2.5 text-sm font-semibold text-navy hover:bg-gold/10 transition-colors">
                   👔 Contact a verified expert
                 </Link>

@@ -27,7 +27,7 @@ const SUPABASE_ANON_KEY =
 const isConfigured = Boolean(SUPABASE_URL) && Boolean(SUPABASE_ANON_KEY);
 
 // Routes that require authentication
-const PROTECTED_PREFIXES = ["/dashboard", "/onboarding"];
+const PROTECTED_PREFIXES = ["/dashboard", "/onboarding", "/admin"];
 
 // Routes that logged-in users should be redirected away from
 const AUTH_PAGES = ["/login", "/register"];
@@ -95,7 +95,7 @@ async function getPrimaryRoleFromDb(userId: string): Promise<UserRole | undefine
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // ── Skip Supabase if not configured (demo mode) ─────────────────────────────
+  // ── Skip Supabase when not configured ─────────────────────────────────────
   if (!isConfigured) {
     return NextResponse.next({ request });
   }
@@ -152,9 +152,37 @@ export async function proxy(request: NextRequest) {
   // Role-specific dashboard — redirect only when path is not allowed for this role
   if (user && pathname.startsWith("/dashboard/")) {
     const dbRole = await getPrimaryRoleFromDb(user.id);
-    const role = dbRole ?? normalizeUserRole(user.user_metadata?.role as string | undefined);
+    const metaRole = normalizeUserRole(user.user_metadata?.role as string | undefined);
+    const adminEmail = (
+      process.env.PLATFORM_ADMIN_EMAIL ||
+      process.env.ADMIN_EMAIL ||
+      "meerhamzakhan2020@gmail.com"
+    ).toLowerCase();
+    const isAdmin =
+      dbRole === "admin" ||
+      metaRole === "admin" ||
+      user.email?.toLowerCase() === adminEmail;
+    const role = isAdmin ? "admin" : (dbRole ?? metaRole);
     if (!isDashboardPathAllowed(pathname, role)) {
       return NextResponse.redirect(new URL(getDashboardForRole(role), request.url));
+    }
+  }
+
+  // /admin/* — authenticated platform admins only
+  if (user && pathname.startsWith("/admin")) {
+    const dbRole = await getPrimaryRoleFromDb(user.id);
+    const metaRole = normalizeUserRole(user.user_metadata?.role as string | undefined);
+    const adminEmail = (
+      process.env.PLATFORM_ADMIN_EMAIL ||
+      process.env.ADMIN_EMAIL ||
+      "meerhamzakhan2020@gmail.com"
+    ).toLowerCase();
+    const isAdmin =
+      dbRole === "admin" ||
+      metaRole === "admin" ||
+      user.email?.toLowerCase() === adminEmail;
+    if (!isAdmin) {
+      return NextResponse.redirect(new URL(getDashboardForRole(dbRole ?? metaRole), request.url));
     }
   }
 

@@ -31,7 +31,7 @@ const FAQS = [
   },
   {
     q: "Are the flight prices guaranteed?",
-    a: "No. All prices shown on Globe Travel Voyage are illustrative planning figures. We are not an airline or travel supplier. Request a verified quote — provider confirmation required before booking.",
+    a: "No. Live pricing is not displayed on browse pages. Request a custom quote — a Globe Travel Voyage specialist will review your request before booking.",
   },
   {
     q: "How do I track my visa application?",

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Icon } from "@/components/Icon";
-import { AuthLayout, SocialLogins, AuthDivider } from "@/components/AuthLayout";
+import { AuthLayout } from "@/components/AuthLayout";
 import {
   isSupabaseConfigured,
   createClient,
@@ -130,9 +130,6 @@ function LoginForm() {
         </p>
       </div>
 
-      <SocialLogins />
-      <AuthDivider />
-
       {error && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
@@ -235,7 +232,6 @@ function LoginForm() {
 }
 
 // ── Dummy labels/emoji used in success state ──────────────────────────────────
-// (imported but only used when isSupabaseConfigured is false — for demo mode)
 void ROLE_LABELS; void ROLE_EMOJI;
 
 // ── Page ──────────────────────────────────────────────────────────────────────

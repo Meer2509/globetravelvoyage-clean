@@ -225,7 +225,7 @@ export async function updateUserActiveStatus(
 export async function updateProviderVerification(
   table: "visa_experts" | "agencies" | "tour_guides" | "property_hosts",
   id: string,
-  isVerified: boolean
+  verificationStatus: "verified" | "rejected" | "under_review" | "pending"
 ): Promise<MvpActionResult> {
   const adminAuth = await requireAdmin();
   if (!adminAuth.ok) return { ok: false, error: adminAuth.error };
@@ -233,7 +233,13 @@ export async function updateProviderVerification(
   const admin = createAdminClient();
   if (!admin) return { ok: false, error: "Supabase is not configured." };
 
-  const { error } = await admin.from(table).update({ is_verified: isVerified }).eq("id", id);
+  const { error } = await admin
+    .from(table)
+    .update({
+      verification_status: verificationStatus,
+      verified_at: verificationStatus === "verified" ? new Date().toISOString() : null,
+    })
+    .eq("id", id);
   if (error) return { ok: false, error: error.message };
   return { ok: true, data: { id } };
 }

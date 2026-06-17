@@ -12,17 +12,17 @@ const VARIANTS = {
   },
   agencies: {
     emoji: "🏢",
-    title: "Premium travel agencies opening soon",
+    title: "Premium travel agencies joining now",
     subtitle:
-      "List packages, tours, and visa support services. Early agencies receive priority verification and marketplace placement.",
+      "List packages, tours, and visa support services. Verified agencies receive priority placement on Globe Travel Voyage.",
     primary: { label: "Register your agency", href: "/register?role=agency" },
     secondary: { label: "Agency onboarding", href: "/onboarding/agency" },
   },
   properties: {
     emoji: "🏠",
-    title: "Luxury stays and rentals launching",
+    title: "Luxury stays and verified rentals",
     subtitle:
-      "Property hosts are being verified now. List rentals, vacation stays, and monthly homes for travelers worldwide.",
+      "Property hosts are verified before listing. Submit your property for review by our specialist team.",
     primary: { label: "Become a property host", href: "/register?role=host" },
     secondary: { label: "Post a listing", href: "/properties/post" },
   },

@@ -59,7 +59,10 @@ export async function HomePropertiesSection() {
 
         {properties.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed border-soft-200 bg-white py-16 text-center">
-            <p className="font-bold text-navy text-lg">Property listings opening soon.</p>
+            <p className="font-bold text-navy text-lg">Request a custom property quote</p>
+            <p className="mt-2 text-sm text-muted max-w-md mx-auto">
+              A Globe Travel Voyage specialist will review your request with verified hosts.
+            </p>
             <p className="mt-2 max-w-md mx-auto text-sm text-muted">
               Verified property hosts are being onboarded. Submit your listing now to be reviewed by our team.
             </p>

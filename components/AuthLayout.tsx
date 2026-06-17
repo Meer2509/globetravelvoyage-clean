@@ -95,7 +95,7 @@ export function AuthLayout({
               {[
                 { value: "Open", label: "Provider onboarding" },
                 { value: "—", label: "Reviews after bookings" },
-                { value: "Live", label: "Marketplace launching" },
+                { value: "Live", label: "Secure requests reviewed by specialists" },
               ].map((s) => (
                 <div key={s.label} className="rounded-xl border border-white/10 bg-white/5 p-3 text-center">
                   <p className="text-lg font-extrabold text-gold">{s.value}</p>
@@ -200,23 +200,6 @@ export function StepProgress({
           </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-// ─── Social login buttons (mock) ─────────────────────────────────────────────
-
-export function SocialLogins() {
-  return (
-    <div className="space-y-2.5">
-      <Link href="/lead/contact" className="btn-outline w-full py-3 text-sm font-medium">
-        <span className="text-lg">🇬</span>
-        Request Google sign-in access
-      </Link>
-      <Link href="/lead/contact" className="btn-outline w-full py-3 text-sm font-medium">
-        <span className="text-lg">🍎</span>
-        Request Apple sign-in access
-      </Link>
     </div>
   );
 }

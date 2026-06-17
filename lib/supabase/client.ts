@@ -3,7 +3,7 @@
 // =============================================================================
 // Used in Client Components ("use client").
 // createBrowserClient() uses a singleton — safe to call multiple times.
-// Returns null when env keys are missing (demo/dev mode without Supabase).
+// Returns null when env keys are missing — forms and auth require configuration.
 // =============================================================================
 
 import { createBrowserClient } from "@supabase/ssr";

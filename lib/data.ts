@@ -63,9 +63,9 @@ export const services: Service[] = [
   { slug: "local-guides", title: "Tour Guides", description: "Book certified local guides for private or group tours.", href: "/tours", icon: "guide", emoji: "🧑‍🦯", accent: "from-navy/20 to-navy/5" },
   { slug: "properties", title: "Property Rentals", description: "Short and long-term rental properties for travel and relocation.", href: "/properties", icon: "property", emoji: "🏡", accent: "from-blue/20 to-blue/5" },
   { slug: "property-sales", title: "Buy / Sell Property", description: "Travel-related property listings: homes, holiday villas and more.", href: "/properties", icon: "property", emoji: "🔑", accent: "from-gold/20 to-gold/5" },
-  { slug: "insurance", title: "Travel Insurance", description: "Multi-trip and single-trip travel insurance options for global coverage.", href: "/lead/contact", icon: "insurance", emoji: "🛡️", accent: "from-navy/20 to-navy/5", badge: "Waitlist" },
+  { slug: "insurance", title: "Travel Insurance", description: "Multi-trip and single-trip travel insurance options for global coverage.", href: "/lead/contact", icon: "insurance", emoji: "🛡️", accent: "from-navy/20 to-navy/5", badge: "Request quote" },
   { slug: "student", title: "Student Travel", description: "Student visa paths, campus housing, flight discounts and more.", href: "/visa", icon: "student", emoji: "🎓", accent: "from-blue/20 to-blue/5" },
-  { slug: "medical", title: "Medical Travel", description: "Medical tourism guidance, hospital connections and travel coordination.", href: "/lead/contact", icon: "medical", emoji: "🏥", accent: "from-gold/20 to-gold/5", badge: "Waitlist" },
+  { slug: "medical", title: "Medical Travel", description: "Medical tourism guidance, hospital connections and travel coordination.", href: "/lead/contact", icon: "medical", emoji: "🏥", accent: "from-gold/20 to-gold/5", badge: "Request quote" },
   { slug: "umrah", title: "Umrah & Hajj Travel", description: "Complete Umrah and Hajj packages from verified agencies and operators.", href: "/agencies", icon: "prayer", emoji: "🕋", accent: "from-navy/20 to-navy/5", badge: "Trusted" },
 ];
 
@@ -653,7 +653,7 @@ export interface Stat {
 export const stats: Stat[] = [
   { value: "Open", label: "Verified provider onboarding open", icon: "🚀" },
   { value: "—", label: "Reviews appear after completed bookings", icon: "⭐" },
-  { value: "Live", label: "Live marketplace launching", icon: "✨" },
+  { value: "Live", label: "Secure requests reviewed by specialists", icon: "✨" },
   { value: "50+", label: "Visa guides", icon: "🛂" },
 ];
 
@@ -752,7 +752,7 @@ export const faqs: Faq[] = [
   },
   {
     q: "Are the flight and ticket prices guaranteed?",
-    a: "No. Browse pages show illustrative planning figures, not live pricing. Request a verified quote — provider confirmation required before booking.",
+    a: "No. Browse pages do not show live pricing. Request a custom quote — a Globe Travel Voyage specialist will review your request with a verified provider before booking.",
   },
   {
     q: "How does the AI travel assistant work?",

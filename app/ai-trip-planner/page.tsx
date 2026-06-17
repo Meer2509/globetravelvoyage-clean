@@ -34,15 +34,6 @@ function DownloadItineraryButton({ destination, totalDays }: { destination: stri
   );
 }
 
-function SaveTripButton() {
-  const [saved, setSaved] = useState(false);
-  return (
-    <button onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 3000); }} className={`flex items-center gap-2 rounded-2xl border px-5 py-3 text-sm font-semibold transition-all ${saved ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-soft-200 bg-white text-charcoal/60 hover:border-blue/30 hover:text-navy"}`}>
-      {saved ? "✓ Trip saved!" : "🔖 Save this trip"}
-    </button>
-  );
-}
-
 const INTERESTS = ["History & Culture", "Adventure", "Food & Cuisine", "Nightlife", "Shopping", "Nature & Hiking", "Beaches", "Art & Museums", "Family Activities", "Wellness & Spa"];
 
 const DESTINATIONS = ["Dubai, UAE", "Istanbul, Turkey", "Bangkok, Thailand", "Maldives", "Tokyo, Japan", "Paris, France", "London, UK", "New York, USA", "Bali, Indonesia", "Rome, Italy"];
@@ -478,7 +469,9 @@ export default function AITripPlannerPage() {
               <Link href="/ai-visa-assistant" className="btn-outline py-3 px-6 text-sm">Check visa requirements</Link>
               <Link href="/ai-flight-finder" className="btn-outline py-3 px-6 text-sm">Find flights</Link>
               <DownloadItineraryButton destination={result.destination} totalDays={result.totalDays} />
-              <SaveTripButton />
+              <Link href="/booking/request" className="flex items-center gap-2 rounded-2xl border border-blue/30 bg-blue/5 px-5 py-3 text-sm font-semibold text-navy hover:bg-blue/10 transition-colors">
+                Request a custom quote
+              </Link>
               <button onClick={reset} className="btn-ghost py-3 px-6 text-sm text-charcoal/50">← Plan another trip</button>
             </div>
 

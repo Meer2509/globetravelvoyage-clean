@@ -19,7 +19,7 @@ const FAQS = [
   { q: "Do I need an international driving permit?",     a: "Requirements vary by country. Many countries accept your home-country license for short stays. Always check locally before renting." },
   { q: "Is car rental insurance included?",              a: "Basic insurance is typically included. Full coverage (CDW/LDW) is optional extra. Review the provider's terms before confirming." },
   { q: "Can I rent a car with a driver?",                a: "Yes — many providers offer chauffeur-driven options. Filter by 'With driver' to see those listings." },
-  { q: "Are prices shown final?",                        a: "No. Prices shown are illustrative planning figures. Request a verified quote — provider confirmation required before booking." },
+  { q: "Are prices shown final?",                        a: "No. Live pricing is not displayed on browse pages. Request a custom quote — a Globe Travel Voyage specialist will review your request before booking." },
 ];
 
 export default function CarRentalsPage() {

@@ -4,7 +4,7 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
-import { AuthLayout, SocialLogins, AuthDivider, LegalConsent } from "@/components/AuthLayout";
+import { AuthLayout, LegalConsent } from "@/components/AuthLayout";
 import {
   isSupabaseConfigured,
   createClient,
@@ -255,9 +255,6 @@ function RegisterForm({
           <p className="text-xs text-charcoal/50">{sel.desc}</p>
         </div>
       </div>
-
-      <SocialLogins />
-      <AuthDivider />
 
       {error && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
