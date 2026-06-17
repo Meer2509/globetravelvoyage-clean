@@ -162,30 +162,65 @@ export interface FlightBookingRequestInput {
   offerId?: string;
 }
 
-function bookingInsertRow(
-  input: {
-    service: string;
-    subject?: string | null;
-    fromLocation?: string | null;
-    toLocation?: string | null;
-    details?: string | null;
-    customerName: string;
-    customerEmail: string;
-    customerPhone?: string | null;
-    passengerCount?: number;
-    travelDate?: string | null;
-    returnDate?: string | null;
-    cabinClass?: string | null;
-    message?: string | null;
-    budget?: string | null;
-    providerUserId?: string;
-  },
-  userId: string | null
-) {
+/** Columns that exist on public.booking_requests (production concierge schema). */
+export interface BookingRequestInsert {
+  service: string;
+  subject: string | null;
+  from_location: string | null;
+  to_location: string | null;
+  details: string | null;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string | null;
+  passenger_count: number;
+  travel_date: string | null;
+  return_date: string | null;
+  cabin_class: string | null;
+  message: string | null;
+  status: string;
+}
+
+function logBookingInsertError(
+  context: string,
+  row: BookingRequestInsert,
+  error: { message: string; code?: string; details?: string; hint?: string }
+): void {
+  console.error(`[booking] ${context} Supabase insert failed`, {
+    message: error.message,
+    code: error.code ?? null,
+    details: error.details ?? null,
+    hint: error.hint ?? null,
+    row: {
+      service: row.service,
+      subject: row.subject,
+      from_location: row.from_location,
+      to_location: row.to_location,
+      customer_email: row.customer_email,
+      passenger_count: row.passenger_count,
+      travel_date: row.travel_date,
+      return_date: row.return_date,
+      cabin_class: row.cabin_class,
+    },
+  });
+}
+
+function buildBookingRequestRow(input: {
+  service: string;
+  subject?: string | null;
+  fromLocation?: string | null;
+  toLocation?: string | null;
+  details?: string | null;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string | null;
+  passengerCount?: number;
+  travelDate?: string | null;
+  returnDate?: string | null;
+  cabinClass?: string | null;
+  message?: string | null;
+}): BookingRequestInsert {
   const passengers = Math.min(9, Math.max(1, input.passengerCount ?? 1));
   return {
-    user_id: userId,
-    customer_id: userId,
     service: input.service,
     subject: input.subject ?? null,
     from_location: input.fromLocation ?? null,
@@ -200,17 +235,6 @@ function bookingInsertRow(
     cabin_class: input.cabinClass ?? null,
     message: input.message ?? null,
     status: "pending",
-    service_type: input.service,
-    service_name: input.subject ?? null,
-    title: input.subject ?? null,
-    full_name: input.customerName,
-    email: input.customerEmail,
-    phone: input.customerPhone ?? null,
-    start_date: input.travelDate || null,
-    end_date: input.returnDate || null,
-    travelers: passengers,
-    budget: input.budget ?? null,
-    provider_user_id: input.providerUserId ?? null,
   };
 }
 
@@ -261,30 +285,38 @@ export async function submitFlightBookingRequest(
   input: FlightBookingRequestInput
 ): Promise<ActionResult> {
   const admin = dbClient();
-  if (!admin) return notConfigured();
+  if (!admin) {
+    console.error("[booking] flight submit failed: Supabase admin client not configured");
+    return notConfigured();
+  }
 
   const userId = await getOptionalUserId();
   const rateBlocked = await guardFormRateLimit(userId);
   if (rateBlocked) return rateBlocked;
 
-  const row = bookingInsertRow(
-    {
-      service: "flight",
-      subject: input.subject,
-      fromLocation: input.fromLocation,
-      toLocation: input.toLocation,
-      details: input.details,
-      customerName: input.customerName,
-      customerEmail: input.customerEmail,
-      customerPhone: input.customerPhone,
-      passengerCount: input.passengerCount,
-      travelDate: input.travelDate,
-      returnDate: input.returnDate,
-      cabinClass: input.cabinClass,
-      message: input.message,
-    },
-    userId
-  );
+  const row = buildBookingRequestRow({
+    service: "flight",
+    subject: input.subject,
+    fromLocation: input.fromLocation,
+    toLocation: input.toLocation,
+    details: input.details,
+    customerName: input.customerName,
+    customerEmail: input.customerEmail,
+    customerPhone: input.customerPhone,
+    passengerCount: input.passengerCount,
+    travelDate: input.travelDate,
+    returnDate: input.returnDate,
+    cabinClass: input.cabinClass,
+    message: input.message,
+  });
+
+  console.log("[booking] flight insert attempt", {
+    service: row.service,
+    from_location: row.from_location,
+    to_location: row.to_location,
+    customer_email: row.customer_email,
+    passenger_count: row.passenger_count,
+  });
 
   const { data, error } = await admin
     .from("booking_requests")
@@ -293,42 +325,51 @@ export async function submitFlightBookingRequest(
     .single();
 
   if (error) {
-    console.error("[booking] flight insert failed", error.message);
+    logBookingInsertError("flight", row, error);
     return { ok: false, error: "submit_failed" };
   }
 
-  await notifySupportFlightBooking(input, data.id, userId);
+  console.log("[booking] flight insert success", { id: data.id });
+
+  void notifySupportFlightBooking(input, data.id, userId).catch((err) => {
+    console.error("[booking] support notification failed (request saved)", err);
+  });
+
   return { ok: true, data: { id: data.id } };
 }
 
 export async function submitBookingRequest(input: BookingRequestInput): Promise<ActionResult> {
   const admin = dbClient();
-  if (!admin) return notConfigured();
+  if (!admin) {
+    console.error("[booking] submit failed: Supabase admin client not configured");
+    return notConfigured();
+  }
 
   const userId = await getOptionalUserId();
   const rateBlocked = await guardFormRateLimit(userId);
   if (rateBlocked) return rateBlocked;
 
-  const row = bookingInsertRow(
-    {
-      service: input.serviceType,
-      subject: input.serviceName,
-      fromLocation: input.fromLocation,
-      toLocation: input.toLocation,
-      details: input.details,
-      customerName: input.name,
-      customerEmail: input.email,
-      customerPhone: input.phone,
-      passengerCount: parseInt(input.travelers ?? "1", 10) || 1,
-      travelDate: input.date,
-      returnDate: input.endDate,
-      cabinClass: input.cabinClass,
-      message: input.message,
-      budget: input.budget,
-      providerUserId: input.providerUserId,
-    },
-    userId
-  );
+  const messageParts = [input.message, input.budget ? `Budget: ${input.budget}` : ""].filter(Boolean);
+  const row = buildBookingRequestRow({
+    service: input.serviceType,
+    subject: input.serviceName,
+    fromLocation: input.fromLocation,
+    toLocation: input.toLocation,
+    details: input.details,
+    customerName: input.name,
+    customerEmail: input.email,
+    customerPhone: input.phone,
+    passengerCount: parseInt(input.travelers ?? "1", 10) || 1,
+    travelDate: input.date,
+    returnDate: input.endDate,
+    cabinClass: input.cabinClass,
+    message: messageParts.length > 0 ? messageParts.join("\n") : null,
+  });
+
+  console.log("[booking] insert attempt", {
+    service: row.service,
+    customer_email: row.customer_email,
+  });
 
   const { data, error } = await admin
     .from("booking_requests")
@@ -337,9 +378,11 @@ export async function submitBookingRequest(input: BookingRequestInput): Promise<
     .single();
 
   if (error) {
-    console.error("[booking] insert failed", error.message);
+    logBookingInsertError("generic", row, error);
     return { ok: false, error: "submit_failed" };
   }
+
+  console.log("[booking] insert success", { id: data.id });
   return { ok: true, data: { id: data.id } };
 }
 

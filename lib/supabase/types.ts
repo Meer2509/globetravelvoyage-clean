@@ -388,7 +388,6 @@ export interface VisaRequest {
 
 export interface BookingRequest {
   id: string;
-  user_id: string | null;
   service: string | null;
   subject: string | null;
   from_location: string | null;
@@ -401,15 +400,6 @@ export interface BookingRequest {
   travel_date: string | null;
   return_date: string | null;
   cabin_class: string | null;
-  service_type: string;
-  service_name: string | null;
-  full_name: string;
-  email: string;
-  phone: string | null;
-  start_date: string | null;
-  end_date: string | null;
-  travelers: number;
-  budget: string | null;
   message: string | null;
   status: string;
   created_at: string;
