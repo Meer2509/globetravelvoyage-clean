@@ -11,6 +11,11 @@ import {
   type VisaInput,
   type VisaResult,
 } from "@/lib/ai-types";
+import {
+  detectConciergeIntent,
+  getConciergeActions,
+  type ConciergeAction,
+} from "@/lib/v3/concierge-intent";
 
 export const AI_UNAVAILABLE_MESSAGE =
   "AI assistance is temporarily unavailable because OpenAI is not configured on this server. Add OPENAI_API_KEY to enable live responses, or contact a verified expert on our marketplace.";
@@ -82,14 +87,17 @@ export function mapTravelStyleLabel(style: string): TripInput["travelStyle"] {
   return "moderate";
 }
 
-export async function getTravelAssistantReply(userMessage: string): Promise<{ text: string }> {
+export async function getTravelAssistantReply(
+  userMessage: string
+): Promise<{ text: string; actions?: ConciergeAction[] }> {
+  const intent = detectConciergeIntent(userMessage);
   const text = await callAi(
     `The traveler asks: "${userMessage}"
 
 Provide concise, practical travel guidance (visas, flights, hotels, itineraries, or documents as relevant).
 Use short paragraphs and bullet lists where helpful. Include a brief reminder that visa approval is never guaranteed.`
   );
-  return { text };
+  return { text, actions: getConciergeActions(intent) };
 }
 
 export async function analyzeVisaWithAi(input: VisaInput): Promise<VisaResult> {

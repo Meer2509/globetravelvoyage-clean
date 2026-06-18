@@ -18,7 +18,7 @@ export default async function AdminLeadsPage() {
   return (
     <AdminIntakeConsole
       title="Contact & lead requests"
-      subtitle="All contact, partner, and expert enquiry submissions from Supabase."
+      subtitle="Contact, partner, expert and AI Concierge handoff submissions (concierge_visa, concierge_property, concierge_planning)."
       table="lead_requests"
       initialRows={rows}
       fetchError={error}

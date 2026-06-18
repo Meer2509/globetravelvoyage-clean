@@ -26,12 +26,11 @@
 **Goal:** One AI front door + conversion-focused homepage.
 
 ### Deliverables
-- [x] `/concierge` — canonical AI Travel Concierge (chat, persistence, marketplace sidebar)
-- [x] Redirects: `/ai-travel-assistant`, `/ai-visa-assistant`, `/ai-trip-planner`, `/trip-planner`, `/ai-flight-finder`, `/ai-document-checker` → `/concierge`
-- [x] Homepage rebuilt around trip planning with concierge as primary CTA
-- [x] Supporting marketplace hub: flights, visas, properties, agents, group tours
-- [x] Nav + footer unified on “AI Concierge”
-- [x] Floating widget points to full concierge (no duplicate tool silos)
+- [x] Concierge intent detection with marketplace CTAs (visa, flights, property, agents, tours, planning)
+- [x] Reusable handoff form → `lead_requests` / `booking_requests` + support email
+- [x] Live marketplace counts on homepage (no fake numbers)
+- [x] Provider deep links from concierge actions
+- [x] Admin visibility via existing intake consoles
 
 ### Success metrics
 - Single entry point for all AI intents
@@ -40,12 +39,15 @@
 
 ---
 
-## Phase 2 — Marketplace depth
+## Phase 2 — Marketplace depth (current)
 
-- Concierge intent routing → agent/property inquiry forms
-- Homepage live counts from Supabase (verified agents, approved properties)
-- Agent dashboard ↔ concierge lead notifications
-- Property featured carousel on homepage (real data)
+**Goal:** Connect AI Concierge to real marketplace actions.
+
+### Deliverables
+- [x] Concierge intent routing with CTAs per topic
+- [x] Handoff forms → Supabase + support email
+- [x] Live homepage marketplace counts
+- [x] Provider deep links (no dead ends)
 
 ---
 

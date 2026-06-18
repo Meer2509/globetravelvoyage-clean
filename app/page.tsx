@@ -3,6 +3,7 @@ import { HeroStatsBar } from "@/components/HeroStatsBar";
 import { V3HomeHero } from "@/components/v3/V3HomeHero";
 import { HomeConciergeSection } from "@/components/v3/HomeConciergeSection";
 import { HomeMarketplaceHub } from "@/components/v3/HomeMarketplaceHub";
+import { fetchV3MarketplaceCounts } from "@/lib/v3/marketplace-counts";
 import { SectionHeader } from "@/components/SectionHeader";
 import { FAQ } from "@/components/FAQ";
 import { Icon } from "@/components/Icon";
@@ -14,7 +15,10 @@ import { visaHubHref } from "@/lib/marketplace-routes";
 import { CONCIERGE_PATH } from "@/lib/v3/concierge-config";
 
 export default async function Home() {
-  const { visas, faqs, visaHubCards } = await loadCatalogBundle();
+  const [{ visas, faqs, visaHubCards }, marketplaceCounts] = await Promise.all([
+    loadCatalogBundle(),
+    fetchV3MarketplaceCounts(),
+  ]);
   const featuredUsa = visas.find((v) => v.slug === "usa-b1-b2")!;
 
   return (
@@ -36,7 +40,7 @@ export default async function Home() {
 
       <HomeConciergeSection />
 
-      <HomeMarketplaceHub />
+      <HomeMarketplaceHub counts={marketplaceCounts} />
 
       {/* How it works */}
       <section className="section-sm border-b border-soft-200 bg-soft/40">

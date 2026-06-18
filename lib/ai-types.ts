@@ -1,8 +1,11 @@
+import type { ConciergeAction } from "@/lib/v3/concierge-intent";
+
 export interface AiMessage {
   id: string;
   role: "user" | "ai";
   text: string;
   cards?: AiCard[];
+  actions?: ConciergeAction[];
   timestamp: Date;
 }
 

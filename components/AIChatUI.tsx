@@ -2,6 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { AiMessage, AiCard } from "@/lib/ai-types";
+import type { ConciergeAction, ConciergeHandoffTopic } from "@/lib/v3/concierge-intent";
+import { buildConversationSummary } from "@/lib/v3/concierge-intent";
+import { ConciergeActionButtons } from "@/components/v3/ConciergeActionButtons";
+import { ConciergeHandoffForm } from "@/components/v3/ConciergeHandoffForm";
 import { uid } from "@/lib/ai-types";
 import { AiUnavailableError } from "@/lib/ai-api";
 
@@ -134,7 +138,13 @@ function AiCardBlock({ card }: { card: AiCard }) {
 
 // ── Message bubble ────────────────────────────────────────────────────────────
 
-function MessageBubble({ msg }: { msg: AiMessage }) {
+function MessageBubble({
+  msg,
+  onHandoff,
+}: {
+  msg: AiMessage;
+  onHandoff: (action: ConciergeAction) => void;
+}) {
   const isUser = msg.role === "user";
   return (
     <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
@@ -167,6 +177,10 @@ function MessageBubble({ msg }: { msg: AiMessage }) {
               <AiCardBlock key={i} card={card} />
             ))}
           </div>
+        )}
+
+        {!isUser && msg.actions && msg.actions.length > 0 && (
+          <ConciergeActionButtons actions={msg.actions} onHandoff={onHandoff} />
         )}
 
         <span className="text-[10px] text-charcoal/30">
@@ -274,7 +288,7 @@ export function SuggestedPrompts({ prompts, onSelect, disabled }: SuggestedPromp
 export interface AIChatUIProps {
   initialMessages?: AiMessage[];
   suggestedPrompts?: string[];
-  onUserMessage: (text: string) => Promise<{ text: string; cards?: AiCard[] }>;
+  onUserMessage: (text: string) => Promise<{ text: string; cards?: AiCard[]; actions?: ConciergeAction[] }>;
   placeholder?: string;
   className?: string;
   maxHeight?: string;
@@ -292,6 +306,7 @@ export function AIChatUI({
 }: AIChatUIProps) {
   const [messages, setMessages] = useState<AiMessage[]>(initialMessages);
   const [loading, setLoading]   = useState(false);
+  const [handoffTopic, setHandoffTopic] = useState<ConciergeHandoffTopic | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -305,7 +320,14 @@ export function AIChatUI({
 
     try {
       const result = await onUserMessage(text);
-      const aiMsg: AiMessage = { id: uid(), role: "ai", text: result.text, cards: result.cards, timestamp: new Date() };
+      const aiMsg: AiMessage = {
+        id: uid(),
+        role: "ai",
+        text: result.text,
+        cards: result.cards,
+        actions: result.actions,
+        timestamp: new Date(),
+      };
       setMessages((prev) => [...prev, aiMsg]);
     } catch (err) {
       const errMsg: AiMessage = {
@@ -324,13 +346,19 @@ export function AIChatUI({
   }
 
   const showPrompts = suggestedPrompts.length > 0 && messages.length <= 1;
+  const conversationSummary = buildConversationSummary(messages);
+
+  function openHandoff(action: ConciergeAction) {
+    if (action.handoffTopic) setHandoffTopic(action.handoffTopic);
+  }
 
   return (
+    <>
     <div className={`flex flex-col rounded-2xl border border-soft-200 bg-soft overflow-hidden ${className}`}>
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight }}>
         {messages.map((msg) => (
-          <MessageBubble key={msg.id} msg={msg} />
+          <MessageBubble key={msg.id} msg={msg} onHandoff={openHandoff} />
         ))}
         {loading && (
           <div className="flex gap-3">
@@ -361,5 +389,13 @@ export function AIChatUI({
         )}
       </div>
     </div>
+
+    <ConciergeHandoffForm
+      open={handoffTopic !== null}
+      onClose={() => setHandoffTopic(null)}
+      topic={handoffTopic ?? "trip_planning"}
+      conversationSummary={conversationSummary}
+    />
+    </>
   );
 }
