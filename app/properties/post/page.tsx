@@ -64,6 +64,11 @@ export default function PostPropertyPage() {
     setLoading(false);
 
     if (!result.ok) {
+      console.error("[property listing submit failed]", {
+        code: result.code,
+        debug: result.debug,
+        message: result.error,
+      });
       setError(result.error ?? FORM_SUBMIT_ERROR_MESSAGE);
       return;
     }

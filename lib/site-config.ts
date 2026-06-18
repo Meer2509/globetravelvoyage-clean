@@ -9,6 +9,11 @@ export const FORM_SUBMIT_SUCCESS_MESSAGE =
 
 export const FORM_SUBMIT_ERROR_MESSAGE = `We could not submit your request right now. Please email ${SITE_CONFIG.supportEmail}.`;
 
+/** Customer-safe form error with a short support reference code (no technical details). */
+export function formSubmitErrorWithCode(code: string): string {
+  return `${FORM_SUBMIT_ERROR_MESSAGE} Reference: ${code}`;
+}
+
 export const supportMailto = `mailto:${SITE_CONFIG.supportEmail}`;
 
 export function supportFromAddress(name = SITE_CONFIG.name): string {

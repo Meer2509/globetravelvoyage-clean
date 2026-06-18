@@ -12,11 +12,12 @@ import { requireAdmin, requireSession, SELF_ASSIGNABLE_ROLES } from "@/lib/auth-
 import { applyUserRole } from "./role-sync";
 import { notifyIntakeSubmission } from "@/lib/email/intake-notifications";
 import type { EmailField } from "@/lib/email/templates";
-import { FORM_SUBMIT_ERROR_MESSAGE } from "@/lib/site-config";
+import { FORM_SUBMIT_ERROR_MESSAGE, formSubmitErrorWithCode } from "@/lib/site-config";
+import { isSupabaseConfigured } from "./client";
 
 export type ActionResult<T = { id: string }> =
   | { ok: true; data: T }
-  | { ok: false; error: string };
+  | { ok: false; error: string; code?: string; debug?: string };
 
 async function getOptionalUserId(): Promise<string | null> {
   const supabase = await createServerSupabaseClient();
@@ -550,6 +551,47 @@ export async function submitSupportTicket(input: SupportTicketInput): Promise<Ac
 
 // ── Property listing ────────────────────────────────────────────────────────
 
+const PROPERTY_LISTING_TABLE = "property_listings" as const;
+
+function propertyListingFailure(
+  code: string,
+  debug: string,
+  extra?: Record<string, unknown>
+): ActionResult {
+  console.error("[property listing]", { code, debug, ...extra });
+  return { ok: false, error: formSubmitErrorWithCode(code), code, debug };
+}
+
+function parseListingInteger(value: string | undefined): number | null {
+  if (!value?.trim()) return null;
+  if (value.toLowerCase() === "studio") return 0;
+  const digits = value.replace(/[^0-9]/g, "");
+  if (!digits) return null;
+  const n = parseInt(digits, 10);
+  return Number.isFinite(n) ? n : null;
+}
+
+function parseListingPrice(value: string | undefined): number | null {
+  if (!value?.trim()) return null;
+  const n = parseFloat(value.replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) ? n : null;
+}
+
+function mapPropertyListingInsertError(error: {
+  code?: string;
+  message: string;
+  details?: string;
+  hint?: string;
+}): ActionResult {
+  const debug = [error.code, error.message, error.details, error.hint].filter(Boolean).join(" | ");
+  let code = "GTV-PL-003";
+  if (error.code === "42P01") code = "GTV-PL-010";
+  else if (error.code === "23502") code = "GTV-PL-011";
+  else if (error.code === "22P02") code = "GTV-PL-012";
+  else if (error.code === "23503") code = "GTV-PL-013";
+  return propertyListingFailure(code, debug, { supabase: error });
+}
+
 export interface PropertyListingInput {
   listingType: string;
   propertyType: string;
@@ -570,40 +612,62 @@ export interface PropertyListingInput {
 
 export async function submitPropertyListing(input: PropertyListingInput): Promise<ActionResult> {
   const admin = dbClient();
-  if (!admin) return notConfigured();
+  if (!admin) {
+    const debug = !isSupabaseConfigured
+      ? "NEXT_PUBLIC_SUPABASE_URL or anon key is missing"
+      : !isAdminClientConfigured
+        ? "SUPABASE_SERVICE_ROLE_KEY is missing"
+        : "Supabase admin client unavailable";
+    return propertyListingFailure("GTV-PL-001", debug);
+  }
 
   const userId = await getOptionalUserId();
   const rateBlocked = await guardFormRateLimit(userId);
-  if (rateBlocked) return rateBlocked;
+  if (rateBlocked) {
+    return propertyListingFailure("GTV-PL-002", rateBlocked.error);
+  }
+
+  const row = {
+    user_id: userId,
+    listing_type: input.listingType,
+    property_type: input.propertyType,
+    title: input.title.trim(),
+    city: input.city.trim(),
+    country: input.country?.trim() || null,
+    address: input.address?.trim() || null,
+    price: parseListingPrice(input.price),
+    price_period: input.pricePeriod ?? "month",
+    beds: parseListingInteger(input.beds),
+    baths: parseListingInteger(input.baths),
+    area_sqft: parseListingInteger(input.area),
+    description: input.description?.trim() || null,
+    contact_name: input.name.trim(),
+    contact_email: input.email.trim(),
+    contact_phone: input.phone?.trim() || null,
+    status: "pending" as const,
+  };
+
+  console.info("[property listing] inserting", {
+    table: PROPERTY_LISTING_TABLE,
+    columns: Object.keys(row),
+    userId,
+  });
 
   const { data, error } = await admin
-    .from("property_listings")
-    .insert({
-      user_id: userId,
-      listing_type: input.listingType,
-      property_type: input.propertyType,
-      title: input.title,
-      city: input.city,
-      country: input.country ?? null,
-      address: input.address ?? null,
-      price: input.price ? parseFloat(input.price.replace(/[^0-9.]/g, "")) || null : null,
-      price_period: input.pricePeriod ?? "month",
-      beds: input.beds ? parseInt(input.beds, 10) : null,
-      baths: input.baths ? parseInt(input.baths, 10) : null,
-      area_sqft: input.area ? parseInt(input.area, 10) : null,
-      description: input.description ?? null,
-      contact_name: input.name,
-      contact_email: input.email,
-      contact_phone: input.phone ?? null,
-      status: "pending",
-    })
+    .from(PROPERTY_LISTING_TABLE)
+    .insert(row)
     .select("id")
     .single();
 
   if (error) {
-    console.error("[property] insert failed", error.message);
-    return { ok: false, error: FORM_SUBMIT_ERROR_MESSAGE };
+    return mapPropertyListingInsertError(error);
   }
+
+  if (!data?.id) {
+    return propertyListingFailure("GTV-PL-004", "Insert succeeded but no id was returned");
+  }
+
+  console.info("[property listing] saved", { table: PROPERTY_LISTING_TABLE, id: data.id });
 
   notifyIntakeSubmission({
     kind: "contact",
