@@ -27,6 +27,7 @@ import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
 import { DashboardProfileSection } from "@/components/DashboardProfileSection";
 import { CustomerDashboardHero } from "@/components/CustomerDashboardHero";
+import { UserOnboardingChecklist } from "@/components/growth/UserOnboardingChecklist";
 import { DashboardEmpty } from "@/components/DashboardEmpty";
 import { visaCaseWorkspacePath, dashboardPaymentsPath, dashboardSupportPath } from "@/lib/visa-case-routes";
 import { customerDashboardPath, hashToCustomerTab, normalizeCustomerTab } from "@/lib/dashboard-routes";
@@ -219,6 +220,7 @@ function CustomerDashboardContent() {
     overview: (
       <div className="space-y-6">
         <CustomerDashboardHero firstName={firstName} />
+        <UserOnboardingChecklist />
         <CustomerActiveServices services={activeServices} visaCase={visaCase} />
 
         {visaCase && (

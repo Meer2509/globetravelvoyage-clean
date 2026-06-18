@@ -11,6 +11,11 @@ import {
 import type { UserRole } from "./types";
 import { notifyIntakeSubmission } from "@/lib/email/intake-notifications";
 import { FORM_SUBMIT_ERROR_MESSAGE } from "@/lib/site-config";
+import type { ProviderAcquisitionRole } from "@/lib/provider-acquisition/types";
+import { ensureProviderOnboardingProgress } from "@/lib/provider-acquisition/onboarding-progress";
+import { sendProviderOnboardingWelcome } from "@/lib/provider-acquisition/emails";
+import { recordProviderReferralAtSignup } from "@/lib/provider-acquisition/referral-actions";
+import { trackProviderSignup } from "@/lib/provider-acquisition/track-landing";
 
 const PROVIDER_ROLES: UserRole[] = [
   "visa_agent",
@@ -44,6 +49,7 @@ export interface SignupProfileInput {
   businessType?: string;
   specializations?: string[];
   bio?: string;
+  referralCode?: string | null;
 }
 
 export interface ProfileUpdateInput {
@@ -122,6 +128,23 @@ export async function saveProfileOnSignup(input: SignupProfileInput): Promise<Pr
         { label: "Bio", value: input.bio },
       ],
     });
+
+    await ensureProviderOnboardingProgress(input.userId, input.role as ProviderAcquisitionRole);
+    sendProviderOnboardingWelcome({
+      to: input.email,
+      userId: input.userId,
+      providerRole: input.role as ProviderAcquisitionRole,
+      fullName: input.fullName,
+    });
+    trackProviderSignup(input.role as ProviderAcquisitionRole, input.userId, input.email);
+    if (input.referralCode) {
+      recordProviderReferralAtSignup({
+        referredUserId: input.userId,
+        referredEmail: input.email,
+        providerRole: input.role,
+        referralCode: input.referralCode,
+      });
+    }
   }
 
   return { ok: true };

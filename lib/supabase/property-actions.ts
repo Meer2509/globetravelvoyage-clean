@@ -7,6 +7,9 @@ import { notifyIntakeSubmission } from "@/lib/email/intake-notifications";
 import { FORM_SUBMIT_ERROR_MESSAGE } from "@/lib/site-config";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { logAdminAudit } from "@/lib/admin/phase1-actions";
+import { trackGrowthEvent } from "@/lib/growth/track-event";
+import { markAbandonedInquirySubmitted } from "@/lib/growth/abandoned-inquiry-actions";
+import { completeOnboardingStep } from "@/lib/growth/onboarding-checklist";
 import {
   PUBLIC_PROPERTY_STATUS,
   PROPERTY_LISTING_SELECT,
@@ -158,6 +161,17 @@ export async function submitPropertyInquiry(input: {
       { label: "Message", value: input.message },
     ],
   }).catch((e) => console.error("[property-inquiry] email failed", e));
+
+  trackGrowthEvent({
+    eventType: "property_inquiry",
+    userId,
+    email: input.email,
+    relatedId: data.id,
+    metadata: { property_id: input.propertyListingId, title: listingRow.title },
+    context: { source_path: "/properties" },
+  });
+  markAbandonedInquirySubmitted(input.email, "property", data.id);
+  completeOnboardingStep("submit_first_request");
 
   return { ok: true, data: { id: data.id } };
 }

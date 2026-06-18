@@ -14,6 +14,9 @@ import { notifyIntakeSubmission } from "@/lib/email/intake-notifications";
 import type { EmailField } from "@/lib/email/templates";
 import { FORM_SUBMIT_ERROR_MESSAGE, formSubmitErrorWithCode } from "@/lib/site-config";
 import { isSupabaseConfigured } from "./client";
+import { trackGrowthEvent } from "@/lib/growth/track-event";
+import { markAbandonedInquirySubmitted } from "@/lib/growth/abandoned-inquiry-actions";
+import { completeOnboardingStep } from "@/lib/growth/onboarding-checklist";
 
 export type ActionResult<T = { id: string }> =
   | { ok: true; data: T }
@@ -144,6 +147,17 @@ export async function submitVisaRequest(input: VisaRequestInput): Promise<Action
       { label: "Message", value: input.message },
     ],
   });
+
+  trackGrowthEvent({
+    eventType: "visa_request",
+    userId,
+    email: input.email,
+    relatedId: data.id,
+    metadata: { destination: input.destination, purpose: input.purpose },
+    context: { source_path: "/visa/start" },
+  });
+  markAbandonedInquirySubmitted(input.email, "visa", data.id);
+  completeOnboardingStep("submit_first_request");
 
   return { ok: true, data: { id: data.id } };
 }
@@ -387,6 +401,21 @@ export async function submitFlightBookingRequest(
     fields: flightBookingEmailFields(input),
   });
 
+  trackGrowthEvent({
+    eventType: "flight_request",
+    userId,
+    email: input.customerEmail,
+    relatedId: data.id,
+    metadata: {
+      from: input.fromLocation,
+      to: input.toLocation,
+      passengers: input.passengerCount,
+    },
+    context: { source_path: "/flights" },
+  });
+  markAbandonedInquirySubmitted(input.customerEmail, "flight", data.id);
+  completeOnboardingStep("submit_first_request");
+
   return { ok: true, data: { id: data.id } };
 }
 
@@ -446,6 +475,21 @@ export async function submitBookingRequest(input: BookingRequestInput): Promise<
     userId,
     fields: bookingRequestEmailFields(input, row),
   });
+
+  trackGrowthEvent({
+    eventType: isFlight ? "flight_request" : "booking_request",
+    userId,
+    email: input.email,
+    relatedId: data.id,
+    metadata: { service: input.serviceType },
+    context: { source_path: "/booking/request" },
+  });
+  if (isFlight) {
+    markAbandonedInquirySubmitted(input.email, "flight", data.id);
+  } else {
+    markAbandonedInquirySubmitted(input.email, "booking", data.id);
+  }
+  completeOnboardingStep("submit_first_request");
 
   return { ok: true, data: { id: data.id } };
 }

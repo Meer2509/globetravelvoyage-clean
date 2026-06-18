@@ -36,6 +36,7 @@ import {
   type DashboardTab,
 } from "@/components/DashboardLayout";
 import { formatPaymentAmount, formatPaymentDate, paymentServiceLabel } from "@/lib/payments-display";
+import { ProviderAnalyticsPanel } from "@/components/provider-acquisition/ProviderAnalyticsPanel";
 
 function statusToPct(status: string): number {
   const map: Record<string, number> = {
@@ -267,6 +268,18 @@ export default function AgentDashboard() {
             hint={reviewCount > 0 ? `${reviewCount} reviews` : "No reviews yet"}
             color="navy"
           />
+        </div>
+
+        <ProviderAnalyticsPanel />
+
+        <div className="rounded-2xl border border-gold/25 bg-gold/5 px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-bold text-navy text-sm">Verification Center</p>
+            <p className="text-xs text-charcoal/55 mt-0.5">Submit credentials to earn verified status and boost your trust score.</p>
+          </div>
+          <Link href="/dashboard/verification" className="btn-gold shrink-0 px-5 py-2.5 text-sm">
+            Manage verification →
+          </Link>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">

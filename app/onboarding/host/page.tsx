@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AuthLayout, StepProgress } from "@/components/AuthLayout";
 import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
 import { completeHostOnboarding } from "@/lib/supabase/onboarding-actions";
+import { ProviderOnboardingTracker } from "@/components/provider-acquisition/ProviderOnboardingTracker";
 
 const STEPS = ["Property", "Details", "Policies", "Done"];
 
@@ -99,6 +100,7 @@ export default function HostOnboarding() {
     >
       <div>
         <StepProgress steps={STEPS} current={step} />
+        <ProviderOnboardingTracker role="property_host" stepIndex={step} />
 
         {step === 0 && (
           <div className="space-y-4">

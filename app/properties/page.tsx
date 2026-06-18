@@ -3,7 +3,8 @@ import { PropertiesCatalog } from "@/components/PropertiesCatalog";
 import { ProviderOnboardingCta } from "@/components/ProviderOnboardingCta";
 import { fetchApprovedPropertyListings } from "@/lib/supabase/property-actions";
 import { fetchUserSavedIds } from "@/lib/supabase/saved-actions";
-import { MarketplaceTrustStrip } from "@/components/trust/MarketplaceTrustStrip";
+import { EmailCaptureStrip } from "@/components/growth/EmailCaptureStrip";
+import { ConversionTrustStrip } from "@/components/growth/ConversionTrustStrip";
 
 export default async function PropertiesPage() {
   const [properties, savedIds] = await Promise.all([
@@ -31,8 +32,9 @@ export default async function PropertiesPage() {
 
       <PropertiesCatalog properties={properties} savedIds={savedIds} />
 
-      <div className="container-px pb-8">
-        <MarketplaceTrustStrip />
+      <div className="container-px pb-8 space-y-6">
+        <EmailCaptureStrip source="properties" headline="Property alerts for your next trip" />
+        <ConversionTrustStrip />
       </div>
 
       <section className="section-sm bg-soft/50">

@@ -11,6 +11,8 @@ import { formatAirportShort } from "@/lib/flights/airports";
 import { searchFlightsClient } from "@/lib/flights/search-client";
 import type { FlightOffer } from "@/lib/flights/types";
 import { SITE_CONFIG, supportMailto } from "@/lib/site-config";
+import { EmailCaptureStrip } from "@/components/growth/EmailCaptureStrip";
+import { ConversionTrustStrip } from "@/components/growth/ConversionTrustStrip";
 
 export default function FlightsPage() {
   const [flights, setFlights] = useState<FlightOffer[]>([]);
@@ -126,8 +128,10 @@ export default function FlightsPage() {
       </section>
 
       <section className="border-t border-soft-200 bg-white py-10">
-        <div className="container-px">
-          <p className="mx-auto max-w-2xl text-center text-xs leading-relaxed text-charcoal/45">
+        <div className="container-px max-w-3xl mx-auto space-y-6">
+          <EmailCaptureStrip source="flights" headline="Get fare alerts & travel deals" />
+          <ConversionTrustStrip />
+          <p className="text-center text-xs leading-relaxed text-charcoal/45">
             Globe Travel Voyage is an independent travel marketplace, not an airline or ticketing agent.
             Live fares are sourced via Duffel. Final price and availability are confirmed at booking.
           </p>

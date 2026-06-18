@@ -108,6 +108,7 @@ export function AdminLaunchChecklist({ report }: { report: LaunchChecklistReport
           <h2 className="font-extrabold text-navy">Admin consoles</h2>
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
             {[
+              "/admin/growth",
               "/admin/bookings",
               "/admin/visa",
               "/admin/leads",

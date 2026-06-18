@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AuthLayout, StepProgress } from "@/components/AuthLayout";
 import { FORM_SUBMIT_SUCCESS_MESSAGE } from "@/lib/site-config";
 import { completeAgencyOnboarding } from "@/lib/supabase/onboarding-actions";
+import { ProviderOnboardingTracker } from "@/components/provider-acquisition/ProviderOnboardingTracker";
 
 const STEPS = ["Business Info", "Services", "Verification", "Done"];
 
@@ -81,6 +82,7 @@ export default function AgencyOnboarding() {
     >
       <div>
         <StepProgress steps={STEPS} current={step} />
+        <ProviderOnboardingTracker role="travel_agency" stepIndex={step} />
 
         {step === 0 && (
           <div className="space-y-4">

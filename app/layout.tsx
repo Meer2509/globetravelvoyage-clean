@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { AIAssistant } from "@/components/AIAssistant";
 import { CatalogProvider } from "@/lib/catalog/context";
 import { loadCatalogBundle } from "@/lib/catalog/load-bundle";
+import { GrowthAttributionProvider } from "@/components/growth/GrowthAttributionProvider";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-sans-custom",
@@ -104,6 +105,7 @@ export default async function RootLayout({
       </head>
       <body className="flex min-h-full flex-col bg-white">
         <CatalogProvider catalog={catalog}>
+          <GrowthAttributionProvider />
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />

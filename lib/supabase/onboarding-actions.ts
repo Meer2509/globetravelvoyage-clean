@@ -14,8 +14,15 @@ import { notifyIntakeSubmission } from "@/lib/email/intake-notifications";
 import { FORM_SUBMIT_ERROR_MESSAGE } from "@/lib/site-config";
 import { parseCommaList } from "./profile-utils";
 import { ensureTravelAgentProfileFromOnboarding } from "./travel-agent-actions";
+import { updateProviderOnboardingStep } from "@/lib/provider-acquisition/onboarding-progress";
 
 export type OnboardingResult = { ok: true } | { ok: false; error: string };
+
+async function markProviderOnboardingSubmitted(
+  role: "visa_agent" | "travel_agency" | "tour_guide" | "property_host"
+): Promise<void> {
+  updateProviderOnboardingStep({ role, stepKey: "submitted", stepIndex: 4 });
+}
 
 function saveError(message?: string): OnboardingResult {
   if (message === "You must be signed in.") return { ok: false, error: message };
@@ -118,6 +125,8 @@ export async function completeAgentOnboarding(input: AgentOnboardingInput): Prom
     ],
   });
 
+  await markProviderOnboardingSubmitted("visa_agent");
+
   return { ok: true };
 }
 
@@ -198,6 +207,8 @@ export async function completeAgencyOnboarding(input: AgencyOnboardingInput): Pr
       { label: "Description", value: input.description },
     ],
   });
+
+  await markProviderOnboardingSubmitted("travel_agency");
 
   return { ok: true };
 }
@@ -297,6 +308,8 @@ export async function completeGuideOnboarding(input: GuideOnboardingInput): Prom
       { label: "Bio", value: input.bio },
     ],
   });
+
+  await markProviderOnboardingSubmitted("tour_guide");
 
   return { ok: true };
 }
@@ -418,6 +431,8 @@ export async function completeHostOnboarding(input: HostOnboardingInput): Promis
       { label: "Description", value: input.description },
     ],
   });
+
+  await markProviderOnboardingSubmitted("property_host");
 
   return { ok: true };
 }

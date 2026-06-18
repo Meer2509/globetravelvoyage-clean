@@ -4,7 +4,8 @@ import { TravelAgentsCatalog } from "@/components/travel-agents/TravelAgentsCata
 import { ProviderOnboardingCta } from "@/components/ProviderOnboardingCta";
 import { CTASection } from "@/components/CTASection";
 import { fetchVerifiedTravelAgents } from "@/lib/supabase/travel-agent-actions";
-import { MarketplaceTrustStrip } from "@/components/trust/MarketplaceTrustStrip";
+import { EmailCaptureStrip } from "@/components/growth/EmailCaptureStrip";
+import { ConversionTrustStrip } from "@/components/growth/ConversionTrustStrip";
 
 export const metadata: Metadata = {
   title: "Travel Agents — Globe Travel Voyage",
@@ -31,8 +32,9 @@ export default async function TravelAgentsPage() {
 
       <TravelAgentsCatalog agents={agents} />
 
-      <div className="container-px pb-8">
-        <MarketplaceTrustStrip />
+      <div className="container-px pb-8 space-y-6">
+        <EmailCaptureStrip source="travel_agents" headline="Agent deals & travel planning tips" />
+        <ConversionTrustStrip />
       </div>
 
       <section className="section-sm bg-soft/50">

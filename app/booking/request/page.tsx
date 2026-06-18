@@ -9,6 +9,7 @@ import { parseFlightBookingParams } from "@/lib/flights/booking-params";
 import { submitBookingRequest } from "@/lib/supabase/actions";
 import { SITE_CONFIG, FORM_SUBMIT_ERROR_MESSAGE, supportMailto } from "@/lib/site-config";
 import { useState } from "react";
+import { ConversionTrustStrip } from "@/components/growth/ConversionTrustStrip";
 
 const SERVICE_TYPES = [
   { value: "tour", label: "Guided tour", emoji: "🗺️" },
@@ -217,6 +218,9 @@ function BookingRequestRouter() {
         </p>
       </div>
       <GenericBookingRequestForm searchParams={searchParams} />
+      <div className="container-px max-w-3xl mx-auto mt-8">
+        <ConversionTrustStrip />
+      </div>
     </>
   );
 }

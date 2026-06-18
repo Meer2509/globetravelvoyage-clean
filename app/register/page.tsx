@@ -127,10 +127,12 @@ function TypeSelector({
 
 function RegisterForm({
   selectedType,
+  referralCode,
   onBack,
   onSuccess,
 }: {
   selectedType: AccountType;
+  referralCode?: string | null;
   onBack: () => void;
   onSuccess: (onboardingUrl: string) => void;
 }) {
@@ -177,6 +179,7 @@ function RegisterForm({
           business_type: selectedType,
           specializations: isAgent ? extra : undefined,
           extra_info: extra,
+          referral_code: referralCode ?? undefined,
         },
         emailRedirectTo: getAuthCallbackUrl(),
       },
@@ -202,6 +205,7 @@ function RegisterForm({
       companyName: isAgency ? extra : undefined,
       businessType: selectedType,
       specializations: isAgent && extra ? parseCommaList(extra) : undefined,
+      referralCode: referralCode ?? (data.user.user_metadata?.referral_code as string | undefined),
     };
 
     if (!data.session) {
@@ -403,13 +407,20 @@ function RegisterPageInner() {
   const searchParams = useSearchParams();
   const roleKey = searchParams.get("role") ?? searchParams.get("type") ?? "none";
   const roleParam = searchParams.get("role") ?? searchParams.get("type");
+  const refCode = searchParams.get("ref");
   const initialRole =
     roleParam && ROLE_PARAM_MAP[roleParam] ? ROLE_PARAM_MAP[roleParam] : null;
 
-  return <RegisterFlow key={roleKey} initialRole={initialRole} />;
+  return <RegisterFlow key={roleKey} initialRole={initialRole} referralCode={refCode} />;
 }
 
-function RegisterFlow({ initialRole }: { initialRole: AccountType | null }) {
+function RegisterFlow({
+  initialRole,
+  referralCode,
+}: {
+  initialRole: AccountType | null;
+  referralCode: string | null;
+}) {
   const [step, setStep] = useState<"type" | "form">(initialRole ? "form" : "type");
   const [selectedType, setSelectedType] = useState<AccountType>(initialRole ?? "customer");
 
@@ -430,6 +441,7 @@ function RegisterFlow({ initialRole }: { initialRole: AccountType | null }) {
       ) : (
         <RegisterForm
           selectedType={selectedType}
+          referralCode={referralCode}
           onBack={() => setStep("type")}
           onSuccess={() => {}}
         />

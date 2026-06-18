@@ -5,6 +5,9 @@ import Link from "next/link";
 import { Disclaimer } from "@/components/Disclaimer";
 import { submitVisaRequest } from "@/lib/supabase/actions";
 import { FORM_SUBMIT_SUCCESS_MESSAGE, FORM_SUBMIT_ERROR_MESSAGE } from "@/lib/site-config";
+import { useAbandonedInquirySaver } from "@/components/growth/useAbandonedInquirySaver";
+import { EmailCaptureStrip } from "@/components/growth/EmailCaptureStrip";
+import { ConversionTrustStrip } from "@/components/growth/ConversionTrustStrip";
 
 const STEPS = ["Your details", "Destination & purpose", "Case overview"] as const;
 
@@ -31,6 +34,13 @@ export default function VisaStartPage() {
   function set(key: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
   }
+
+  useAbandonedInquirySaver({
+    inquiryType: "visa",
+    email: form.email,
+    draftData: { ...form, step },
+    enabled: !submitted && step > 0 && form.email.includes("@"),
+  });
 
   function canNext() {
     if (step === 0) return form.name && form.email && form.phone;
@@ -290,6 +300,9 @@ export default function VisaStartPage() {
               </div>
             ))}
           </div>
+
+          <EmailCaptureStrip source="visa_start" className="mt-6" headline="Free visa tips by email" />
+          <ConversionTrustStrip className="mt-6" />
         </div>
       </div>
     </div>

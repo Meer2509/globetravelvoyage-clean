@@ -233,6 +233,8 @@ export async function updateProviderVerification(
   const admin = createAdminClient();
   if (!admin) return { ok: false, error: "Supabase is not configured." };
 
+  const { data: row } = await admin.from(table).select("user_id, full_name, email").eq("id", id).maybeSingle();
+
   const { error } = await admin
     .from(table)
     .update({
@@ -241,5 +243,42 @@ export async function updateProviderVerification(
     })
     .eq("id", id);
   if (error) return { ok: false, error: error.message };
+
+  if (verificationStatus === "verified" && row) {
+    const providerRow = row as { user_id: string; full_name?: string; email?: string };
+    const roleMap = {
+      visa_experts: "visa_agent",
+      agencies: "travel_agency",
+      tour_guides: "tour_guide",
+      property_hosts: "property_host",
+    } as const;
+
+    const { sendProviderApprovalNotification } = await import("@/lib/provider-acquisition/emails");
+    const { rewardProviderReferralOnVerification } = await import("@/lib/provider-acquisition/referral-actions");
+
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("email, full_name")
+      .eq("id", providerRow.user_id)
+      .maybeSingle();
+
+    const email = providerRow.email ?? (profile as { email?: string } | null)?.email;
+    const name = providerRow.full_name ?? (profile as { full_name?: string } | null)?.full_name;
+
+    if (email) {
+      sendProviderApprovalNotification({
+        to: email,
+        userId: providerRow.user_id,
+        providerRole: roleMap[table],
+        fullName: name ?? undefined,
+      });
+    }
+
+    rewardProviderReferralOnVerification(providerRow.user_id);
+
+    const { recalculateReputationForUser } = await import("@/lib/trust/reputation-engine");
+    recalculateReputationForUser(providerRow.user_id, roleMap[table] ?? "visa_agent");
+  }
+
   return { ok: true, data: { id } };
 }

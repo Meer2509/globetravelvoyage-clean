@@ -7,6 +7,9 @@ import { notifyIntakeSubmission } from "@/lib/email/intake-notifications";
 import { FORM_SUBMIT_ERROR_MESSAGE } from "@/lib/site-config";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { logAdminAudit } from "@/lib/admin/phase1-actions";
+import { trackGrowthEvent } from "@/lib/growth/track-event";
+import { markAbandonedInquirySubmitted } from "@/lib/growth/abandoned-inquiry-actions";
+import { completeOnboardingStep } from "@/lib/growth/onboarding-checklist";
 import { parseCommaList } from "./profile-utils";
 import {
   PUBLIC_TRAVEL_AGENT_STATUS,
@@ -387,6 +390,17 @@ export async function submitTravelAgentInquiry(input: {
       { label: "Message", value: input.message },
     ],
   }).catch((e) => console.error("[travel-agent-inquiry] email failed", e));
+
+  trackGrowthEvent({
+    eventType: "agent_inquiry",
+    userId,
+    email: input.email,
+    relatedId: data.id,
+    metadata: { profile_id: input.profileId, agent: agentLabel },
+    context: { source_path: "/travel-agents" },
+  });
+  markAbandonedInquirySubmitted(input.email, "agent", data.id);
+  completeOnboardingStep("submit_first_request");
 
   return { ok: true, data: { id: data.id } };
 }

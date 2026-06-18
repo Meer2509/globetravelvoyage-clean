@@ -11,6 +11,8 @@ import {
   fetchTravelAgentServices,
 } from "@/lib/supabase/travel-agent-actions";
 import { fetchReviewsForTarget } from "@/lib/supabase/review-actions";
+import { fetchPublicTrustProfile } from "@/lib/trust/verification-actions";
+import { PublicTrustProfileCard } from "@/components/trust/PublicTrustProfileCard";
 
 export async function generateMetadata({
   params,
@@ -39,6 +41,8 @@ export default async function TravelAgentProfilePage({
   ]);
 
   if (!agent) notFound();
+
+  const trustProfile = await fetchPublicTrustProfile(agent.user_id);
 
   const displayName = agent.agency_name
     ? `${agent.full_name} · ${agent.agency_name}`
@@ -71,6 +75,8 @@ export default async function TravelAgentProfilePage({
       <div className="container-px py-10">
         <div className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
+            {trustProfile && <PublicTrustProfileCard profile={trustProfile} />}
+
             {agent.bio && (
               <div className="card p-6">
                 <h2 className="font-bold text-navy mb-2">About</h2>

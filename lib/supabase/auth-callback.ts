@@ -10,6 +10,11 @@ import { applyUserRole } from "./role-sync";
 import { ensureProfileForUserId } from "./ensure-user-profile";
 import { normalizeUserRole } from "@/lib/auth";
 import type { UserRole } from "./types";
+import { cookies } from "next/headers";
+import { parseGrowthCookie, GROWTH_COOKIE_NAME } from "@/lib/growth/attribution-cookie";
+import { linkAttributionToUser } from "@/lib/growth/attribution-actions";
+import { ensureOnboardingChecklistForUser } from "@/lib/growth/onboarding-checklist";
+import { trackGrowthEvent } from "@/lib/growth/track-event";
 
 const ROLE_DASHBOARD: Record<UserRole, string> = {
   customer: "/dashboard/customer",
@@ -54,9 +59,9 @@ async function ensureAuthUserProfile(user: {
   id: string;
   email?: string | null;
   user_metadata?: Record<string, unknown>;
-}) {
+}): Promise<boolean> {
   const admin = createAdminClient();
-  if (!admin) return;
+  if (!admin) return false;
 
   const { data: existing } = await admin
     .from("profiles")
@@ -64,7 +69,7 @@ async function ensureAuthUserProfile(user: {
     .eq("id", user.id)
     .maybeSingle();
 
-  if (existing) return;
+  if (existing) return false;
 
   const meta = user.user_metadata ?? {};
   const role = normalizeUserRole(meta.role as string | undefined);
@@ -80,6 +85,8 @@ async function ensureAuthUserProfile(user: {
     businessType: (meta.business_type as string | undefined) ?? role,
     bio: (meta.bio as string | undefined) ?? null,
   });
+
+  return true;
 }
 
 async function resolveRoleAfterCallback(user: {
@@ -134,7 +141,48 @@ export async function completeAuthCallback(input: {
   }
 
   const user = data.session.user;
-  await ensureAuthUserProfile(user);
+  const isNewUser = await ensureAuthUserProfile(user);
+  if (isNewUser) {
+    trackGrowthEvent({
+      eventType: "signup",
+      userId: user.id,
+      email: user.email ?? null,
+    });
+    ensureOnboardingChecklistForUser(user.id);
+    const cookieStore = await cookies();
+    const payload = parseGrowthCookie(cookieStore.get(GROWTH_COOKIE_NAME)?.value);
+    if (payload?.session_id) {
+      linkAttributionToUser(payload.session_id, user.id);
+    }
+
+    const meta = user.user_metadata ?? {};
+    const role = normalizeUserRole(meta.role as string | undefined);
+    const referralCode = meta.referral_code as string | undefined;
+    const providerRoles = ["visa_agent", "travel_agency", "tour_guide", "property_host"];
+    if (providerRoles.includes(role) && user.email) {
+      const { ensureProviderOnboardingProgress } = await import("@/lib/provider-acquisition/onboarding-progress");
+      const { sendProviderOnboardingWelcome } = await import("@/lib/provider-acquisition/emails");
+      const { recordProviderReferralAtSignup } = await import("@/lib/provider-acquisition/referral-actions");
+      const { trackProviderSignup } = await import("@/lib/provider-acquisition/track-landing");
+
+      await ensureProviderOnboardingProgress(user.id, role as import("@/lib/provider-acquisition/types").ProviderAcquisitionRole);
+      sendProviderOnboardingWelcome({
+        to: user.email,
+        userId: user.id,
+        providerRole: role as import("@/lib/provider-acquisition/types").ProviderAcquisitionRole,
+        fullName: (meta.full_name as string | undefined) ?? undefined,
+      });
+      trackProviderSignup(role as import("@/lib/provider-acquisition/types").ProviderAcquisitionRole, user.id, user.email);
+      if (referralCode) {
+        recordProviderReferralAtSignup({
+          referredUserId: user.id,
+          referredEmail: user.email,
+          providerRole: role,
+          referralCode,
+        });
+      }
+    }
+  }
   const role = await resolveRoleAfterCallback(user);
 
   if (input.type === "recovery") {

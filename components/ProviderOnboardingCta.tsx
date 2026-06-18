@@ -2,10 +2,10 @@ import Link from "next/link";
 import { PROVIDER_ONBOARDING_HEADLINE } from "@/lib/launch-trust";
 
 const ROLES = [
-  { label: "Visa expert", href: "/register?role=agent", emoji: "👔" },
-  { label: "Travel agency", href: "/register?role=agency", emoji: "🏢" },
-  { label: "Tour guide", href: "/register?role=guide", emoji: "🧭" },
-  { label: "Property host", href: "/register?role=host", emoji: "🏠" },
+  { label: "Visa expert", href: "/providers/visa-expert", emoji: "👔" },
+  { label: "Travel agency", href: "/providers/travel-agent", emoji: "🏢" },
+  { label: "Tour guide", href: "/providers/tour-organizer", emoji: "🧭" },
+  { label: "Property host", href: "/providers/property-host", emoji: "🏠" },
 ] as const;
 
 export function ProviderOnboardingCta({ compact = false }: { compact?: boolean }) {
@@ -16,9 +16,14 @@ export function ProviderOnboardingCta({ compact = false }: { compact?: boolean }
           <p className="font-bold text-navy text-sm">{PROVIDER_ONBOARDING_HEADLINE}</p>
           <p className="text-xs text-muted mt-0.5">List services, receive leads, and earn through Stripe Connect payouts.</p>
         </div>
-        <Link href="/register?role=agent" className="btn-primary shrink-0 px-5 py-2.5 text-sm">
-          Start provider onboarding
-        </Link>
+        <div className="flex flex-wrap gap-2 shrink-0">
+          <Link href="/providers" className="btn-primary px-5 py-2.5 text-sm">
+            Provider programs
+          </Link>
+          <Link href="/register?role=agent" className="btn-outline px-5 py-2.5 text-sm">
+            Apply now
+          </Link>
+        </div>
       </div>
     );
   }
@@ -47,8 +52,8 @@ export function ProviderOnboardingCta({ compact = false }: { compact?: boolean }
               </Link>
             ))}
           </div>
-          <Link href="/register?role=agent" className="btn-gold mt-8 inline-flex px-8 py-3 text-sm">
-            Become a Verified Provider
+          <Link href="/providers" className="btn-gold mt-8 inline-flex px-8 py-3 text-sm">
+            View all provider programs
           </Link>
         </div>
       </div>

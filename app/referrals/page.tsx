@@ -7,6 +7,7 @@ import { Icon } from "@/components/Icon";
 import { Disclaimer } from "@/components/Disclaimer";
 import { areReferralRewardsLive, REFERRAL_LAUNCHING_SOON } from "@/lib/launch-trust";
 import { submitReferralSignup } from "@/lib/supabase/actions";
+import { ProviderReferralPanel } from "@/components/provider-acquisition/ProviderReferralPanel";
 import { FORM_SUBMIT_SUCCESS_MESSAGE, FORM_SUBMIT_ERROR_MESSAGE } from "@/lib/site-config";
 
 type CommissionStatus = "pending" | "approved" | "paid";
@@ -130,6 +131,8 @@ export default function ReferralsPage() {
       </div>
 
       <div className="container-px py-8 space-y-6">
+
+        <ProviderReferralPanel />
 
         {!areReferralRewardsLive() && (
           <div className="rounded-2xl border border-gold/25 bg-gold/5 px-5 py-4 text-sm text-muted">

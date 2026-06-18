@@ -5,6 +5,8 @@ import {
   rateLimitHeaders,
 } from "@/lib/rate-limit";
 import { getSessionUserId } from "@/lib/auth-server";
+import { trackGrowthEvent } from "@/lib/growth/track-event";
+import { completeOnboardingStep } from "@/lib/growth/onboarding-checklist";
 
 const SYSTEM_PROMPT = `You are Globe Travel Voyage's premium AI travel concierge. Provide helpful, structured travel guidance including visas, itineraries, budgets, and hotel suggestions. Always include a brief disclaimer that you are not a government agency and visa approval is never guaranteed. Be concise, professional, and luxury-branded in tone. Use markdown sparingly for emphasis.`;
 
@@ -95,6 +97,15 @@ export async function POST(request: Request) {
     const text = data.choices?.[0]?.message?.content?.trim() ?? "";
     if (!text) {
       return NextResponse.json({ error: "Empty response from AI service." }, { status: 502 });
+    }
+
+    trackGrowthEvent({
+      eventType: "concierge_usage",
+      userId,
+      metadata: { prompt_chars: userContent.length, json: useJson },
+    });
+    if (userId) {
+      completeOnboardingStep("try_concierge");
     }
 
     return NextResponse.json({ text, source: "openai" });

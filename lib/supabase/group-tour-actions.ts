@@ -7,6 +7,9 @@ import { notifyIntakeSubmission } from "@/lib/email/intake-notifications";
 import { FORM_SUBMIT_ERROR_MESSAGE } from "@/lib/site-config";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { logAdminAudit } from "@/lib/admin/phase1-actions";
+import { trackGrowthEvent } from "@/lib/growth/track-event";
+import { markAbandonedInquirySubmitted } from "@/lib/growth/abandoned-inquiry-actions";
+import { completeOnboardingStep } from "@/lib/growth/onboarding-checklist";
 import { parseCommaList } from "./profile-utils";
 import {
   GROUP_TOUR_SELECT,
@@ -355,7 +358,19 @@ export async function submitGroupTourRequest(input: {
     ],
   }).catch((e) => console.error("[group-tour-request] email failed", e));
 
-  return { ok: true, data: { id: (data as { id: string }).id } };
+  const requestId = (data as { id: string }).id;
+  trackGrowthEvent({
+    eventType: "tour_request",
+    userId,
+    email: input.email,
+    relatedId: requestId,
+    metadata: { tour_id: input.tourId, title: row.title, travelers },
+    context: { source_path: "/group-tours" },
+  });
+  markAbandonedInquirySubmitted(input.email, "tour", requestId);
+  completeOnboardingStep("submit_first_request");
+
+  return { ok: true, data: { id: requestId } };
 }
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
