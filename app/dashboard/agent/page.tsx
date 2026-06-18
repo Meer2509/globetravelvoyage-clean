@@ -334,9 +334,10 @@ export default function AgentDashboard() {
               <p className="sm:col-span-2"><span className="text-charcoal/50">Languages:</span> <strong className="text-navy">{joinCommaList(user.result.visaExpert?.languages) || "—"}</strong></p>
               <p className="sm:col-span-2"><span className="text-charcoal/50">Services:</span> <strong className="text-navy">{services.length > 0 ? `${services.length} service(s) listed` : "—"}</strong></p>
             </div>
-            <div className="mt-5 flex gap-3">
+            <div className="mt-5 flex flex-wrap gap-3">
               <Link href="/dashboard/profile" className="btn-primary px-5 py-2.5 text-sm">Edit profile</Link>
-              <Link href="/agents" className="btn-outline px-5 py-2.5 text-sm">View public marketplace</Link>
+              <Link href="/dashboard/agent/marketplace" className="btn-primary px-5 py-2.5 text-sm">Travel agent marketplace</Link>
+              <Link href="/agents" className="btn-outline px-5 py-2.5 text-sm">View visa experts</Link>
             </div>
           </>
         ) : (

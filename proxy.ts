@@ -54,7 +54,7 @@ const ROLE_DASHBOARD_PREFIXES: Record<UserRole, string[]> = {
     "/dashboard/profile",
     "/dashboard/messages",
   ],
-  visa_agent: ["/dashboard/agent", "/dashboard/profile", "/dashboard/payouts", "/dashboard/messages"],
+  visa_agent: ["/dashboard/agent", "/dashboard/agent/marketplace", "/dashboard/profile", "/dashboard/payouts", "/dashboard/messages"],
   travel_agency: ["/dashboard/agency", "/dashboard/profile", "/dashboard/payouts", "/dashboard/messages"],
   tour_guide: ["/dashboard/guide", "/dashboard/profile", "/dashboard/payouts", "/dashboard/messages"],
   property_host: ["/dashboard/host", "/dashboard/host/properties", "/dashboard/profile", "/dashboard/payouts", "/dashboard/messages"],

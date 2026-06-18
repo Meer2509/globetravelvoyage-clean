@@ -58,6 +58,7 @@ const nav = [
     href: "/agents",
     sub: [
       { label: "Visa Experts",         href: "/agents",       desc: "Verified visa agents" },
+      { label: "Travel Agents",        href: "/travel-agents", desc: "Verified travel agents" },
       { label: "Travel Agencies",      href: "/agencies",     desc: "Curated agency packages" },
       { label: "Contact an Expert",    href: "/lead/contact", desc: "Send a direct enquiry" },
       { label: "Referral Program",     href: "/referrals",    desc: "Earn commissions" },

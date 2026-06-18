@@ -11,7 +11,7 @@ export function ReviewForm({
   targetName,
   onSubmitted,
 }: {
-  targetType: "visa_agent" | "agency" | "tour_guide" | "property" | "tour";
+  targetType: "visa_agent" | "agency" | "tour_guide" | "property" | "tour" | "travel_agent";
   targetId: string;
   targetName: string;
   onSubmitted?: () => void;

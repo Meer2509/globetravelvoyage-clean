@@ -6,7 +6,7 @@ import { createAdminClient } from "./admin";
 export type ReviewResult = { ok: true; id: string } | { ok: false; error: string };
 
 export interface SubmitReviewInput {
-  targetType: "visa_agent" | "agency" | "tour_guide" | "property" | "tour";
+  targetType: "visa_agent" | "agency" | "tour_guide" | "property" | "tour" | "travel_agent";
   targetId: string;
   rating: number;
   title?: string;
@@ -87,6 +87,7 @@ async function recalculateTargetRating(
     tour_guide: "tour_guides",
     property: "property_listings",
     tour: "tours",
+    travel_agent: "travel_agent_profiles",
   };
 
   const table = tableMap[targetType];

@@ -18,6 +18,7 @@ const navCols = [
       { label: "USA from Pakistan 🇵🇰→🇺🇸", href: "/visa/usa-from-pakistan" },
       { label: "All Countries A–Z", href: "/visa/countries" },
       { label: "Visa Experts Marketplace", href: "/agents" },
+      { label: "Travel Agents Marketplace", href: "/travel-agents" },
       { label: "Visa Intelligence Hub", href: "/visa" },
     ],
   },

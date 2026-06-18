@@ -821,6 +821,7 @@ export default function AdminDashboard() {
               { href: "/admin/bookings", label: "Booking requests" },
               { href: "/admin/support", label: "Support tickets" },
               { href: "/admin/properties", label: "Property requests" },
+              { href: "/admin/travel-agents", label: "Travel agents" },
               { href: "/admin/providers", label: "Provider applications" },
               { href: "/admin/referrals", label: "Referrals" },
               { href: "/admin/reviews", label: "Reviews" },

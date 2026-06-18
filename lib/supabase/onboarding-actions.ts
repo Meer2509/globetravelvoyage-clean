@@ -13,6 +13,7 @@ import type { UserRole } from "./types";
 import { notifyIntakeSubmission } from "@/lib/email/intake-notifications";
 import { FORM_SUBMIT_ERROR_MESSAGE } from "@/lib/site-config";
 import { parseCommaList } from "./profile-utils";
+import { ensureTravelAgentProfileFromOnboarding } from "./travel-agent-actions";
 
 export type OnboardingResult = { ok: true } | { ok: false; error: string };
 
@@ -83,6 +84,16 @@ export async function completeAgentOnboarding(input: AgentOnboardingInput): Prom
   });
 
   if (!expertResult.ok) return saveError();
+
+  await ensureTravelAgentProfileFromOnboarding({
+    userId: profileResult.profile.id,
+    fullName: input.fullName,
+    bio: input.bio ?? undefined,
+    specialties: input.specializations ?? [],
+    countries: input.country ? [input.country] : [],
+    languages: input.spokenLanguages ?? [],
+    yearsExperience: input.yearsExp ? parseInt(input.yearsExp, 10) || null : null,
+  });
 
   const customerEmail = input.email ?? profileResult.profile.email;
   await notifyIntakeSubmission({
