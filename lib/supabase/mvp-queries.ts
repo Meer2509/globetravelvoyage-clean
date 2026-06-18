@@ -303,18 +303,23 @@ export interface MarketplacePropertyRow {
 }
 
 export async function fetchMarketplaceProperties(): Promise<MarketplacePropertyRow[]> {
-  const admin = createAdminClient();
-  if (!admin) return [];
-
-  const { data, error } = await admin
-    .from("property_listings")
-    .select("id, title, city, country, listing_type, property_type, price, price_period, beds, baths, area_sqft, status, created_at")
-    .in("status", ["active", "approved", "published"])
-    .order("created_at", { ascending: false })
-    .limit(12);
-
-  if (error || !data?.length) return [];
-  return data as MarketplacePropertyRow[];
+  const { fetchApprovedPropertyListings } = await import("./property-actions");
+  const rows = await fetchApprovedPropertyListings();
+  return rows.map((p) => ({
+    id: p.id,
+    title: p.title,
+    city: p.city,
+    country: p.country,
+    listing_type: p.listing_type,
+    property_type: p.property_type,
+    price: p.price,
+    price_period: p.price_period,
+    beds: p.beds,
+    baths: p.baths,
+    area_sqft: p.area_sqft,
+    status: p.status,
+    created_at: p.created_at,
+  }));
 }
 
 export async function fetchMarketplaceExperts(): Promise<MarketplaceExpertRow[]> {

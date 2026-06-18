@@ -4,6 +4,7 @@ import { AdminPropertyConsole } from "@/components/admin/AdminPropertyConsole";
 import { requireAdmin } from "@/lib/auth-server";
 import { fetchAdminIntakeRows } from "@/lib/admin/fetch-intake";
 import { fetchPropertyInquiriesForAdmin } from "@/lib/supabase/property-actions";
+import type { PropertyListingRow } from "@/lib/supabase/property-types";
 
 export const metadata: Metadata = {
   title: "Properties — Globe Travel Voyage Admin",
@@ -22,7 +23,10 @@ export default async function AdminPropertiesPage() {
 
   return (
     <AdminPropertyConsole
-      listings={listings}
+      listings={listings.map((row) => ({
+        ...(row as PropertyListingRow),
+        is_featured: Boolean((row as { is_featured?: boolean }).is_featured),
+      }))}
       inquiries={inquiries}
       listingsError={listingsError}
       inquiriesError={inquiriesError}

@@ -96,6 +96,11 @@ export default function HostDashboard() {
 
     listings: (
       <div className="space-y-4">
+        <div className="flex justify-end">
+          <Link href="/dashboard/host/properties" className="text-sm font-semibold text-blue hover:underline">
+            Manage all listings →
+          </Link>
+        </div>
         {listings.length === 0 ? (
           <DashboardEmpty
             title="No listings"

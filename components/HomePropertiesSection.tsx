@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SectionHeader } from "@/components/SectionHeader";
 import { Disclaimer } from "@/components/Disclaimer";
-import { fetchMarketplaceProperties } from "@/lib/supabase/mvp-queries";
+import { fetchApprovedPropertyListings } from "@/lib/supabase/property-actions";
 
 const PROPERTY_EMOJI: Record<string, string> = {
   apartment: "🏢",
@@ -27,7 +27,7 @@ function formatPrice(price: number | null, period: string | null, listingType: s
 }
 
 export async function HomePropertiesSection() {
-  const properties = await fetchMarketplaceProperties();
+  const properties = await fetchApprovedPropertyListings();
 
   return (
     <section className="section bg-soft">
@@ -59,12 +59,9 @@ export async function HomePropertiesSection() {
 
         {properties.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed border-soft-200 bg-white py-16 text-center">
-            <p className="font-bold text-navy text-lg">Request a custom property quote</p>
+            <p className="font-bold text-navy text-lg">Property listings are currently being reviewed.</p>
             <p className="mt-2 text-sm text-muted max-w-md mx-auto">
-              A Globe Travel Voyage specialist will review your request with verified hosts.
-            </p>
-            <p className="mt-2 max-w-md mx-auto text-sm text-muted">
-              Verified property hosts are being onboarded. Submit your listing now to be reviewed by our team.
+              New host submissions are reviewed by our admin team before they appear here.
             </p>
             <Link href="/properties/post" className="btn-primary mt-6 px-6 py-2.5 text-sm">
               Post a property listing
@@ -79,7 +76,7 @@ export async function HomePropertiesSection() {
                 p.listing_type === "sale" ? "bg-gold" : p.listing_type === "short" ? "bg-blue" : "bg-emerald-500";
 
               return (
-                <Link key={p.id} href="/properties" className="card card-hover group overflow-hidden flex flex-col">
+                <Link key={p.id} href={`/properties/${p.id}`} className="card card-hover group overflow-hidden flex flex-col">
                   <div className="relative h-44 bg-gradient-to-br from-blue/20 to-navy/20 flex items-center justify-center">
                     <span className="text-5xl opacity-70">{emoji}</span>
                     <span className={`absolute right-3 top-3 rounded-full px-2 py-0.5 text-[10px] font-bold text-white ${typeColor}`}>

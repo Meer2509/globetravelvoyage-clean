@@ -589,7 +589,14 @@ function mapPropertyListingInsertError(error: {
   else if (error.code === "23502") code = "GTV-PL-011";
   else if (error.code === "22P02") code = "GTV-PL-012";
   else if (error.code === "23503") code = "GTV-PL-013";
-  return propertyListingFailure(code, debug, { supabase: error });
+  else if (error.code === "42501") code = "GTV-PL-014";
+  else if (error.code === "PGRST204") code = "GTV-PL-015";
+  return propertyListingFailure(code, debug, {
+    supabaseCode: error.code ?? null,
+    supabaseMessage: error.message,
+    supabaseDetails: error.details ?? null,
+    supabaseHint: error.hint ?? null,
+  });
 }
 
 export interface PropertyListingInput {
@@ -660,6 +667,14 @@ export async function submitPropertyListing(input: PropertyListingInput): Promis
     .single();
 
   if (error) {
+    console.error("[property listing] Supabase insert failed", {
+      table: PROPERTY_LISTING_TABLE,
+      postgresCode: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      row,
+    });
     return mapPropertyListingInsertError(error);
   }
 

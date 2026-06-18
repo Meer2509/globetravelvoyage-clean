@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { PropertiesCatalog } from "@/components/PropertiesCatalog";
 import { ProviderOnboardingCta } from "@/components/ProviderOnboardingCta";
-import { fetchMarketplaceProperties } from "@/lib/supabase/mvp-queries";
+import { fetchApprovedPropertyListings } from "@/lib/supabase/property-actions";
 import { fetchUserSavedIds } from "@/lib/supabase/saved-actions";
 
 export default async function PropertiesPage() {
   const [properties, savedIds] = await Promise.all([
-    fetchMarketplaceProperties(),
+    fetchApprovedPropertyListings(),
     fetchUserSavedIds("property"),
   ]);
 

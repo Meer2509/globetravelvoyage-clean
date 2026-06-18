@@ -44,3 +44,10 @@ DROP POLICY IF EXISTS "Public read published property listings" ON public.proper
 CREATE POLICY "Public read published property listings"
   ON public.property_listings FOR SELECT
   USING (status IN ('active', 'approved', 'published'));
+
+-- Only needed if inserts use the anon/authenticated client instead of service role.
+-- submitPropertyListing() uses SUPABASE_SERVICE_ROLE_KEY and bypasses RLS.
+DROP POLICY IF EXISTS "Service intake insert property listings" ON public.property_listings;
+CREATE POLICY "Service intake insert property listings"
+  ON public.property_listings FOR INSERT
+  WITH CHECK (true);

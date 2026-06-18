@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { PremiumMarketplaceEmpty } from "@/components/PremiumMarketplaceEmpty";
+import Link from "next/link";
 import { FilterBar } from "@/components/FilterBar";
 import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
-import { PropertyInquiryModal } from "@/components/properties/PropertyInquiryModal";
 import { SaveButton } from "@/components/SaveButton";
 import { PROVIDER_ONBOARDING_HEADLINE } from "@/lib/launch-trust";
-import type { MarketplacePropertyRow } from "@/lib/supabase/mvp-queries";
+import type { PropertyListingRow } from "@/lib/supabase/property-types";
 
 const PROPERTY_EMOJI: Record<string, string> = {
   apartment: "🏢",
@@ -37,13 +36,9 @@ export function PropertiesCatalog({
   properties,
   savedIds = [],
 }: {
-  properties: MarketplacePropertyRow[];
+  properties: PropertyListingRow[];
   savedIds?: string[];
 }) {
-  const [modal, setModal] = useState<{ open: boolean; property: MarketplacePropertyRow | null }>({
-    open: false,
-    property: null,
-  });
   const [search, setSearch] = useState("");
   const [chips, setChips] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
@@ -128,12 +123,21 @@ export function PropertiesCatalog({
         </div>
 
         <div className="mb-5 text-sm text-muted">
-          {filtered.length} listing{filtered.length !== 1 ? "s" : ""} available
+          {filtered.length} approved listing{filtered.length !== 1 ? "s" : ""}
           {search || chips.length > 0 ? " — filtered" : ""}
         </div>
 
         {properties.length === 0 ? (
-          <PremiumMarketplaceEmpty variant="properties" />
+          <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-soft-200 py-16 text-center px-6">
+            <span className="text-4xl mb-3">🏠</span>
+            <p className="font-semibold text-navy text-lg">Property listings are currently being reviewed.</p>
+            <p className="mt-2 text-sm text-muted max-w-md">
+              New host submissions are reviewed by our admin team before they appear here. Check back soon or post your own listing.
+            </p>
+            <Link href="/properties/post" className="btn-primary mt-6 px-6 py-3 text-sm">
+              Post a property listing
+            </Link>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-soft-200 py-16 text-center">
             <span className="text-4xl mb-3">🔍</span>
@@ -147,9 +151,9 @@ export function PropertiesCatalog({
               const listingLabel = LISTING_LABEL[property.listing_type] ?? property.listing_type;
               return (
                 <div key={property.id} className="card card-hover flex flex-col overflow-hidden">
-                  <div className="relative flex h-36 items-center justify-center bg-gradient-to-br from-soft to-soft-200 text-5xl">
+                  <Link href={`/properties/${property.id}`} className="relative flex h-36 items-center justify-center bg-gradient-to-br from-soft to-soft-200 text-5xl">
                     <span>{emoji}</span>
-                    <div className="absolute right-2 top-2">
+                    <div className="absolute right-2 top-2" onClick={(e) => e.preventDefault()}>
                       <SaveButton
                         id={property.id}
                         itemType="property"
@@ -158,6 +162,11 @@ export function PropertiesCatalog({
                         className="rounded-lg bg-white/80 shadow-sm"
                       />
                     </div>
+                    {property.is_featured && (
+                      <span className="absolute left-3 bottom-3 rounded-full bg-gold px-2.5 py-1 text-[10px] font-bold text-navy">
+                        Featured
+                      </span>
+                    )}
                     <span
                       className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-bold ${
                         property.listing_type === "sale" ? "bg-gold text-navy" : "bg-blue/90 text-white"
@@ -165,9 +174,11 @@ export function PropertiesCatalog({
                     >
                       {listingLabel}
                     </span>
-                  </div>
+                  </Link>
                   <div className="flex flex-1 flex-col p-5">
-                    <h3 className="font-bold text-navy">{property.title}</h3>
+                    <Link href={`/properties/${property.id}`} className="hover:text-blue">
+                      <h3 className="font-bold text-navy">{property.title}</h3>
+                    </Link>
                     <p className="text-sm text-muted">
                       {property.city}
                       {property.country ? `, ${property.country}` : ""}
@@ -185,12 +196,12 @@ export function PropertiesCatalog({
                         </p>
                         <p className="text-xs text-muted capitalize">{property.property_type}</p>
                       </div>
-                      <button
-                        onClick={() => setModal({ open: true, property })}
-                        className="btn-primary w-full py-2.5 text-sm"
+                      <Link
+                        href={`/properties/${property.id}`}
+                        className="btn-primary block w-full py-2.5 text-sm text-center"
                       >
-                        {property.listing_type === "sale" ? "Inquire — free" : "Request quote — free"}
-                      </button>
+                        {property.listing_type === "sale" ? "View & inquire" : "View & request quote"}
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -212,15 +223,9 @@ export function PropertiesCatalog({
           title={PROVIDER_ONBOARDING_HEADLINE}
           subtitle="Create a host account to publish listings, capture leads and manage inquiries."
           primary={{ label: "Become a property host", href: "/register?role=host" }}
-          secondary={{ label: "Open host dashboard", href: "/dashboard/host" }}
+          secondary={{ label: "Manage my listings", href: "/dashboard/host/properties" }}
         />
       </div>
-
-      <PropertyInquiryModal
-        open={modal.open}
-        onClose={() => setModal({ open: false, property: null })}
-        property={modal.property ? { id: modal.property.id, title: modal.property.title } : null}
-      />
     </>
   );
 }
