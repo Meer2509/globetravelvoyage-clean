@@ -142,7 +142,7 @@ export function getConciergeActions(intent: ConciergeIntent): ConciergeAction[] 
           id: "tours-explore",
           label: "Explore Group Tours",
           kind: "link",
-          href: "/tours",
+          href: "/group-tours",
           variant: "primary",
         },
       ];

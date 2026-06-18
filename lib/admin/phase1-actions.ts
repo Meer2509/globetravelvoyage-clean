@@ -28,7 +28,7 @@ export async function logAdminAudit(input: {
 
 export async function moderateReview(
   reviewId: string,
-  action: "hide" | "show" | "delete"
+  action: "hide" | "show" | "delete" | "approve" | "reject"
 ): Promise<Phase1AdminResult> {
   const adminAuth = await requireAdmin();
   if (!adminAuth.ok) return { ok: false, error: adminAuth.error };
@@ -36,15 +36,43 @@ export async function moderateReview(
   const admin = createAdminClient();
   if (!admin) return { ok: false, error: "Supabase is not configured." };
 
+  const { data: existing } = await admin
+    .from("reviews")
+    .select("target_type, target_id")
+    .eq("id", reviewId)
+    .maybeSingle();
+
   if (action === "delete") {
     const { error } = await admin.from("reviews").delete().eq("id", reviewId);
+    if (error) return { ok: false, error: error.message };
+  } else if (action === "approve") {
+    const { error } = await admin
+      .from("reviews")
+      .update({ status: "approved", is_hidden: false, updated_at: new Date().toISOString() })
+      .eq("id", reviewId);
+    if (error) return { ok: false, error: error.message };
+  } else if (action === "reject") {
+    const { error } = await admin
+      .from("reviews")
+      .update({ status: "rejected", is_hidden: true, updated_at: new Date().toISOString() })
+      .eq("id", reviewId);
     if (error) return { ok: false, error: error.message };
   } else {
     const { error } = await admin
       .from("reviews")
-      .update({ is_hidden: action === "hide", updated_at: new Date().toISOString() })
+      .update({
+        is_hidden: action === "hide",
+        status: action === "hide" ? "rejected" : "approved",
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", reviewId);
     if (error) return { ok: false, error: error.message };
+  }
+
+  if (existing) {
+    const row = existing as { target_type: string; target_id: string };
+    const { recalculateReviewTargetRating } = await import("@/lib/supabase/review-actions");
+    await recalculateReviewTargetRating(row.target_type, row.target_id);
   }
 
   await logAdminAudit({
@@ -95,7 +123,7 @@ export async function fetchAdminReviews(limit = 100) {
 
   const { data, error } = await admin
     .from("reviews")
-    .select("id, reviewer_id, target_type, target_id, rating, title, body, is_verified, is_hidden, created_at")
+    .select("id, reviewer_id, target_type, target_id, rating, title, body, is_verified, is_hidden, status, created_at")
     .order("created_at", { ascending: false })
     .limit(limit);
 

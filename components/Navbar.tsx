@@ -50,7 +50,7 @@ const nav = [
       { label: "Visa guidance",       href: "/concierge?topic=visa", desc: "Requirements & document checklists" },
       { label: "Trip planning",       href: "/concierge?topic=trip", desc: "Itineraries & budget breakdown" },
       { label: "Properties",          href: "/properties",         desc: "Rent, buy or list property" },
-      { label: "Group tours",         href: "/tours",              desc: "Guided experiences & departures" },
+      { label: "Group tours",         href: "/group-tours",              desc: "Guided experiences & departures" },
     ],
   },
   {

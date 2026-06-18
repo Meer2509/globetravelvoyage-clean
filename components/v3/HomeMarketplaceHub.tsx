@@ -40,7 +40,7 @@ const MARKETPLACES = [
     key: "tours" as const,
     title: "Group Tours",
     description: "Curated guided experiences, day trips and premium group departures.",
-    href: "/tours",
+    href: "/group-tours",
     icon: "tour" as const,
     accent: "from-orange-400/20 to-orange-400/5",
   },

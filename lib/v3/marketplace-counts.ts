@@ -39,6 +39,20 @@ async function countRows(
   return count ?? 0;
 }
 
+async function countGroupTours(
+  admin: NonNullable<ReturnType<typeof createAdminClient>>
+): Promise<number> {
+  const { count, error } = await admin
+    .from("group_tours")
+    .select("*", { count: "exact", head: true })
+    .in("status", ["active", "approved"]);
+  if (error) {
+    console.error("[v3-counts] group_tours count failed", error.message);
+    return 0;
+  }
+  return count ?? 0;
+}
+
 export async function fetchV3MarketplaceCounts(): Promise<V3MarketplaceCounts> {
   const admin = createAdminClient();
   const flightSearchLive = Boolean(process.env.DUFFEL_ACCESS_TOKEN?.trim());
@@ -54,7 +68,7 @@ export async function fetchV3MarketplaceCounts(): Promise<V3MarketplaceCounts> {
         { column: "verification_status", value: PUBLIC_TRAVEL_AGENT_STATUS },
         { column: "is_active", value: true },
       ]),
-      countRows(admin, "tours", [{ column: "is_active", value: true }]),
+      countGroupTours(admin),
       countRows(admin, "visa_experts", [
         { column: "verification_status", value: "verified" },
         { column: "is_active", value: true },

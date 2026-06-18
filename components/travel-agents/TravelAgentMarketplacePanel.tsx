@@ -143,9 +143,14 @@ export function TravelAgentMarketplacePanel({ userId }: { userId: string }) {
             <p className="text-sm text-muted capitalize">Status: {profile.verification_status}</p>
           </div>
           {profile.verification_status === "verified" && (
-            <Link href={`/travel-agents/${profile.id}`} className="text-sm font-semibold text-blue hover:underline">
-              View public profile →
-            </Link>
+            <div className="flex flex-wrap gap-3">
+              <Link href={`/travel-agents/${profile.id}`} className="text-sm font-semibold text-blue hover:underline">
+                View public profile →
+              </Link>
+              <Link href="/dashboard/agent/group-tours" className="text-sm font-semibold text-blue hover:underline">
+                Manage group tours →
+              </Link>
+            </div>
           )}
         </div>
       )}

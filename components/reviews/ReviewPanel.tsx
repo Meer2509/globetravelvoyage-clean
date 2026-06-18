@@ -5,13 +5,15 @@ import { submitReview } from "@/lib/supabase/review-actions";
 import { FORM_SUBMIT_ERROR_MESSAGE } from "@/lib/site-config";
 import { Stars } from "@/components/Stars";
 
+import type { ReviewTargetType } from "@/lib/supabase/group-tour-types";
+
 export function ReviewForm({
   targetType,
   targetId,
   targetName,
   onSubmitted,
 }: {
-  targetType: "visa_agent" | "agency" | "tour_guide" | "property" | "tour" | "travel_agent";
+  targetType: ReviewTargetType | "agency" | "tour_guide" | "tour";
   targetId: string;
   targetName: string;
   onSubmitted?: () => void;
@@ -46,7 +48,7 @@ export function ReviewForm({
   if (done) {
     return (
       <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-        Thank you. Your review of {targetName} has been submitted.
+        Thank you. Your review of {targetName} has been submitted and is pending moderation.
       </p>
     );
   }

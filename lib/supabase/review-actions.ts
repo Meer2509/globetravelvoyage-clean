@@ -2,11 +2,12 @@
 
 import { createServerSupabaseClient } from "./server";
 import { createAdminClient } from "./admin";
+import type { ReviewTargetType } from "./group-tour-types";
 
 export type ReviewResult = { ok: true; id: string } | { ok: false; error: string };
 
 export interface SubmitReviewInput {
-  targetType: "visa_agent" | "agency" | "tour_guide" | "property" | "tour" | "travel_agent";
+  targetType: ReviewTargetType | "agency" | "tour_guide" | "tour";
   targetId: string;
   rating: number;
   title?: string;
@@ -52,16 +53,14 @@ export async function submitReview(input: SubmitReviewInput): Promise<ReviewResu
       title: input.title ?? null,
       body: input.body ?? null,
       is_verified: Boolean(input.paymentId),
+      status: "pending",
+      is_hidden: false,
     })
     .select("id")
     .single();
 
   if (error) return { ok: false, error: error.message };
-  const reviewId = (data as { id: string }).id;
-
-  await recalculateTargetRating(admin, input.targetType, input.targetId);
-
-  return { ok: true, id: reviewId };
+  return { ok: true, id: (data as { id: string }).id };
 }
 
 async function recalculateTargetRating(
@@ -76,6 +75,7 @@ async function recalculateTargetRating(
     .select("rating")
     .eq("target_type", targetType)
     .eq("target_id", targetId)
+    .eq("status", "approved")
     .eq("is_hidden", false);
 
   const ratings = (reviews ?? []).map((r) => Number((r as { rating: number }).rating));
@@ -88,6 +88,7 @@ async function recalculateTargetRating(
     property: "property_listings",
     tour: "tours",
     travel_agent: "travel_agent_profiles",
+    group_tour: "group_tours",
   };
 
   const table = tableMap[targetType];
@@ -121,6 +122,7 @@ export async function fetchReviewsForTarget(
     .select("id, rating, title, body, is_verified, created_at, reviewer_id")
     .eq("target_type", targetType)
     .eq("target_id", targetId)
+    .eq("status", "approved")
     .eq("is_hidden", false)
     .order("created_at", { ascending: false })
     .limit(20);
@@ -159,4 +161,13 @@ export async function fetchReviewsForTarget(
       reviewer_name: nameMap.get(row.reviewer_id) ?? "Traveler",
     };
   });
+}
+
+export async function recalculateReviewTargetRating(
+  targetType: string,
+  targetId: string
+): Promise<void> {
+  const admin = createAdminClient();
+  if (!admin) return;
+  await recalculateTargetRating(admin, targetType, targetId);
 }

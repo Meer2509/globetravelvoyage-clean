@@ -4,6 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { moderateReview } from "@/lib/admin/phase1-actions";
 
+const STATUS_STYLE: Record<string, string> = {
+  pending: "bg-gold/10 text-gold",
+  approved: "bg-emerald-50 text-emerald-700",
+  rejected: "bg-red-50 text-red-600",
+};
+
 export function AdminReviewsConsole({
   initialRows,
   fetchError,
@@ -20,7 +26,10 @@ export function AdminReviewsConsole({
     setTimeout(() => setToast(null), 3000);
   }
 
-  async function handleAction(id: string, action: "hide" | "show" | "delete") {
+  async function handleAction(
+    id: string,
+    action: "hide" | "show" | "delete" | "approve" | "reject"
+  ) {
     setBusyId(id);
     const result = await moderateReview(id, action);
     setBusyId(null);
@@ -32,7 +41,12 @@ export function AdminReviewsConsole({
       setRows((prev) => prev.filter((r) => r.id !== id));
     } else {
       setRows((prev) =>
-        prev.map((r) => (r.id === id ? { ...r, is_hidden: action === "hide" } : r))
+        prev.map((r) => {
+          if (r.id !== id) return r;
+          if (action === "approve") return { ...r, status: "approved", is_hidden: false };
+          if (action === "reject" || action === "hide") return { ...r, status: "rejected", is_hidden: true };
+          return { ...r, status: "approved", is_hidden: false };
+        })
       );
     }
     showToast("Review updated");
@@ -51,7 +65,9 @@ export function AdminReviewsConsole({
             ← Command center
           </Link>
           <h1 className="mt-2 text-2xl font-extrabold text-navy">Reviews & reputation</h1>
-          <p className="mt-1 text-sm text-muted">Moderate marketplace reviews from Supabase.</p>
+          <p className="mt-1 text-sm text-muted">
+            Moderate reviews for travel agents, properties, group tours, and visa experts. Only approved reviews appear publicly.
+          </p>
         </div>
       </div>
       <div className="container-px py-8 space-y-4">
@@ -72,6 +88,7 @@ export function AdminReviewsConsole({
               body: string | null;
               is_hidden: boolean;
               is_verified: boolean;
+              status: string;
               created_at: string;
             };
             return (
@@ -83,24 +100,25 @@ export function AdminReviewsConsole({
                       {r.target_type} · {r.rating}★ · {new Date(r.created_at).toLocaleString()}
                     </p>
                   </div>
-                  <span className={`chip text-xs ${r.is_hidden ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-700"}`}>
-                    {r.is_hidden ? "Hidden" : "Visible"}
+                  <span className={`chip text-xs ${STATUS_STYLE[r.status] ?? STATUS_STYLE.pending}`}>
+                    {r.status ?? "pending"}
                   </span>
                 </div>
                 {r.title && <p className="text-sm font-semibold text-navy">{r.title}</p>}
                 {r.body && <p className="text-sm text-charcoal/65">{r.body}</p>}
                 <div className="flex flex-wrap gap-2 border-t border-soft-200 pt-3">
-                  {!r.is_hidden ? (
-                    <button type="button" disabled={busyId === r.id} onClick={() => handleAction(r.id, "hide")} className="rounded-lg border border-gold/30 bg-gold/10 px-3 py-1.5 text-xs font-semibold text-gold">
-                      Hide
-                    </button>
-                  ) : (
-                    <button type="button" disabled={busyId === r.id} onClick={() => handleAction(r.id, "show")} className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
-                      Show
+                  {r.status !== "approved" && (
+                    <button type="button" disabled={busyId === r.id} onClick={() => handleAction(r.id, "approve")} className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+                      Approve
                     </button>
                   )}
-                  <button type="button" disabled={busyId === r.id} onClick={() => handleAction(r.id, "delete")} className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600">
-                    Delete
+                  {r.status !== "rejected" && (
+                    <button type="button" disabled={busyId === r.id} onClick={() => handleAction(r.id, "reject")} className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600">
+                      Reject
+                    </button>
+                  )}
+                  <button type="button" disabled={busyId === r.id} onClick={() => handleAction(r.id, "delete")} className="rounded-lg border border-charcoal/15 px-3 py-1.5 text-xs font-semibold text-charcoal/55">
+                    Remove
                   </button>
                 </div>
               </div>
