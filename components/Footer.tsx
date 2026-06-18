@@ -233,9 +233,9 @@ export function Footer() {
             <div className="mt-6">
               <p className="text-xs font-bold uppercase tracking-widest text-white/30 mb-3">Popular routes</p>
               <div className="space-y-1.5">
-                {popularRoutes.map((r) => (
+                {popularRoutes.map((r, index) => (
                   <Link
-                    key={r.from}
+                    key={`${r.from}-${r.to}-${index}`}
                     href="/flights"
                     className="flex items-center justify-between rounded-lg border border-white/8 bg-white/3 px-3 py-2 text-xs hover:bg-white/8 transition-colors"
                   >
