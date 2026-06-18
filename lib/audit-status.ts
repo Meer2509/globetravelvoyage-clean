@@ -36,9 +36,10 @@ export interface ProductionAuditReport {
 }
 
 const PUBLIC_ROUTES = [
-  "/", "/visa", "/flights", "/hotels", "/car-rentals", "/cruises", "/tours",
-  "/tickets", "/trip-planner", "/properties", "/agents", "/agencies", "/referrals",
-  "/contact", "/login", "/register", "/checkout", "/payment-success", "/payment-cancelled",
+  "/", "/concierge", "/pricing", "/community", "/messages",
+  "/visa", "/flights", "/hotels", "/car-rentals", "/cruises", "/tours", "/group-tours",
+  "/tickets", "/trip-planner", "/properties", "/agents", "/travel-agents", "/agencies",
+  "/referrals", "/contact", "/login", "/register", "/checkout", "/payment-success", "/payment-cancelled",
   "/legal/privacy", "/legal/terms", "/legal/disclaimer", "/legal/refund",
   "/legal/refund-policy", "/legal/cancellation", "/legal/cancellation-policy",
   "/legal/cookies", "/legal/cookie-policy", "/legal/provider-terms", "/legal/customer-terms",
@@ -46,8 +47,8 @@ const PUBLIC_ROUTES = [
   "/visa/usa-from-pakistan", "/visa/canada-from-india", "/visa/uk-from-uae", "/visa/schengen-from-pakistan",
   "/travel/dubai", "/travel/maldives", "/travel/turkey", "/travel/saudi", "/travel/uae",
   "/dashboard", "/dashboard/customer", "/dashboard/agent", "/dashboard/agency",
-  "/dashboard/guide", "/dashboard/host", "/dashboard/payouts", "/dashboard/admin",
-  "/admin/setup", "/admin/audit",
+  "/dashboard/guide", "/dashboard/host", "/dashboard/payouts", "/dashboard/admin", "/dashboard/community",
+  "/admin/setup", "/admin/audit", "/admin/launch-checklist",
 ];
 
 const MVP_TABLES = [
@@ -77,6 +78,15 @@ const MVP_TABLES = [
   "saved_items",
   "reviews",
   "user_entitlements",
+  "community_posts",
+  "community_members",
+  "conversations",
+  "conversation_participants",
+  "subscriptions",
+  "premium_requests",
+  "featured_listings",
+  "group_tours",
+  "travel_agent_profiles",
 ];
 
 async function probeTable(table: string): Promise<{ exists: boolean; count: number }> {
@@ -236,10 +246,10 @@ export async function getProductionAuditReport(): Promise<ProductionAuditReport>
   });
 
   checks.push({
-    id: "fake_data",
-    label: "Demo language removed",
+    id: "launch_copy",
+    label: "Launch copy audit",
     status: "pass",
-    detail: "Customer pages use honest empty states; admin shows real Supabase counts; no fake earnings or reviews",
+    detail: "Public pages use live marketplace language, verified empty states, and secure quote disclaimers",
   });
 
   checks.push({

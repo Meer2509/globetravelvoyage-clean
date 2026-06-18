@@ -8,7 +8,7 @@ export function PriceEstimateLabel({ className = "" }: { className?: string }) {
   );
 }
 
-export function SamplePrice({
+export function QuotePriceDisplay({
   value,
   className = "font-extrabold text-navy",
   size = "sm",
@@ -26,3 +26,6 @@ export function SamplePrice({
     </div>
   );
 }
+
+/** @deprecated Use QuotePriceDisplay */
+export const SamplePrice = QuotePriceDisplay;

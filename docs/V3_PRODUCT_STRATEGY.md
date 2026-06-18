@@ -82,6 +82,16 @@
 
 ---
 
+## Phase 6 — Launch QA & polish (current)
+
+- [x] Full-site QA pass — admin protected, Stripe verify-only success, marketplace trust strip
+- [x] Launch wording — removed public "coming soon" / demo language
+- [x] `/admin/launch-checklist` — OpenAI, Duffel, Resend, Supabase, Stripe, Site URL, admin role
+- [x] `/admin/users` — live user list
+- [x] Concierge handoff CTAs + saved conversations (signed-in)
+
+---
+
 ## Technical notes
 
 - AI backend: `app/api/ai/route.ts` (single concierge system prompt)

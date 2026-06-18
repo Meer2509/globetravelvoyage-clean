@@ -73,6 +73,7 @@ const navCols = [
       { label: "Dashboard", href: "/dashboard" },
       { label: "Saved items", href: "/saved" },
       { label: "Support", href: "/support" },
+      { label: SITE_CONFIG.supportEmail, href: supportMailto },
     ],
   },
   {

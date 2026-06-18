@@ -67,7 +67,7 @@ function countBadge(key: (typeof MARKETPLACES)[number]["key"], counts: V3Marketp
     case "tours":
       return counts.activeGroupTours > 0
         ? `${counts.activeGroupTours} active tour${counts.activeGroupTours === 1 ? "" : "s"}`
-        : "New departures coming soon";
+        : "Browse group departures";
     default:
       return null;
   }
@@ -80,7 +80,7 @@ export function HomeMarketplaceHub({ counts }: { counts: V3MarketplaceCounts }) 
         <SectionHeader
           eyebrow="Verified marketplaces"
           title="Everything your concierge connects to"
-          subtitle="Flights, visas, properties, agents and group tours — real providers, real inquiries, no demo data."
+          subtitle="Flights, visas, properties, agents and group tours — verified providers and secure inquiries."
           center
         />
 
@@ -129,8 +129,8 @@ export function HomeMarketplaceHub({ counts }: { counts: V3MarketplaceCounts }) 
           })}
 
           <div className="relative overflow-hidden rounded-2xl border border-gold/35 bg-gold/5 p-6 sm:col-span-2 lg:col-span-1">
-            <span className="rounded-full bg-gold/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">
-              V3 Phase 4
+            <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+              Live
             </span>
             <h3 className="mt-3 text-lg font-extrabold text-navy">Travel community</h3>
             <p className="mt-2 text-sm leading-relaxed text-charcoal/60">

@@ -29,13 +29,34 @@ export function TrustBadge({
   );
 }
 
-export function VerifiedBadge({ className = "" }: { className?: string }) {
+export function VerifiedBadge({
+  className = "",
+  reviewed = false,
+}: {
+  className?: string;
+  reviewed?: boolean;
+}) {
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full bg-blue/10 px-2 py-0.5 text-xs font-semibold text-blue ${className}`}
+      title={reviewed ? "Reviewed by Globe Travel Voyage" : "Verified provider"}
     >
       <Icon name="check" className="h-3.5 w-3.5" />
-      Verified
+      {reviewed ? "Reviewed by GTV" : "Verified"}
+    </span>
+  );
+}
+
+export function ApprovalStatusBadge({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    approved: "bg-emerald-50 text-emerald-700",
+    pending: "bg-gold/10 text-gold",
+    rejected: "bg-red-50 text-red-600",
+    hidden: "bg-charcoal/10 text-charcoal/55",
+  };
+  return (
+    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${styles[status] ?? "bg-soft text-charcoal/55"}`}>
+      {status}
     </span>
   );
 }

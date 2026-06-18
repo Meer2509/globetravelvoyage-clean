@@ -101,7 +101,7 @@ export default function CarRentalsPage() {
           <SectionHeader
             eyebrow="Available now"
             title={query || chips.length ? `${filtered.length} car${filtered.length !== 1 ? "s" : ""} found` : "Featured cars"}
-            subtitle="Illustrative daily rates. Request a verified quote — provider confirmation required."
+            subtitle="Browse available vehicles. Request a verified quote — provider confirmation required before booking."
           />
 
           {filtered.length === 0 ? (

@@ -84,7 +84,7 @@ export default function GuideDashboard() {
           <DashboardEmpty
             title="No tours or bookings yet"
             message="Add services and tour listings to start receiving booking requests."
-            action={<Link href="/tours" className="btn-primary px-5 py-2.5 text-sm">Explore tours marketplace</Link>}
+            action={<Link href="/group-tours" className="btn-primary px-5 py-2.5 text-sm">Explore group tours</Link>}
           />
         ) : null}
       </div>

@@ -3,6 +3,7 @@ import { PropertiesCatalog } from "@/components/PropertiesCatalog";
 import { ProviderOnboardingCta } from "@/components/ProviderOnboardingCta";
 import { fetchApprovedPropertyListings } from "@/lib/supabase/property-actions";
 import { fetchUserSavedIds } from "@/lib/supabase/saved-actions";
+import { MarketplaceTrustStrip } from "@/components/trust/MarketplaceTrustStrip";
 
 export default async function PropertiesPage() {
   const [properties, savedIds] = await Promise.all([
@@ -29,6 +30,10 @@ export default async function PropertiesPage() {
       </div>
 
       <PropertiesCatalog properties={properties} savedIds={savedIds} />
+
+      <div className="container-px pb-8">
+        <MarketplaceTrustStrip />
+      </div>
 
       <section className="section-sm bg-soft/50">
         <div className="container-px max-w-4xl">

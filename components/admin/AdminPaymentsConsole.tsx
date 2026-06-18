@@ -87,7 +87,7 @@ export function AdminPaymentsConsole({
             ← Command center
           </Link>
           <h1 className="mt-2 text-2xl font-extrabold text-navy">Payments & revenue</h1>
-          <p className="mt-1 text-sm text-muted">Real Stripe payments — no mock data.</p>
+          <p className="mt-1 text-sm text-muted">Live Stripe payments from Supabase.</p>
           <div className="mt-4 flex flex-wrap gap-2">
             {(["payments", "requests", "featured"] as const).map((t) => (
               <button

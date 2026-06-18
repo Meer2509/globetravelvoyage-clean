@@ -4,6 +4,7 @@ import { TravelAgentsCatalog } from "@/components/travel-agents/TravelAgentsCata
 import { ProviderOnboardingCta } from "@/components/ProviderOnboardingCta";
 import { CTASection } from "@/components/CTASection";
 import { fetchVerifiedTravelAgents } from "@/lib/supabase/travel-agent-actions";
+import { MarketplaceTrustStrip } from "@/components/trust/MarketplaceTrustStrip";
 
 export const metadata: Metadata = {
   title: "Travel Agents — Globe Travel Voyage",
@@ -29,6 +30,10 @@ export default async function TravelAgentsPage() {
       </div>
 
       <TravelAgentsCatalog agents={agents} />
+
+      <div className="container-px pb-8">
+        <MarketplaceTrustStrip />
+      </div>
 
       <section className="section-sm bg-soft/50">
         <div className="container-px max-w-4xl">

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { GroupToursCatalog } from "@/components/group-tours/GroupToursCatalog";
 import { CTASection } from "@/components/CTASection";
 import { fetchPublicGroupTours } from "@/lib/supabase/group-tour-actions";
+import { MarketplaceTrustStrip } from "@/components/trust/MarketplaceTrustStrip";
 
 export const metadata: Metadata = {
   title: "Group Tours — Globe Travel Voyage",
@@ -28,6 +29,10 @@ export default async function GroupToursPage() {
       </div>
 
       <GroupToursCatalog tours={tours} />
+
+      <div className="container-px pb-8">
+        <MarketplaceTrustStrip />
+      </div>
 
       <CTASection
         title="List your group tour"

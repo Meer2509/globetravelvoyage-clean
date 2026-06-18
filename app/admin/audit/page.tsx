@@ -93,7 +93,7 @@ export default async function AdminAuditPage() {
         <div className="card overflow-hidden">
           <div className="border-b border-soft-200 px-6 py-4">
             <h2 className="font-bold text-navy">Audit checklist</h2>
-            <p className="text-sm text-charcoal/55">Auth, payments, Supabase tables, Stripe, fake data status</p>
+            <p className="text-sm text-charcoal/55">Auth, payments, Supabase tables, Stripe, launch readiness</p>
           </div>
           <div className="divide-y divide-soft-200">
             {report.checks.map((check) => (

@@ -110,7 +110,7 @@ export default function AgencyDashboard() {
           <DashboardEmpty
             title="No tour listings"
             message="Submit tour or ticket listings through intake forms. Approved listings appear here."
-            action={<Link href="/tours" className="btn-primary px-5 py-2.5 text-sm">Browse tours marketplace</Link>}
+            action={<Link href="/group-tours" className="btn-primary px-5 py-2.5 text-sm">Browse group tours</Link>}
           />
         ) : (
           tours.map((t) => (

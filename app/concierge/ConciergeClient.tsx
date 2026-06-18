@@ -16,8 +16,17 @@ const MARKETPLACE_LINKS = [
   { label: "Visa guides", href: "/visa" },
   { label: "Properties", href: "/properties" },
   { label: "Travel agents", href: "/travel-agents" },
-  { label: "Group tours", href: "/tours" },
+  { label: "Group tours", href: "/group-tours" },
+  { label: "Community", href: "/community" },
   { label: "Pricing", href: "/pricing" },
+] as const;
+
+const HANDOFF_CTAS = [
+  { label: "Plan a trip", href: "/concierge?topic=trip" },
+  { label: "Visa guidance", href: "/concierge?topic=visa" },
+  { label: "Find flights", href: "/flights" },
+  { label: "Browse properties", href: "/properties" },
+  { label: "Message an agent", href: "/travel-agents" },
 ] as const;
 
 export function ConciergeClient() {
@@ -50,6 +59,17 @@ export function ConciergeClient() {
             />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
+            {HANDOFF_CTAS.map((cta) => (
+              <Link
+                key={cta.href}
+                href={cta.href}
+                className="flex items-center gap-2 rounded-xl border border-soft-200 bg-white px-3 py-2 text-xs font-semibold text-charcoal/70 hover:border-gold/30 hover:text-navy transition-colors"
+              >
+                {cta.label}
+              </Link>
+            ))}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
             <Link
               href="/travel-agents"
               className="flex items-center gap-2 rounded-xl border border-gold/30 bg-gold/5 px-4 py-2.5 text-xs font-semibold text-navy hover:bg-gold/10 transition-colors"

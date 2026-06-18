@@ -831,6 +831,9 @@ export default function AdminDashboard() {
               { href: "/admin/community", label: "Community" },
               { href: "/admin/messages", label: "Messaging" },
               { href: "/admin/ai-trips", label: "AI saved trips" },
+              { href: "/admin/users", label: "Users" },
+              { href: "/admin/launch-checklist", label: "Launch checklist" },
+              { href: "/admin/audit", label: "Production audit" },
               { href: "/admin/setup", label: "Environment setup" },
             ].map((link) => (
               <Link
