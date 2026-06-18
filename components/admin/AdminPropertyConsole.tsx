@@ -170,7 +170,7 @@ export function AdminPropertyConsole({
                       Feature
                     </button>
                   )}
-                  {r.is_featured && (
+                  {r.status === "approved" && r.is_featured && (
                     <button
                       type="button"
                       disabled={busyId === r.id}

@@ -3,7 +3,8 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/auth";
-import { fetchHostListings } from "@/lib/supabase/queries";
+import { fetchHostPropertyListings } from "@/lib/supabase/property-actions";
+import type { PropertyListingRow } from "@/lib/supabase/property-types";
 import { fetchProviderPayments, type PaymentRow } from "@/lib/supabase/queries";
 import { fetchProviderLeads, fetchProviderBookings, type LeadRequestRow, type BookingRequestRow } from "@/lib/supabase/mvp-queries";
 import { useDashboardUser } from "@/hooks/useDashboardUser";
@@ -30,7 +31,7 @@ function formatDate(iso: string) {
 
 export default function HostDashboard() {
   const user = useDashboardUser();
-  const [listings, setListings] = useState<Array<{ id: string; title: string; city: string; listing_type: string; price: number | null; status: string; created_at: string }>>([]);
+  const [listings, setListings] = useState<PropertyListingRow[]>([]);
   const [bookings, setBookings] = useState<BookingRequestRow[]>([]);
   const [leads, setLeads] = useState<LeadRequestRow[]>([]);
   const [payments, setPayments] = useState<PaymentRow[]>([]);
@@ -41,7 +42,7 @@ export default function HostDashboard() {
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     Promise.all([
-      fetchHostListings(),
+      fetchHostPropertyListings().then((r) => r.rows),
       userId ? fetchProviderBookings(userId) : Promise.resolve([]),
       userId ? fetchProviderLeads(userId) : Promise.resolve([]),
       fetchProviderPayments(),
@@ -109,12 +110,21 @@ export default function HostDashboard() {
           />
         ) : (
           listings.map((l) => (
-            <div key={l.id} className="card p-5 flex justify-between">
+            <div key={l.id} className="card p-5 flex flex-wrap justify-between gap-3">
               <div>
                 <p className="font-bold text-navy">{l.title}</p>
-                <p className="text-sm text-charcoal/55">{l.city} · {l.listing_type} · {formatDate(l.created_at)}</p>
+                <p className="text-sm text-charcoal/55">
+                  {l.city} · {l.listing_type} · {formatDate(l.created_at)}
+                </p>
               </div>
-              <span className="chip text-xs">{l.status}</span>
+              <div className="flex items-center gap-3">
+                <span className="chip text-xs capitalize">{l.status}</span>
+                {l.status === "approved" && (
+                  <Link href={`/properties/${l.id}`} className="text-xs font-semibold text-blue hover:underline">
+                    View live
+                  </Link>
+                )}
+              </div>
             </div>
           ))
         )}

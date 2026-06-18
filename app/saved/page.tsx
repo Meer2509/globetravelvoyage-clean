@@ -50,7 +50,7 @@ export default async function SavedPage() {
               return (
                 <Link
                   key={item.id}
-                  href={meta.browseHref}
+                  href={item.item_type === "property" ? `/properties/${item.item_id}` : meta.browseHref}
                   className="card card-hover flex items-start gap-4 p-5"
                 >
                   <span className="text-3xl">{meta.emoji}</span>

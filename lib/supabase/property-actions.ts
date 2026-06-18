@@ -30,6 +30,17 @@ function adminDb() {
   return createAdminClient();
 }
 
+function normalizeListingRow(row: Record<string, unknown>): PropertyListingRow {
+  return {
+    ...(row as PropertyListingRow),
+    is_featured: Boolean(row.is_featured),
+    admin_notes: (row.admin_notes as string | null) ?? null,
+    rating: (row.rating as number | null) ?? null,
+    review_count: (row.review_count as number | null) ?? null,
+    updated_at: (row.updated_at as string | null) ?? null,
+  };
+}
+
 // ── Public marketplace ──────────────────────────────────────────────────────
 
 export async function fetchApprovedPropertyListings(): Promise<PropertyListingRow[]> {
@@ -48,7 +59,7 @@ export async function fetchApprovedPropertyListings(): Promise<PropertyListingRo
     console.error("[property] fetch approved failed", error.message);
     return [];
   }
-  return (data ?? []) as PropertyListingRow[];
+  return (data ?? []).map((row) => normalizeListingRow(row as Record<string, unknown>));
 }
 
 export async function fetchApprovedPropertyById(id: string): Promise<PropertyListingRow | null> {
@@ -66,7 +77,7 @@ export async function fetchApprovedPropertyById(id: string): Promise<PropertyLis
     console.error("[property] fetch by id failed", error.message);
     return null;
   }
-  return (data as PropertyListingRow | null) ?? null;
+  return normalizeListingRow(data as Record<string, unknown>);
 }
 
 // ── Host dashboard ────────────────────────────────────────────────────────────
@@ -88,7 +99,7 @@ export async function fetchHostPropertyListings(): Promise<{
     .order("created_at", { ascending: false });
 
   if (error) return { rows: [], error: error.message };
-  return { rows: (data ?? []) as PropertyListingRow[] };
+  return { rows: (data ?? []).map((row) => normalizeListingRow(row as Record<string, unknown>)) };
 }
 
 // ── Inquiries ─────────────────────────────────────────────────────────────────
@@ -224,6 +235,25 @@ export async function setPropertyFeatured(
   listingId: string,
   featured: boolean
 ): Promise<PropertyActionResult> {
+  const adminAuth = await requireAdmin();
+  if (!adminAuth.ok) return { ok: false, error: adminAuth.error };
+
+  const admin = adminDb();
+  if (!admin) return { ok: false, error: "Supabase is not configured." };
+
+  const { data: listing } = await admin
+    .from("property_listings")
+    .select("id, status, title")
+    .eq("id", listingId)
+    .maybeSingle();
+
+  if (!listing) return { ok: false, error: "Listing not found." };
+
+  const row = listing as { status: string; title: string };
+  if (featured && row.status !== PUBLIC_PROPERTY_STATUS) {
+    return { ok: false, error: "Only approved listings can be featured." };
+  }
+
   return adminUpdateListing(
     listingId,
     { is_featured: featured },
