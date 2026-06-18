@@ -826,6 +826,7 @@ export default function AdminDashboard() {
               { href: "/admin/providers", label: "Provider applications" },
               { href: "/admin/referrals", label: "Referrals" },
               { href: "/admin/reviews", label: "Reviews" },
+              { href: "/admin/community", label: "Community" },
               { href: "/admin/messages", label: "Messaging" },
               { href: "/admin/ai-trips", label: "AI saved trips" },
               { href: "/admin/setup", label: "Environment setup" },

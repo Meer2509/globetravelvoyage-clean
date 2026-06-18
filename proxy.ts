@@ -27,7 +27,7 @@ const SUPABASE_ANON_KEY =
 const isConfigured = Boolean(SUPABASE_URL) && Boolean(SUPABASE_ANON_KEY);
 
 // Routes that require authentication
-const PROTECTED_PREFIXES = ["/dashboard", "/onboarding", "/admin"];
+const PROTECTED_PREFIXES = ["/dashboard", "/onboarding", "/admin", "/messages"];
 
 // Routes that logged-in users should be redirected away from
 const AUTH_PAGES = ["/login", "/register"];
@@ -53,11 +53,12 @@ const ROLE_DASHBOARD_PREFIXES: Record<UserRole, string[]> = {
     "/dashboard/documents",
     "/dashboard/profile",
     "/dashboard/messages",
+    "/dashboard/community",
   ],
-  visa_agent: ["/dashboard/agent", "/dashboard/agent/marketplace", "/dashboard/agent/group-tours", "/dashboard/profile", "/dashboard/payouts", "/dashboard/messages"],
-  travel_agency: ["/dashboard/agency", "/dashboard/profile", "/dashboard/payouts", "/dashboard/messages"],
-  tour_guide: ["/dashboard/guide", "/dashboard/profile", "/dashboard/payouts", "/dashboard/messages"],
-  property_host: ["/dashboard/host", "/dashboard/host/properties", "/dashboard/profile", "/dashboard/payouts", "/dashboard/messages"],
+  visa_agent: ["/dashboard/agent", "/dashboard/agent/marketplace", "/dashboard/agent/group-tours", "/dashboard/profile", "/dashboard/payouts", "/dashboard/messages", "/dashboard/community"],
+  travel_agency: ["/dashboard/agency", "/dashboard/profile", "/dashboard/payouts", "/dashboard/messages", "/dashboard/community"],
+  tour_guide: ["/dashboard/guide", "/dashboard/profile", "/dashboard/payouts", "/dashboard/messages", "/dashboard/community"],
+  property_host: ["/dashboard/host", "/dashboard/host/properties", "/dashboard/profile", "/dashboard/payouts", "/dashboard/messages", "/dashboard/community"],
   admin: ["/dashboard"],
 };
 

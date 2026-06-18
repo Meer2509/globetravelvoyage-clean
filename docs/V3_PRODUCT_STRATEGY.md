@@ -17,7 +17,7 @@
 | 3 | Property Marketplace | Phase 2 | Featured on homepage; concierge can surface property intents |
 | 4 | Group Tours Marketplace | Phase 3 | `/tours` powered by Supabase group tours; admin + provider flows |
 | 5 | Reviews & Reputation | Phase 3 | Cross-marketplace trust scores; concierge cites verified providers |
-| 6 | Community | Phase 4 | Traveler stories, Q&A, provider tips — new `/community` |
+| 6 | Community | Phase 4 | Traveler stories, messaging, moderation at `/community` |
 
 ---
 
@@ -60,11 +60,13 @@
 
 ---
 
-## Phase 4 — Community
+## Phase 4 — Community + messaging (current)
 
-- `/community` — traveler posts, destination tips, provider showcases
-- Moderation + RLS
-- Concierge can suggest community threads (read-only until Phase 4)
+- [x] `/community` — free join, travel posts, likes, comments, follows, reports
+- [x] `/messages` — real traveler ↔ agent/host/expert/support messaging
+- [x] Admin moderation at `/admin/community` and `/admin/messages`
+- [x] RLS + moderation (pending posts, approved public feed)
+- [x] Optional Supabase Storage for community images
 
 ---
 

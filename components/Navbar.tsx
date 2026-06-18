@@ -51,6 +51,7 @@ const nav = [
       { label: "Trip planning",       href: "/concierge?topic=trip", desc: "Itineraries & budget breakdown" },
       { label: "Properties",          href: "/properties",         desc: "Rent, buy or list property" },
       { label: "Group tours",         href: "/group-tours",              desc: "Guided experiences & departures" },
+      { label: "Travel community",    href: "/community",                desc: "Free stories, tips & traveler network" },
     ],
   },
   {
@@ -213,6 +214,12 @@ function NavbarContent({
             <span className="text-sm text-charcoal/40">…</span>
           ) : auth.isLoggedIn ? (
             <>
+              <Link
+                href="/messages"
+                className="rounded-xl px-3 py-2.5 text-sm font-semibold text-charcoal/65 transition-all duration-150 hover:bg-navy/5 hover:text-navy"
+              >
+                Messages
+              </Link>
               <Link
                 href={auth.dashboardUrl}
                 className="rounded-xl px-4 py-2.5 text-sm font-semibold text-charcoal/65 transition-all duration-150 hover:bg-navy/5 hover:text-navy"

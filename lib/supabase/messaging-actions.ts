@@ -290,3 +290,204 @@ export async function startProviderConversation(input: {
 
   return conv;
 }
+
+export async function reportMessage(input: {
+  conversationId: string;
+  messageId?: string;
+  reason: string;
+  details?: string;
+}): Promise<MessagingResult> {
+  const userId = await requireUserId();
+  if (typeof userId !== "string") return { ok: false, error: userId.error };
+
+  const admin = createAdminClient();
+  if (!admin) return { ok: false, error: "Supabase is not configured." };
+
+  const { data: membership } = await admin
+    .from("conversation_participants")
+    .select("conversation_id")
+    .eq("conversation_id", input.conversationId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (!membership) return { ok: false, error: "You are not a participant in this conversation." };
+
+  const { data, error } = await admin
+    .from("message_reports")
+    .insert({
+      reporter_id: userId,
+      conversation_id: input.conversationId,
+      message_id: input.messageId ?? null,
+      reason: input.reason.trim(),
+      details: input.details?.trim() || null,
+      status: "pending",
+    })
+    .select("id")
+    .single();
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, data: { id: (data as { id: string }).id } };
+}
+
+async function resolveSupportAdminUserId(admin: NonNullable<ReturnType<typeof createAdminClient>>): Promise<string | null> {
+  const supportId = process.env.SUPPORT_USER_ID?.trim();
+  if (supportId) return supportId;
+
+  const adminEmail = (
+    process.env.PLATFORM_ADMIN_EMAIL ||
+    process.env.ADMIN_EMAIL ||
+    ""
+  ).toLowerCase();
+
+  if (adminEmail) {
+    const { data: byEmail } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("email", adminEmail)
+      .maybeSingle();
+    if (byEmail) return (byEmail as { id: string }).id;
+  }
+
+  const { data: adminProfile } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("role", "admin")
+    .limit(1)
+    .maybeSingle();
+
+  return adminProfile ? (adminProfile as { id: string }).id : null;
+}
+
+export async function getOrCreateSupportConversation(): Promise<MessagingResult<{ conversationId: string }>> {
+  const userId = await requireUserId();
+  if (typeof userId !== "string") return { ok: false, error: userId.error };
+
+  const admin = createAdminClient();
+  if (!admin) return { ok: false, error: "Supabase is not configured." };
+
+  const supportUserId = await resolveSupportAdminUserId(admin);
+  if (!supportUserId) return { ok: false, error: "Support messaging is not configured yet." };
+
+  return getOrCreateDirectConversation(supportUserId, "Support");
+}
+
+export async function fetchAdminMessageReports(): Promise<{
+  rows: Array<Record<string, unknown>>;
+  error?: string;
+}> {
+  const { requireAdmin } = await import("@/lib/auth-server");
+  const auth = await requireAdmin();
+  if (!auth.ok) return { rows: [], error: auth.error };
+
+  const admin = createAdminClient();
+  if (!admin) return { rows: [], error: "Supabase is not configured." };
+
+  const { data, error } = await admin
+    .from("message_reports")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error) return { rows: [], error: error.message };
+  return { rows: (data ?? []) as Array<Record<string, unknown>> };
+}
+
+export async function adminResolveMessageReport(
+  reportId: string,
+  status: "reviewed" | "dismissed"
+): Promise<MessagingResult> {
+  const { requireAdmin } = await import("@/lib/auth-server");
+  const auth = await requireAdmin();
+  if (!auth.ok) return { ok: false, error: auth.error };
+
+  const admin = createAdminClient();
+  if (!admin) return { ok: false, error: "Supabase is not configured." };
+
+  const { error } = await admin
+    .from("message_reports")
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("id", reportId);
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, data: { id: reportId } };
+}
+
+export interface AdminConversationDetail {
+  id: string;
+  kind: string;
+  subject: string | null;
+  updated_at: string;
+  participants: Array<{ user_id: string; name: string | null }>;
+  messages: ThreadMessage[];
+}
+
+export async function fetchAdminConversationDetail(
+  conversationId: string
+): Promise<{ detail: AdminConversationDetail | null; error?: string }> {
+  const { requireAdmin } = await import("@/lib/auth-server");
+  const auth = await requireAdmin();
+  if (!auth.ok) return { detail: null, error: auth.error };
+
+  const admin = createAdminClient();
+  if (!admin) return { detail: null, error: "Supabase is not configured." };
+
+  const { data: conv, error: convError } = await admin
+    .from("conversations")
+    .select("id, kind, subject, updated_at")
+    .eq("id", conversationId)
+    .maybeSingle();
+
+  if (convError || !conv) return { detail: null, error: convError?.message ?? "Conversation not found." };
+
+  const { data: parts } = await admin
+    .from("conversation_participants")
+    .select("user_id")
+    .eq("conversation_id", conversationId);
+
+  const userIds = (parts ?? []).map((p) => (p as { user_id: string }).user_id);
+  const nameMap = new Map<string, string>();
+  if (userIds.length) {
+    const { data: profiles } = await admin
+      .from("profiles")
+      .select("id, full_name, email")
+      .in("id", userIds);
+    for (const p of profiles ?? []) {
+      const row = p as { id: string; full_name: string | null; email: string };
+      nameMap.set(row.id, row.full_name ?? row.email);
+    }
+  }
+
+  const { data: msgs } = await admin
+    .from("messages")
+    .select("id, sender_id, body, created_at")
+    .eq("conversation_id", conversationId)
+    .order("created_at", { ascending: true })
+    .limit(300);
+
+  const messages: ThreadMessage[] = (msgs ?? []).map((m) => {
+    const row = m as { id: string; sender_id: string | null; body: string; created_at: string };
+    return {
+      id: row.id,
+      sender_id: row.sender_id,
+      body: row.body,
+      created_at: row.created_at,
+      sender_name: row.sender_id ? nameMap.get(row.sender_id) ?? null : null,
+    };
+  });
+
+  const c = conv as { id: string; kind: string; subject: string | null; updated_at: string };
+
+  return {
+    detail: {
+      id: c.id,
+      kind: c.kind,
+      subject: c.subject,
+      updated_at: c.updated_at,
+      participants: userIds.map((uid) => ({
+        user_id: uid,
+        name: nameMap.get(uid) ?? null,
+      })),
+      messages,
+    },
+  };
+}

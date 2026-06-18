@@ -128,16 +128,16 @@ export function HomeMarketplaceHub({ counts }: { counts: V3MarketplaceCounts }) 
             );
           })}
 
-          <div className="relative overflow-hidden rounded-2xl border border-dashed border-gold/35 bg-gold/5 p-6 sm:col-span-2 lg:col-span-1">
+          <div className="relative overflow-hidden rounded-2xl border border-gold/35 bg-gold/5 p-6 sm:col-span-2 lg:col-span-1">
             <span className="rounded-full bg-gold/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">
-              V3 Phase 3
+              V3 Phase 4
             </span>
-            <h3 className="mt-3 text-lg font-extrabold text-navy">Reviews & Community</h3>
+            <h3 className="mt-3 text-lg font-extrabold text-navy">Travel community</h3>
             <p className="mt-2 text-sm leading-relaxed text-charcoal/60">
-              Cross-marketplace reputation and traveler community — launching in upcoming V3 phases.
+              Free traveler stories, destination tips, and real messaging with verified experts.
             </p>
-            <Link href="/travel-agents" className="mt-4 inline-flex text-sm font-semibold text-blue hover:underline">
-              See verified agent reviews →
+            <Link href="/community" className="mt-4 inline-flex text-sm font-semibold text-blue hover:underline">
+              Join the community →
             </Link>
           </div>
         </div>

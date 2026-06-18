@@ -45,8 +45,8 @@ export function MessageProviderButton({
     return (
       <div className="space-y-2">
         <p className="text-sm text-emerald-700 font-semibold">Message sent securely.</p>
-        <Link href="/dashboard/messages/inbox" className="text-sm font-semibold text-blue hover:underline">
-          Open inbox →
+        <Link href={`/messages/${conversationId}`} className="text-sm font-semibold text-blue hover:underline">
+          Open conversation →
         </Link>
       </div>
     );
