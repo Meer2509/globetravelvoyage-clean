@@ -66,6 +66,15 @@ function formatDuration(iso: string | undefined): string {
   return `${hours}${mins}`.trim() || "—";
 }
 
+function isoToTravelDate(iso: string | undefined): string | undefined {
+  if (!iso) return undefined;
+  const match = iso.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (match) return match[1];
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return undefined;
+  return d.toISOString().slice(0, 10);
+}
+
 function mapCabinClass(cabin?: FlightCabinClass): string {
   switch (cabin) {
     case "premium_economy":
@@ -93,27 +102,34 @@ function buildBookingLink(offer: FlightOffer): string {
     arrive: offer.arrivalTime,
     duration: offer.duration,
     stops: offer.stops,
+    travelDate: offer.travelDate,
+    returnDate: offer.returnDate,
     details: `Duffel offer ${offer.id}`,
   });
 }
 
 function mapDuffelOffer(offer: DuffelOffer): FlightOffer | null {
-  const slice = offer.slices?.[0];
-  const segments = slice?.segments ?? [];
+  const outboundSlice = offer.slices?.[0];
+  const returnSlice = offer.slices?.[1];
+  const segments = outboundSlice?.segments ?? [];
   if (segments.length === 0) return null;
 
   const first = segments[0];
   const last = segments[segments.length - 1];
+  const returnFirst = returnSlice?.segments?.[0];
   const airline =
     offer.owner?.name ||
     first.marketing_carrier?.name ||
     first.operating_carrier?.name ||
     "Airline";
 
-  const origin = slice?.origin?.iata_code || first.origin?.iata_code || "—";
-  const destination = slice?.destination?.iata_code || last.destination?.iata_code || "—";
+  const origin = outboundSlice?.origin?.iata_code || first.origin?.iata_code || "—";
+  const destination = outboundSlice?.destination?.iata_code || last.destination?.iata_code || "—";
   const price = parseFloat(offer.total_amount ?? "0");
   if (!Number.isFinite(price) || price <= 0) return null;
+
+  const travelDate = isoToTravelDate(first.departing_at);
+  const returnDate = isoToTravelDate(returnFirst?.departing_at);
 
   const mapped: FlightOffer = {
     id: offer.id,
@@ -122,7 +138,9 @@ function mapDuffelOffer(offer: DuffelOffer): FlightOffer | null {
     destination,
     departureTime: formatTime(first.departing_at ?? ""),
     arrivalTime: formatTime(last.arriving_at ?? ""),
-    duration: formatDuration(slice?.duration || first.duration),
+    travelDate,
+    returnDate,
+    duration: formatDuration(outboundSlice?.duration || first.duration),
     stops: Math.max(0, segments.length - 1),
     price,
     currency: offer.total_currency ?? "USD",

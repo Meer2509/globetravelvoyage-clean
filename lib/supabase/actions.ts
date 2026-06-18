@@ -187,7 +187,7 @@ export interface FlightBookingRequestInput {
   offerId?: string;
 }
 
-/** Columns that exist on public.booking_requests (production concierge schema). */
+/** Columns that exist on public.booking_requests (new + legacy schema). */
 export interface BookingRequestInsert {
   service: string;
   subject: string | null;
@@ -203,6 +203,15 @@ export interface BookingRequestInsert {
   cabin_class: string | null;
   message: string | null;
   status: string;
+  service_type: string;
+  service_name: string | null;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  travelers: number;
+  budget: string | null;
 }
 
 function logBookingInsertError(
@@ -243,11 +252,15 @@ function buildBookingRequestRow(input: {
   returnDate?: string | null;
   cabinClass?: string | null;
   message?: string | null;
+  budget?: string | null;
 }): BookingRequestInsert {
   const passengers = Math.min(9, Math.max(1, input.passengerCount ?? 1));
+  const travelDate = input.travelDate || null;
+  const returnDate = input.returnDate || null;
+  const subject = input.subject ?? null;
   return {
     service: input.service,
-    subject: input.subject ?? null,
+    subject,
     from_location: input.fromLocation ?? null,
     to_location: input.toLocation ?? null,
     details: input.details ?? null,
@@ -255,11 +268,20 @@ function buildBookingRequestRow(input: {
     customer_email: input.customerEmail,
     customer_phone: input.customerPhone ?? null,
     passenger_count: passengers,
-    travel_date: input.travelDate || null,
-    return_date: input.returnDate || null,
+    travel_date: travelDate,
+    return_date: returnDate,
     cabin_class: input.cabinClass ?? null,
     message: input.message ?? null,
     status: "pending",
+    service_type: input.service,
+    service_name: subject,
+    full_name: input.customerName,
+    email: input.customerEmail,
+    phone: input.customerPhone ?? null,
+    start_date: travelDate,
+    end_date: returnDate,
+    travelers: passengers,
+    budget: input.budget?.trim() || null,
   };
 }
 
@@ -394,6 +416,7 @@ export async function submitBookingRequest(input: BookingRequestInput): Promise<
     returnDate: input.endDate,
     cabinClass: input.cabinClass,
     message: messageParts.length > 0 ? messageParts.join("\n") : null,
+    budget: input.budget,
   });
 
   console.log("[booking] insert attempt", {

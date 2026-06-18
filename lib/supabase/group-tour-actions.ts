@@ -154,6 +154,11 @@ export async function saveGroupTour(input: {
     return { ok: false, error: "Create your travel agent profile before listing group tours." };
   }
 
+  const nextStatus = input.status ?? "draft";
+  if (nextStatus === "pending" && profileResult.profile.verification_status !== "verified") {
+    return { ok: false, error: "Only verified travel agents can submit tours for review." };
+  }
+
   const admin = adminDb();
   if (!admin) return { ok: false, error: FORM_SUBMIT_ERROR_MESSAGE };
 
@@ -480,6 +485,127 @@ export async function adminUpdateGroupTourRequestStatus(
 
   const admin = adminDb();
   if (!admin) return { ok: false, error: "Supabase is not configured." };
+
+  const { data: requestRow, error: fetchError } = await admin
+    .from("group_tour_requests")
+    .select("id, status, tour_id, traveler_count, full_name, email, phone, message")
+    .eq("id", requestId)
+    .maybeSingle();
+
+  if (fetchError) return { ok: false, error: fetchError.message };
+  if (!requestRow) return { ok: false, error: "Request not found." };
+
+  const request = requestRow as {
+    id: string;
+    status: string;
+    tour_id: string;
+    traveler_count: number;
+    full_name: string;
+    email: string;
+    phone: string | null;
+    message: string | null;
+  };
+
+  if (request.status === status) {
+    return { ok: true, data: { id: requestId } };
+  }
+
+  if (status === "confirmed") {
+    if (request.status === "confirmed") {
+      return { ok: true, data: { id: requestId } };
+    }
+
+    const travelers = Math.max(1, request.traveler_count ?? 1);
+
+    const { data: tourRow, error: tourError } = await admin
+      .from("group_tours")
+      .select("id, title, destination, start_date, price, currency, seat_limit, seats_booked")
+      .eq("id", request.tour_id)
+      .maybeSingle();
+
+    if (tourError) return { ok: false, error: tourError.message };
+    if (!tourRow) return { ok: false, error: "Group tour not found." };
+
+    const tour = tourRow as {
+      id: string;
+      title: string;
+      destination: string;
+      start_date: string | null;
+      price: number | null;
+      currency: string;
+      seat_limit: number;
+      seats_booked: number;
+    };
+
+    const seatsRemaining = tour.seat_limit - tour.seats_booked;
+    if (travelers > seatsRemaining) {
+      return {
+        ok: false,
+        error: `Cannot confirm — only ${Math.max(0, seatsRemaining)} seat(s) remaining.`,
+      };
+    }
+
+    const newSeatsBooked = tour.seats_booked + travelers;
+    const { data: seatUpdate, error: seatError } = await admin
+      .from("group_tours")
+      .update({
+        seats_booked: newSeatsBooked,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", tour.id)
+      .eq("seats_booked", tour.seats_booked)
+      .select("id")
+      .maybeSingle();
+
+    if (seatError) return { ok: false, error: seatError.message };
+    if (!seatUpdate) {
+      return {
+        ok: false,
+        error: "Could not reserve seats — tour capacity changed. Refresh and try again.",
+      };
+    }
+
+    const { error: statusError } = await admin
+      .from("group_tour_requests")
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq("id", requestId);
+
+    if (statusError) {
+      await admin
+        .from("group_tours")
+        .update({
+          seats_booked: tour.seats_booked,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", tour.id);
+      return { ok: false, error: statusError.message };
+    }
+
+    const priceLabel =
+      tour.price != null
+        ? `${tour.currency} ${Number(tour.price).toLocaleString()}`
+        : "Quote on request";
+
+    notifyIntakeSubmission({
+      kind: "booking_request",
+      requestId,
+      customerName: request.full_name,
+      customerEmail: request.email,
+      supportSubject: `Group tour confirmed: ${tour.title}`,
+      fields: [
+        { label: "Tour", value: tour.title },
+        { label: "Destination", value: tour.destination },
+        { label: "Departure", value: tour.start_date ?? "—" },
+        { label: "Price", value: priceLabel },
+        { label: "Travelers confirmed", value: String(travelers) },
+        { label: "Status", value: "Confirmed — our team will follow up with payment details" },
+        { label: "Phone", value: request.phone ?? "—" },
+        { label: "Message", value: request.message ?? "—" },
+      ],
+    }).catch((e) => console.error("[group-tour-confirm] email failed", e));
+
+    return { ok: true, data: { id: requestId } };
+  }
 
   const { error } = await admin
     .from("group_tour_requests")

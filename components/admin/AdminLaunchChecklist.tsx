@@ -37,7 +37,48 @@ export function AdminLaunchChecklist({ report }: { report: LaunchChecklistReport
       </div>
 
       <div className="container-px py-8 max-w-3xl space-y-8">
+        <div className="card p-6">
+          <h2 className="font-extrabold text-navy">Required production environment</h2>
+          <p className="mt-1 text-sm text-muted">
+            Secret values are never shown — only configured vs missing.
+          </p>
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-soft-200 text-left text-xs uppercase text-charcoal/45">
+                  <th className="pb-2 pr-4 font-bold">Variable</th>
+                  <th className="pb-2 font-bold">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {report.requiredEnv.map((item) => (
+                  <tr key={item.id} className="border-b border-soft-100 last:border-0">
+                    <td className="py-3 pr-4">
+                      <p className="font-mono text-xs font-semibold text-navy">{item.envKey}</p>
+                      <p className="mt-0.5 text-xs text-charcoal/55">{item.label}</p>
+                    </td>
+                    <td className="py-3">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase ${
+                          item.configured
+                            ? "bg-emerald-50 text-emerald-700"
+                            : item.status === "fail"
+                              ? "bg-red-50 text-red-700"
+                              : "bg-gold/10 text-gold"
+                        }`}
+                      >
+                        {item.configured ? "Configured" : "Missing"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <div className="space-y-3">
+          <h2 className="font-extrabold text-navy">Full checklist</h2>
           {report.items.map((item) => (
             <div
               key={item.id}

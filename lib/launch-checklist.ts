@@ -14,14 +14,120 @@ export interface LaunchCheckItem {
   status: "pass" | "warn" | "fail" | "info";
   detail: string;
   envKey?: string;
+  configured?: boolean;
 }
 
 export interface LaunchChecklistReport {
   generatedAt: string;
   items: LaunchCheckItem[];
+  requiredEnv: LaunchCheckItem[];
   summary: { pass: number; warn: number; fail: number };
   launchReadyScore: number;
   deployCommands: string[];
+}
+
+const REQUIRED_PRODUCTION_ENV: Array<{
+  id: string;
+  key: string;
+  label: string;
+  hint: string;
+  isSet: () => boolean;
+  severity: "fail" | "warn";
+}> = [
+  {
+    id: "env_supabase_service",
+    key: "SUPABASE_SERVICE_ROLE_KEY",
+    label: "Supabase service role",
+    hint: "Required for forms, admin writes, payments, and community",
+    isSet: () => isAdminClientConfigured,
+    severity: "fail",
+  },
+  {
+    id: "env_openai",
+    key: "OPENAI_API_KEY",
+    label: "OpenAI (AI Concierge)",
+    hint: "Required for live AI concierge responses",
+    isSet: () => Boolean(process.env.OPENAI_API_KEY?.trim()),
+    severity: "warn",
+  },
+  {
+    id: "env_duffel",
+    key: "DUFFEL_ACCESS_TOKEN",
+    label: "Duffel (Flight search)",
+    hint: "Required for live fare search on /flights",
+    isSet: () => Boolean(process.env.DUFFEL_ACCESS_TOKEN?.trim()),
+    severity: "warn",
+  },
+  {
+    id: "env_resend_key",
+    key: "RESEND_API_KEY",
+    label: "Resend API key",
+    hint: "Required for transactional email delivery",
+    isSet: () => Boolean(process.env.RESEND_API_KEY?.trim()),
+    severity: "warn",
+  },
+  {
+    id: "env_resend_from",
+    key: "RESEND_FROM_EMAIL",
+    label: "Resend from address",
+    hint: "Sender address for transactional email (verified domain in Resend)",
+    isSet: () => Boolean(process.env.RESEND_FROM_EMAIL?.trim()),
+    severity: "warn",
+  },
+  {
+    id: "env_stripe_secret",
+    key: "STRIPE_SECRET_KEY",
+    label: "Stripe secret key",
+    hint: "Required for checkout and payment fulfillment",
+    isSet: () => isStripeServerConfigured(),
+    severity: "fail",
+  },
+  {
+    id: "env_stripe_publishable",
+    key: "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+    label: "Stripe publishable key",
+    hint: "Required for checkout UI",
+    isSet: () => isStripeConfigured,
+    severity: "warn",
+  },
+  {
+    id: "env_stripe_webhook",
+    key: "STRIPE_WEBHOOK_SECRET",
+    label: "Stripe webhook secret",
+    hint: "Required for automatic payment fulfillment via webhook",
+    isSet: () => isStripeWebhookConfigured(),
+    severity: "warn",
+  },
+  {
+    id: "env_site_url",
+    key: "NEXT_PUBLIC_SITE_URL",
+    label: "Site URL",
+    hint: "Used for Stripe redirects and email links",
+    isSet: () => Boolean(process.env.NEXT_PUBLIC_SITE_URL?.trim()),
+    severity: "warn",
+  },
+  {
+    id: "env_platform_admin",
+    key: "PLATFORM_ADMIN_EMAIL",
+    label: "Platform admin email",
+    hint: "Primary operator inbox for admin access checks",
+    isSet: () => Boolean(process.env.PLATFORM_ADMIN_EMAIL?.trim()),
+    severity: "warn",
+  },
+];
+
+function buildRequiredEnvItems(): LaunchCheckItem[] {
+  return REQUIRED_PRODUCTION_ENV.map((entry) => {
+    const configured = entry.isSet();
+    return {
+      id: entry.id,
+      label: entry.label,
+      envKey: entry.key,
+      configured,
+      status: configured ? "pass" : entry.severity,
+      detail: configured ? "Configured" : `Missing — ${entry.hint}`,
+    };
+  });
 }
 
 function scoreFromItems(items: LaunchCheckItem[]): number {
@@ -38,107 +144,55 @@ export async function getLaunchChecklistReport(): Promise<LaunchChecklistReport>
     return {
       generatedAt: new Date().toISOString(),
       items: [{ id: "auth", label: "Admin access", status: "fail", detail: auth.error }],
+      requiredEnv: [],
       summary: { pass: 0, warn: 0, fail: 1 },
       launchReadyScore: 0,
       deployCommands: [],
     };
   }
 
-  const items: LaunchCheckItem[] = [];
+  const requiredEnv = buildRequiredEnvItems();
+  const items: LaunchCheckItem[] = [...requiredEnv];
   const siteUrl = getSiteUrl();
 
-  items.push({
-    id: "openai",
-    label: "OpenAI (AI Concierge)",
-    status: process.env.OPENAI_API_KEY?.trim() ? "pass" : "warn",
-    detail: process.env.OPENAI_API_KEY?.trim()
-      ? "OPENAI_API_KEY configured — concierge AI enabled"
-      : "Add OPENAI_API_KEY for live AI concierge responses",
-    envKey: "OPENAI_API_KEY",
-  });
+  if (!isSupabaseConfigured) {
+    items.push({
+      id: "supabase_public",
+      label: "Supabase public keys",
+      status: "fail",
+      detail: "Missing — NEXT_PUBLIC_SUPABASE_URL and anon key required for auth and data",
+      envKey: "NEXT_PUBLIC_SUPABASE_URL",
+      configured: false,
+    });
+  } else {
+    items.push({
+      id: "supabase_public",
+      label: "Supabase public keys",
+      status: "pass",
+      detail: "Configured — NEXT_PUBLIC_SUPABASE_URL and anon key present",
+      envKey: "NEXT_PUBLIC_SUPABASE_URL",
+      configured: true,
+    });
+  }
 
   items.push({
-    id: "duffel",
-    label: "Duffel (Flight search)",
-    status: process.env.DUFFEL_ACCESS_TOKEN?.trim() ? "pass" : "warn",
-    detail: process.env.DUFFEL_ACCESS_TOKEN?.trim()
-      ? "DUFFEL_ACCESS_TOKEN configured — live flight search enabled"
-      : "Add DUFFEL_ACCESS_TOKEN for live fare search on /flights",
-    envKey: "DUFFEL_ACCESS_TOKEN",
-  });
-
-  items.push({
-    id: "resend",
-    label: "Resend (Email)",
-    status: process.env.RESEND_API_KEY?.trim() ? "pass" : "warn",
-    detail: process.env.RESEND_API_KEY?.trim()
-      ? "RESEND_API_KEY configured — payment & intake emails live"
-      : "Add RESEND_API_KEY + RESEND_FROM_EMAIL for transactional email",
-    envKey: "RESEND_API_KEY",
-  });
-
-  items.push({
-    id: "supabase_public",
-    label: "Supabase (public)",
-    status: isSupabaseConfigured ? "pass" : "fail",
-    detail: isSupabaseConfigured
-      ? "NEXT_PUBLIC_SUPABASE_URL and anon key configured"
-      : "Missing Supabase public keys — auth and data disabled",
-    envKey: "NEXT_PUBLIC_SUPABASE_URL",
-  });
-
-  items.push({
-    id: "supabase_service",
-    label: "Supabase (service role)",
-    status: isAdminClientConfigured ? "pass" : "fail",
-    detail: isAdminClientConfigured
-      ? "SUPABASE_SERVICE_ROLE_KEY set — server-only, never exposed to client"
-      : "SUPABASE_SERVICE_ROLE_KEY required for forms, payments, admin writes",
-    envKey: "SUPABASE_SERVICE_ROLE_KEY",
-  });
-
-  items.push({
-    id: "stripe_pub",
-    label: "Stripe (publishable)",
-    status: isStripeConfigured ? "pass" : "warn",
-    detail: isStripeConfigured ? "Checkout UI enabled" : "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY missing",
-    envKey: "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
-  });
-
-  items.push({
-    id: "stripe_secret",
-    label: "Stripe (secret + webhook)",
-    status:
-      isStripeServerConfigured() && isStripeWebhookConfigured()
-        ? "pass"
-        : isStripeServerConfigured()
-          ? "warn"
-          : "fail",
-    detail:
-      isStripeServerConfigured() && isStripeWebhookConfigured()
-        ? "STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET configured"
-        : isStripeServerConfigured()
-          ? "Add STRIPE_WEBHOOK_SECRET for automatic payment fulfillment"
-          : "STRIPE_SECRET_KEY missing",
-    envKey: "STRIPE_SECRET_KEY",
-  });
-
-  items.push({
-    id: "site_url",
-    label: "Site URL",
+    id: "site_url_active",
+    label: "Active site URL",
     status: siteUrl.startsWith("https://") || siteUrl.includes("localhost") ? "pass" : "warn",
-    detail: `Active site URL: ${siteUrl} (production: ${PRODUCTION_SITE_URL})`,
+    detail: `Resolved URL: ${siteUrl} (production target: ${PRODUCTION_SITE_URL})`,
     envKey: "NEXT_PUBLIC_SITE_URL",
+    configured: Boolean(process.env.NEXT_PUBLIC_SITE_URL?.trim()),
   });
 
   items.push({
     id: "admin_role",
-    label: "Platform admin",
+    label: "Platform admin session",
     status: auth.role === "admin" ? "pass" : "warn",
     detail:
       auth.role === "admin"
-        ? `Signed in as admin (${getPlatformAdminEmail()} is platform owner email)`
+        ? `Signed in as admin (platform owner: ${getPlatformAdminEmail()})`
         : "Ensure admin role in Supabase user_roles for platform operators",
+    configured: auth.role === "admin",
   });
 
   const audit = await getProductionAuditReport();
@@ -165,12 +219,13 @@ export async function getLaunchChecklistReport(): Promise<LaunchChecklistReport>
   return {
     generatedAt: new Date().toISOString(),
     items,
+    requiredEnv,
     summary,
     launchReadyScore: scoreFromItems(items),
     deployCommands: [
       "npm ci",
       "npm run build",
-      "npx supabase db push   # or apply migrations 001–025 on production",
+      "npx supabase db push   # or apply migrations 001–026 on production",
       "vercel --prod          # or your host deploy command",
       "stripe listen --forward-to localhost:3000/api/stripe/webhook  # local webhook test",
     ],
