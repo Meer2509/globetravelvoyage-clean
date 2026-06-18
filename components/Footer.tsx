@@ -17,7 +17,7 @@ const navCols = [
       { label: "USA Visa Guide", href: "/visa/usa" },
       { label: "USA from Pakistan 🇵🇰→🇺🇸", href: "/visa/usa-from-pakistan" },
       { label: "All Countries A–Z", href: "/visa/countries" },
-      { label: "Visa Experts Marketplace", href: "/agents" },
+      { label: "AI Travel Concierge", href: "/concierge" },
       { label: "Travel Agents Marketplace", href: "/travel-agents" },
       { label: "Visa Intelligence Hub", href: "/visa" },
     ],
@@ -48,7 +48,7 @@ const navCols = [
     links: [
       { label: "Local Tours", href: "/tours" },
       { label: "Attraction Tickets", href: "/tickets" },
-      { label: "AI Trip Planner", href: "/trip-planner" },
+      { label: "AI Travel Concierge", href: "/concierge" },
       { label: "Destination Explorer", href: "/destinations" },
       { label: "Travel Guides", href: "/guides" },
       { label: "Vacation Packages", href: "/agencies" },

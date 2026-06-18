@@ -1,16 +1,17 @@
 import Link from "next/link";
-import { Hero } from "@/components/Hero";
 import { HeroStatsBar } from "@/components/HeroStatsBar";
-import { AICommandCenter } from "@/components/AICommandCenter";
+import { V3HomeHero } from "@/components/v3/V3HomeHero";
+import { HomeConciergeSection } from "@/components/v3/HomeConciergeSection";
+import { HomeMarketplaceHub } from "@/components/v3/HomeMarketplaceHub";
 import { SectionHeader } from "@/components/SectionHeader";
 import { FAQ } from "@/components/FAQ";
 import { Icon } from "@/components/Icon";
 import { Disclaimer } from "@/components/Disclaimer";
 import { loadCatalogBundle } from "@/lib/catalog/load-bundle";
-import { HomeTravelServicesSection } from "@/components/HomeTravelServicesSection";
 import { TrustSection } from "@/components/TrustSection";
 import { ProviderOnboardingCta } from "@/components/ProviderOnboardingCta";
 import { visaHubHref } from "@/lib/marketplace-routes";
+import { CONCIERGE_PATH } from "@/lib/v3/concierge-config";
 
 export default async function Home() {
   const { visas, faqs, visaHubCards } = await loadCatalogBundle();
@@ -18,7 +19,7 @@ export default async function Home() {
 
   return (
     <>
-      <Hero statsBar={<HeroStatsBar />} />
+      <V3HomeHero statsBar={<HeroStatsBar />} />
 
       <div className="border-b border-soft-200 bg-gold-50">
         <div className="container-px py-3">
@@ -33,34 +34,44 @@ export default async function Home() {
         </div>
       </div>
 
+      <HomeConciergeSection />
+
+      <HomeMarketplaceHub />
+
       {/* How it works */}
-      <section className="section-sm border-b border-soft-200 bg-white">
+      <section className="section-sm border-b border-soft-200 bg-soft/40">
         <div className="container-px">
-          <div className="grid gap-6 md:grid-cols-3">
+          <SectionHeader
+            eyebrow="How it works"
+            title="Three steps to your next journey"
+            subtitle="Start with AI, then connect to verified marketplaces when you're ready to book."
+            center
+          />
+          <div className="mt-8 grid gap-6 md:grid-cols-3">
             {[
               {
                 step: "01",
-                title: "AI visa check",
-                text: "Get requirement summaries, document checklists, and difficulty insights for your nationality and destination.",
-                href: "/ai-visa-assistant",
-                cta: "Start AI Visa Check",
+                title: "Ask the concierge",
+                text: "One conversation for visas, itineraries, flights, documents and budget planning.",
+                href: CONCIERGE_PATH,
+                cta: "Start AI Concierge",
               },
               {
                 step: "02",
-                title: "Plan your trip",
-                text: "Build AI itineraries with budget estimates, visa notes, and activity suggestions for international travel.",
-                href: "/ai-trip-planner",
-                cta: "Plan My Trip",
+                title: "Explore marketplaces",
+                text: "Browse verified flights, visa guides, properties, agents and group tours.",
+                href: "#marketplaces",
+                cta: "View marketplaces",
               },
               {
                 step: "03",
-                title: "Expert support",
-                text: "Connect with verified visa experts and travel providers when you need human review and confirmed quotes.",
-                href: "/agents",
-                cta: "Find experts",
+                title: "Book with trust",
+                text: "Send inquiries to verified providers. Reviews and reputation grow with every trip.",
+                href: "/travel-agents",
+                cta: "Find an agent",
               },
             ].map((item) => (
-              <div key={item.step} className="relative rounded-2xl border border-soft-200 bg-soft/30 p-6">
+              <div key={item.step} className="relative rounded-2xl border border-soft-200 bg-white p-6 shadow-[var(--shadow-card)]">
                 <span className="text-xs font-bold uppercase tracking-widest text-gold">{item.step}</span>
                 <h3 className="mt-2 text-lg font-extrabold text-navy">{item.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-charcoal/60">{item.text}</p>
@@ -72,8 +83,6 @@ export default async function Home() {
           </div>
         </div>
       </section>
-
-      <AICommandCenter />
 
       {/* Featured visa guide */}
       <section className="section">
@@ -101,8 +110,8 @@ export default async function Home() {
                   ))}
                 </ul>
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <Link href="/ai-visa-assistant" className="btn-gold px-6 py-3">
-                    Start AI Visa Check
+                  <Link href={`${CONCIERGE_PATH}?topic=visa`} className="btn-gold px-6 py-3">
+                    Ask concierge about USA visa
                   </Link>
                   <Link href="/visa/usa-from-pakistan" className="btn border border-white/20 px-6 py-3 text-white hover:bg-white/10">
                     Full PK → USA guide
@@ -165,8 +174,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <HomeTravelServicesSection />
-
       <section className="section-sm">
         <div className="container-px">
           <ProviderOnboardingCta />
@@ -182,9 +189,9 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Final CTA */}
       <section className="section-sm bg-hero-gradient relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)",
             backgroundSize: "32px 32px",
@@ -192,20 +199,20 @@ export default async function Home() {
         />
         <div className="container-px relative text-center">
           <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
-            Ready for your next international journey?
+            Your journey starts with one conversation
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-base text-white/65">
-            Start with AI visa guidance, plan your trip, or join as a verified provider.
+            Open the AI Travel Concierge — or connect with verified agents and providers on our marketplace.
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link href="/ai-visa-assistant" className="btn-gold w-full px-8 py-3.5 sm:w-auto">
-              Start AI Visa Check
+            <Link href={CONCIERGE_PATH} className="btn-gold w-full min-h-[52px] px-8 py-3.5 sm:w-auto">
+              Start AI Concierge
             </Link>
-            <Link href="/ai-trip-planner" className="btn w-full border border-white/20 px-8 py-3.5 text-white hover:bg-white/10 sm:w-auto">
-              Plan My Trip
+            <Link href="/travel-agents" className="btn w-full border border-white/20 px-8 py-3.5 text-white hover:bg-white/10 sm:w-auto">
+              Browse travel agents
             </Link>
             <Link href="/register?role=agent" className="btn w-full border border-white/15 px-8 py-3.5 text-white/90 hover:border-gold/40 hover:text-gold sm:w-auto">
-              Become a Verified Provider
+              Become a verified provider
             </Link>
           </div>
         </div>

@@ -23,7 +23,7 @@ const nav = [
     label: "Visa",
     href: "/visa",
     sub: [
-      { label: "AI Visa Assistant",    href: "/visa",                   desc: "AI guidance for every country" },
+      { label: "AI Visa Assistant",    href: "/concierge?topic=visa",  desc: "AI-guided visa prep" },
       { label: "USA Visa Guide",       href: "/visa/usa",               desc: "B1/B2, F-1 and more" },
       { label: "USA from Pakistan",    href: "/visa/usa-from-pakistan", desc: "Step-by-step PK → USA" },
       { label: "All Countries A–Z",   href: "/visa/countries",         desc: "Browse 190+ countries" },
@@ -43,14 +43,14 @@ const nav = [
     ],
   },
   {
-    label: "Plan",
-    href: "/trip-planner",
+    label: "Concierge",
+    href: "/concierge",
     sub: [
-      { label: "AI Trip Planner",     href: "/trip-planner",      desc: "Budget → full itinerary" },
-      { label: "AI Visa Assistant",   href: "/ai-visa-assistant",  desc: "AI-guided visa prep" },
-      { label: "AI Flight Finder",    href: "/ai-flight-finder",   desc: "Best routes by AI" },
+      { label: "AI Travel Concierge",  href: "/concierge",        desc: "One conversation for your entire trip" },
+      { label: "Visa guidance",       href: "/concierge?topic=visa", desc: "Requirements & document checklists" },
+      { label: "Trip planning",       href: "/concierge?topic=trip", desc: "Itineraries & budget breakdown" },
       { label: "Properties",          href: "/properties",         desc: "Rent, buy or list property" },
-      { label: "Post a Listing",      href: "/properties/post",    desc: "List your property" },
+      { label: "Group tours",         href: "/tours",              desc: "Guided experiences & departures" },
     ],
   },
   {

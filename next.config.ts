@@ -9,7 +9,13 @@ const nextConfig: NextConfig = {
       { source: "/legal/cancellation-policy", destination: "/legal/cancellation", permanent: true },
       { source: "/legal/cookie-policy", destination: "/legal/cookies", permanent: true },
       { source: "/signup", destination: "/register", permanent: true },
-      { source: "/ai-planner", destination: "/trip-planner", permanent: true },
+      { source: "/ai-planner", destination: "/concierge", permanent: true },
+      { source: "/trip-planner", destination: "/concierge", permanent: true },
+      { source: "/ai-travel-assistant", destination: "/concierge", permanent: true },
+      { source: "/ai-visa-assistant", destination: "/concierge?topic=visa", permanent: true },
+      { source: "/ai-trip-planner", destination: "/concierge?topic=trip", permanent: true },
+      { source: "/ai-flight-finder", destination: "/concierge?topic=flights", permanent: true },
+      { source: "/ai-document-checker", destination: "/concierge?topic=documents", permanent: true },
     ];
   },
 };

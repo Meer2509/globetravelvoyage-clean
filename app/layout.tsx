@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     template: "%s · Globe Travel Voyage",
   },
   description:
-    "Globe Travel Voyage is your AI-powered global travel marketplace. Search visas, flights, hotels, tours, car rentals, cruises and connect with verified travel experts worldwide.",
+    "Globe Travel Voyage is your AI-first luxury travel marketplace. One AI concierge for planning, plus verified agents, properties, tours and visa experts.",
   keywords: [
     "AI travel marketplace",
     "visa assistant",
