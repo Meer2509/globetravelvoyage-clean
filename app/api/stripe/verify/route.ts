@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getStripe, isStripeServerConfigured } from "@/lib/stripe/server";
 import { fulfillStripeCheckoutSession } from "@/lib/stripe/fulfill-session";
 import { getCheckoutProduct } from "@/lib/stripe/products";
+import { isSubscriptionProduct } from "@/lib/v5/plans";
 import { repairMissingVisaCaseForUser } from "@/lib/supabase/visa-case-queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -23,10 +24,14 @@ export async function GET(request: Request) {
   try {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    const paid = session.payment_status === "paid";
     const amount = session.amount_total ? session.amount_total / 100 : null;
     const productKey = session.metadata?.product_key ?? "";
     const product = productKey ? getCheckoutProduct(productKey) : undefined;
+    const isSubscription =
+      session.mode === "subscription" || isSubscriptionProduct(productKey);
+    const paid =
+      session.payment_status === "paid" ||
+      (isSubscription && session.status === "complete");
 
     let bookingId: string | undefined;
     let paymentId: string | undefined;

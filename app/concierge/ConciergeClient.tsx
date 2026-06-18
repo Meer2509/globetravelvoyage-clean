@@ -9,6 +9,7 @@ import {
   parseConciergeTopic,
   type ConciergeTopic,
 } from "@/lib/v3/concierge-config";
+import { ConciergePremiumUpsell } from "@/components/pricing/ConciergePremiumUpsell";
 
 const MARKETPLACE_LINKS = [
   { label: "Flights", href: "/flights" },
@@ -83,6 +84,8 @@ export function ConciergeClient() {
               ))}
             </div>
           </div>
+
+          <ConciergePremiumUpsell />
 
           <div className="rounded-xl border border-gold/20 bg-gold/5 p-4 text-[11px] text-charcoal/55 leading-relaxed">
             <p className="font-semibold text-gold mb-1">Trust & disclaimer</p>

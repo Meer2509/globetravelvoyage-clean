@@ -107,6 +107,12 @@ export async function saveAiTripPlan(input: {
   const userId = await requireUserId();
   if (typeof userId !== "string") return { ok: false, error: userId.error };
 
+  const { canUserSaveTrip } = await import("@/lib/v5/access-control");
+  const saveCheck = await canUserSaveTrip(userId);
+  if (!saveCheck.ok) {
+    return { ok: false, error: `${saveCheck.error} Upgrade at /pricing.` };
+  }
+
   const admin = createAdminClient();
   if (!admin) return { ok: false, error: "Supabase is not configured." };
 

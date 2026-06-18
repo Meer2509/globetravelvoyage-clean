@@ -31,7 +31,13 @@ const PROVIDER_FEATURED = new Set([
   "property_featured_listing",
   "homepage_placement",
   "provider_subscription",
+  "travel_agent_featured_listing",
+  "featured_group_tour_listing",
 ]);
+
+const CONCIERGE_PLUS = new Set(["ai_concierge_plus"]);
+const PREMIUM_CONCIERGE = new Set(["premium_concierge_planning"]);
+const AGENT_PRO = new Set(["travel_agent_pro"]);
 
 export interface ActivationResult {
   entitlementId?: string;
@@ -39,9 +45,15 @@ export interface ActivationResult {
   visaCaseId?: string;
   caseNumber?: string;
   entitlementType: string;
+  subscriptionId?: string;
+  premiumRequestId?: string;
+  featuredListingId?: string;
 }
 
 function entitlementTypeForProduct(productKey: string): string {
+  if (CONCIERGE_PLUS.has(productKey)) return "concierge_plus";
+  if (PREMIUM_CONCIERGE.has(productKey)) return "premium_concierge";
+  if (AGENT_PRO.has(productKey)) return "agent_pro";
   if (
     productKey === "full_visa_application_support" ||
     productKey === "premium_visa_filing_support" ||
@@ -82,6 +94,12 @@ export async function activatePaidService(input: {
   email?: string | null;
   listingTitle?: string | null;
   agentId?: string | null;
+  listingId?: string | null;
+  listingType?: string | null;
+  stripeSessionId?: string | null;
+  stripeSubscriptionId?: string | null;
+  stripeCustomerId?: string | null;
+  subscriptionPeriodEnd?: string | null;
 }): Promise<ActivationResult | null> {
   const admin = createAdminClient();
   if (!admin) return null;
@@ -211,6 +229,85 @@ export async function activatePaidService(input: {
     await admin.from("tour_guides").update({ is_featured: true }).eq("user_id", input.userId);
   }
 
+  if (input.productKey === "travel_agent_featured_listing") {
+    const agentListingId = input.listingId ?? input.agentId;
+    if (agentListingId) {
+      await admin.from("travel_agent_profiles").update({ featured: true }).eq("id", agentListingId);
+    } else {
+      await admin.from("travel_agent_profiles").update({ featured: true }).eq("user_id", input.userId);
+    }
+  }
+
+  if (input.productKey === "property_featured_listing" && input.listingId) {
+    await admin.from("property_listings").update({ is_featured: true }).eq("id", input.listingId);
+  }
+
+  if (input.productKey === "featured_group_tour_listing" && input.listingId) {
+    await admin.from("group_tours").update({ featured: true }).eq("id", input.listingId);
+  }
+
+  let subscriptionId: string | undefined;
+  let premiumRequestId: string | undefined;
+  let featuredListingId: string | undefined;
+
+  const { recordSubscription, recordPremiumRequest, recordFeaturedListing } = await import(
+    "@/lib/supabase/premium-actions"
+  );
+
+  if (input.stripeSubscriptionId && (CONCIERGE_PLUS.has(input.productKey) || AGENT_PRO.has(input.productKey))) {
+    const sub = await recordSubscription({
+      userId: input.userId,
+      planKey: input.productKey,
+      stripeSubscriptionId: input.stripeSubscriptionId,
+      stripeCustomerId: input.stripeCustomerId,
+      currentPeriodEnd: input.subscriptionPeriodEnd,
+      paymentId: input.paymentId,
+    });
+    if (sub.ok) subscriptionId = sub.data.id;
+  }
+
+  if (CONCIERGE_PLUS.has(input.productKey) || PREMIUM_CONCIERGE.has(input.productKey)) {
+    const req = await recordPremiumRequest({
+      userId: input.userId,
+      planKey: input.productKey,
+      paymentId: input.paymentId,
+      subscriptionId,
+      requestType: PREMIUM_CONCIERGE.has(input.productKey) ? "premium_planning" : "concierge_plus",
+      details: {
+        listing_title: input.listingTitle,
+        priority: true,
+      },
+    });
+    if (req.ok) premiumRequestId = req.data.id;
+  }
+
+  if (
+    input.productKey === "travel_agent_featured_listing" ||
+    input.productKey === "property_featured_listing" ||
+    input.productKey === "featured_group_tour_listing"
+  ) {
+    const listingType =
+      input.productKey === "travel_agent_featured_listing"
+        ? "travel_agent"
+        : input.productKey === "property_featured_listing"
+          ? "property"
+          : "group_tour";
+    const listingId = input.listingId ?? input.agentId ?? input.userId;
+    const feat = await recordFeaturedListing({
+      userId: input.userId,
+      listingType,
+      listingId,
+      paymentId: input.paymentId,
+      stripeSessionId: input.stripeSessionId,
+    });
+    if (feat.ok) featuredListingId = feat.data.id;
+  }
+
+  const expiresAt =
+    PROVIDER_FEATURED.has(input.productKey) || input.productKey === "featured_group_tour_listing"
+      ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      : input.subscriptionPeriodEnd ?? null;
+
   const { data: entitlement, error: entError } = await admin
     .from("user_entitlements")
     .insert({
@@ -225,10 +322,7 @@ export async function activatePaidService(input: {
         product_name: product?.name ?? input.productKey,
         listing_title: input.listingTitle ?? null,
       },
-      expires_at:
-        PROVIDER_FEATURED.has(input.productKey)
-          ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-          : null,
+      expires_at: expiresAt,
     })
     .select("id")
     .single();
@@ -237,7 +331,15 @@ export async function activatePaidService(input: {
     if (!isMissingTableError(entError)) {
       console.error("Entitlement insert failed:", entError.message);
     }
-    return { entitlementType, visaApplicationId, visaCaseId, caseNumber };
+    return {
+      entitlementType,
+      visaApplicationId,
+      visaCaseId,
+      caseNumber,
+      subscriptionId,
+      premiumRequestId,
+      featuredListingId,
+    };
   }
 
   return {
@@ -246,5 +348,8 @@ export async function activatePaidService(input: {
     visaCaseId,
     caseNumber,
     entitlementType,
+    subscriptionId,
+    premiumRequestId,
+    featuredListingId,
   };
 }

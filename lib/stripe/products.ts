@@ -37,7 +37,12 @@ export type CheckoutProductKey =
   | "cruise_booking_request"
   | "provider_subscription"
   | "homepage_placement"
-  | "provider_service";
+  | "provider_service"
+  | "ai_concierge_plus"
+  | "premium_concierge_planning"
+  | "travel_agent_pro"
+  | "travel_agent_featured_listing"
+  | "featured_group_tour_listing";
 
 export type ProductTier = "premium" | "featured";
 
@@ -121,6 +126,65 @@ export const CHECKOUT_PRODUCTS: CheckoutProduct[] = [
     category: "Traveler Premium",
     tier: "premium",
     ctaLabel: "Purchase",
+  },
+  {
+    key: "ai_concierge_plus",
+    name: "AI Concierge Plus",
+    description: "Monthly subscription — enhanced AI itineraries, 20 saved trips, priority concierge queue.",
+    amountCents: 1200,
+    currency: "usd",
+    emoji: "✨",
+    category: "V5 Concierge",
+    tier: "premium",
+    priceLabel: "$12/month",
+    ctaLabel: "Subscribe",
+  },
+  {
+    key: "premium_concierge_planning",
+    name: "Premium Travel Concierge",
+    description: "One-time white-glove planning request reviewed by our concierge team.",
+    amountCents: 14900,
+    currency: "usd",
+    emoji: "🌟",
+    category: "V5 Concierge",
+    tier: "premium",
+    ctaLabel: "Request planning",
+  },
+  {
+    key: "travel_agent_pro",
+    name: "Travel Agent Pro",
+    description: "Monthly pro subscription — priority leads, analytics, and agent dashboard tools.",
+    amountCents: 4900,
+    currency: "usd",
+    emoji: "💼",
+    category: "V5 Provider",
+    tier: "featured",
+    priceLabel: "$49/month",
+    ctaLabel: "Subscribe",
+  },
+  {
+    key: "travel_agent_featured_listing",
+    name: "Featured Agent Listing",
+    description: "30-day featured placement for your travel agent profile in marketplace search.",
+    amountCents: 5900,
+    currency: "usd",
+    emoji: "⭐",
+    category: "V5 Provider",
+    tier: "featured",
+    priceLabel: "$59 / 30 days",
+    ctaLabel: "Get featured",
+  },
+  {
+    key: "featured_group_tour_listing",
+    name: "Featured Group Tour",
+    description: "30-day featured placement for a group tour departure on the marketplace.",
+    amountCents: 3900,
+    currency: "usd",
+    emoji: "🗺️",
+    category: "V5 Provider",
+    tier: "featured",
+    priceLabel: "$39 / 30 days",
+    ctaLabel: "Feature tour",
   },
   {
     key: "human_trip_planner",
@@ -455,8 +519,23 @@ export function formatProductPrice(product: CheckoutProduct): string {
   }).format(product.amountCents / 100);
 }
 
+/** V5 Phase 5 plans shown on /pricing */
+export const V5_PRICING_KEYS: CheckoutProductKey[] = [
+  "ai_concierge_plus",
+  "premium_concierge_planning",
+  "travel_agent_pro",
+  "travel_agent_featured_listing",
+  "property_featured_listing",
+  "featured_group_tour_listing",
+];
+
 /** Premium & featured services shown on /services (Stripe checkout). */
 export const SERVICES_CATALOG_KEYS: CheckoutProductKey[] = [
+  "ai_concierge_plus",
+  "premium_concierge_planning",
+  "travel_agent_pro",
+  "travel_agent_featured_listing",
+  "featured_group_tour_listing",
   "visa_document_review",
   "visa_application_assistance",
   "premium_visa_filing_support",
@@ -481,6 +560,8 @@ export const FEATURED_HOME_PREMIUM_KEYS: CheckoutProductKey[] = [
 ];
 
 export const SERVICE_CATEGORIES = [
+  "V5 Concierge",
+  "V5 Provider",
   "Traveler Premium",
   "Provider Featured",
 ] as const;

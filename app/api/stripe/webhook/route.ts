@@ -46,6 +46,19 @@ export async function POST(request: Request) {
     } else if (event.type === "checkout.session.expired") {
       const session = event.data.object as Stripe.Checkout.Session;
       await markPaymentStatusBySession(session.id, "expired");
+    } else if (event.type === "customer.subscription.updated") {
+      const sub = event.data.object as Stripe.Subscription;
+      const { updateSubscriptionStatus } = await import("@/lib/supabase/premium-actions");
+      const periodEnd = (sub as { current_period_end?: number }).current_period_end;
+      await updateSubscriptionStatus(
+        sub.id,
+        sub.status === "active" ? "active" : sub.status,
+        periodEnd ? new Date(periodEnd * 1000).toISOString() : null
+      );
+    } else if (event.type === "customer.subscription.deleted") {
+      const sub = event.data.object as Stripe.Subscription;
+      const { updateSubscriptionStatus } = await import("@/lib/supabase/premium-actions");
+      await updateSubscriptionStatus(sub.id, "canceled", null);
     } else if (event.type === "payment_intent.payment_failed") {
       const intent = event.data.object as Stripe.PaymentIntent;
       const sessionId = intent.metadata?.checkout_session_id;

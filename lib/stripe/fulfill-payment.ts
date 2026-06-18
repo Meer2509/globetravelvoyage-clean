@@ -12,6 +12,8 @@ import {
   sendAdminPaymentNotification,
 } from "@/lib/email/send-payment-emails";
 import { getCheckoutProduct } from "@/lib/stripe/products";
+import { getStripe } from "@/lib/stripe/server";
+import { isSubscriptionProduct } from "@/lib/v5/plans";
 
 const BOOKING_TYPE_MAP: Record<string, string> = {
   visa_document_review: "visa_consultation",
@@ -49,6 +51,11 @@ const BOOKING_TYPE_MAP: Record<string, string> = {
   homepage_placement: "provider_service",
   provider_subscription: "provider_service",
   provider_service: "provider_service",
+  ai_concierge_plus: "subscription",
+  premium_concierge_planning: "travel_plan",
+  travel_agent_pro: "subscription",
+  travel_agent_featured_listing: "provider_service",
+  featured_group_tour_listing: "provider_service",
 };
 
 function bookingTypeFromProduct(productKey: string): string {
@@ -70,14 +77,45 @@ export interface FulfillResult {
 export async function fulfillStripePaymentComplete(
   session: Stripe.Checkout.Session
 ): Promise<FulfillResult | { ok: false; error: string }> {
-  if (session.payment_status !== "paid") {
+  const isSubscriptionCheckout =
+    session.mode === "subscription" || isSubscriptionProduct(session.metadata?.product_key ?? "");
+
+  if (!isSubscriptionCheckout && session.payment_status !== "paid") {
     return { ok: false, error: "Session is not paid." };
+  }
+
+  if (isSubscriptionCheckout && session.status !== "complete") {
+    return { ok: false, error: "Subscription checkout is not complete." };
   }
 
   const paymentIntentId =
     typeof session.payment_intent === "string"
       ? session.payment_intent
       : session.payment_intent?.id ?? null;
+
+  const stripeSubscriptionId =
+    typeof session.subscription === "string"
+      ? session.subscription
+      : session.subscription?.id ?? null;
+
+  const stripeCustomerId =
+    typeof session.customer === "string" ? session.customer : session.customer?.id ?? null;
+
+  let subscriptionPeriodEnd: string | null = null;
+  if (stripeSubscriptionId) {
+    const stripe = getStripe();
+    if (stripe) {
+      try {
+        const sub = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+        const periodEnd = (sub as { current_period_end?: number }).current_period_end;
+        if (periodEnd) {
+          subscriptionPeriodEnd = new Date(periodEnd * 1000).toISOString();
+        }
+      } catch {
+        /* optional */
+      }
+    }
+  }
 
   const email =
     session.customer_details?.email ??
@@ -149,6 +187,13 @@ export async function fulfillStripePaymentComplete(
     await admin
       .from("payments")
       .update({ transfer_status: transferStatus })
+      .eq("id", paymentId);
+  }
+
+  if (stripeCustomerId) {
+    await admin
+      .from("payments")
+      .update({ stripe_customer_id: stripeCustomerId })
       .eq("id", paymentId);
   }
 
@@ -269,6 +314,12 @@ export async function fulfillStripePaymentComplete(
       email,
       listingTitle: meta.listing_title || null,
       agentId: meta.agent_id || null,
+      listingId: meta.listing_id || null,
+      listingType: meta.listing_type || null,
+      stripeSessionId: session.id,
+      stripeSubscriptionId,
+      stripeCustomerId,
+      subscriptionPeriodEnd,
     });
     if (activation) {
       visaApplicationId = activation.visaApplicationId;

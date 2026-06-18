@@ -8,6 +8,7 @@ import { createPaymentRecord } from "@/lib/stripe/payment-records";
 import { createPendingBooking } from "@/lib/stripe/create-booking";
 import { applicationFeeCents } from "@/lib/stripe/commission";
 import { fetchConnectReadyAccount } from "@/lib/stripe/connect-accounts";
+import { isSubscriptionProduct } from "@/lib/v5/plans";
 
 interface CheckoutBody {
   productKey?: string;
@@ -134,14 +135,21 @@ export async function POST(request: Request) {
   }
 
   try {
+    const isSubscription = isSubscriptionProduct(productKey);
+
     const sessionParams: Parameters<typeof stripe.checkout.sessions.create>[0] = {
-      mode: "payment",
+      mode: isSubscription ? "subscription" : "payment",
       payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
             currency,
             unit_amount: amountCents,
+            ...(isSubscription
+              ? {
+                  recurring: { interval: "month" as const },
+                }
+              : {}),
             product_data: {
               name,
               description,
@@ -154,10 +162,13 @@ export async function POST(request: Request) {
       success_url: `${siteUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/payment-cancelled?product_key=${encodeURIComponent(productKey)}`,
       customer_email: userEmail,
-      metadata,
+      metadata: {
+        ...metadata,
+        checkout_mode: isSubscription ? "subscription" : "payment",
+      },
     };
 
-    if (connectDestination) {
+    if (!isSubscription && connectDestination) {
       sessionParams.payment_intent_data = {
         application_fee_amount: applicationFeeCents(amountCents),
         transfer_data: { destination: connectDestination },
@@ -171,7 +182,7 @@ export async function POST(request: Request) {
 
     const session = await stripe.checkout.sessions.create(sessionParams);
 
-    if (typeof session.payment_intent === "string") {
+    if (!isSubscription && typeof session.payment_intent === "string") {
       await stripe.paymentIntents.update(session.payment_intent, {
         metadata: { checkout_session_id: session.id, product_key: productKey },
       });

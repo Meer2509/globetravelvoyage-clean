@@ -1,39 +1,29 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
-import { FreeFeatureCard } from "@/components/FreeFeatureCard";
-import { ServiceCard } from "@/components/ServiceCard";
 import { TierBadge } from "@/components/TierBadge";
+import { PricingPlans } from "@/components/pricing/PricingPlans";
 import { StripeTrustBanner } from "@/components/ServicesCatalog";
-import {
-  PROVIDER_FREE_FEATURES,
-  TRAVELER_FREE_FEATURES,
-} from "@/lib/launch-pricing";
-import { SERVICES_CATALOG_KEYS } from "@/lib/stripe/products";
+
 export const metadata: Metadata = {
   title: "Pricing — Globe Travel Voyage",
-  description: "Free travel tools and provider accounts at launch. Optional premium upgrades for expert help and featured visibility.",
+  description:
+    "Free travel tools for everyone. Premium AI concierge plans, human planning, and featured marketplace placement — secure Stripe checkout.",
 };
 
 export default function PricingPage() {
-  const premiumKeys = SERVICES_CATALOG_KEYS.filter((k) =>
-    ["usa_visa_consultation", "usa_b1b2_document_review", "full_visa_application_support", "premium_ai_trip_plan", "concierge_travel_planning"].includes(k)
-  );
-  const featuredKeys = SERVICES_CATALOG_KEYS.filter((k) =>
-    ["expert_featured_listing", "agency_featured_listing", "verified_badge_fee", "homepage_placement"].includes(k)
-  );
-
   return (
     <>
       <section className="bg-hero-gradient py-16 sm:py-20">
         <div className="container-px text-center">
-          <span className="eyebrow-white mb-4">Launch pricing</span>
+          <span className="eyebrow-white mb-4">V3 Premium</span>
           <h1 className="h-hero text-white">
-            Start free.{" "}
-            <span className="text-gradient-gold">Upgrade when ready.</span>
+            Plans built for{" "}
+            <span className="text-gradient-gold">real travelers & experts</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-white/65">
-            Grow users and providers fast with free core tools. Revenue comes from optional premium services — never required to get started.
+            Start free. Upgrade only when you need smarter AI, white-glove planning, or featured marketplace visibility. Every charge goes through secure Stripe — success is confirmed only after payment.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
             <TierBadge tier="free" />
@@ -44,71 +34,9 @@ export default function PricingPage() {
       </section>
 
       <section className="section">
-        <div className="container-px max-w-5xl">
-          <div className="mb-8 text-center">
-            <TierBadge tier="free" className="mb-3" />
-            <h2 className="h-section">Free for travelers</h2>
-            <p className="mx-auto mt-2 max-w-xl text-sm text-muted">
-              Account, planning, guides, and quote requests — no credit card needed.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {TRAVELER_FREE_FEATURES.map((f) => (
-              <FreeFeatureCard key={f.title} feature={f} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="section bg-soft/40">
-        <div className="container-px max-w-5xl">
-          <div className="mb-8 text-center">
-            <TierBadge tier="free" className="mb-3" />
-            <h2 className="h-section">Free for providers</h2>
-            <p className="mx-auto mt-2 max-w-xl text-sm text-muted">
-              List your business, add up to 3 services, and receive leads at no cost.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {PROVIDER_FREE_FEATURES.map((f) => (
-              <FreeFeatureCard key={f.title} feature={f} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="container-px max-w-5xl">
-          <div className="mb-8 text-center">
-            <TierBadge tier="premium" className="mb-3" />
-            <h2 className="h-section">Traveler premium</h2>
-            <p className="mx-auto mt-2 max-w-xl text-sm text-muted">
-              Optional expert help and premium AI when you need more than free tools.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {premiumKeys.map((key) => (
-              <ServiceCard key={key} productKey={key} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="section bg-soft/40">
-        <div className="container-px max-w-5xl">
-          <div className="mb-8 text-center">
-            <TierBadge tier="featured" className="mb-3" />
-            <h2 className="h-section">Provider featured</h2>
-            <p className="mx-auto mt-2 max-w-xl text-sm text-muted">
-              Stand out with featured placement, verified badges, and homepage visibility.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {featuredKeys.map((key) => (
-              <ServiceCard key={key} productKey={key} />
-            ))}
-          </div>
-          <StripeTrustBanner className="mt-8" />
+        <div className="container-px max-w-6xl">
+          <PricingPlans />
+          <StripeTrustBanner className="mt-12" />
         </div>
       </section>
 
@@ -118,20 +46,20 @@ export default function PricingPage() {
           <div className="space-y-4">
             {[
               {
-                q: "Do I need to pay to use Globe Travel Voyage?",
-                a: "No. Creating an account, browsing providers, using visa guides, the basic AI planner, and requesting quotes are all free at launch.",
+                q: "When am I charged?",
+                a: "Only after you click upgrade and complete Stripe Checkout. The success page confirms payment via our server — never a fake success screen.",
               },
               {
-                q: "What is Premium vs Featured?",
-                a: "Premium is for travelers who want expert visa help or a full AI itinerary. Featured is for providers who want more visibility — featured listings, verified badges, and homepage placement.",
+                q: "What's included in Free Traveler?",
+                a: "AI concierge (basic), up to 3 saved trips, community access, browsing verified experts, and basic inquiries — no credit card required.",
               },
               {
-                q: "When does Stripe charge me?",
-                a: "Only when you explicitly choose a premium or featured upgrade. You are redirected to secure Stripe Checkout before any charge.",
+                q: "Can I cancel AI Concierge Plus or Agent Pro?",
+                a: "Subscriptions are managed through Stripe. Contact support and we will help you cancel before your next billing period.",
               },
               {
-                q: "Can providers list services for free?",
-                a: "Yes. Provider accounts, basic profiles, up to 3 services, dashboards, and lead delivery are free during launch.",
+                q: "How do featured listings work?",
+                a: "One-time featured purchases activate for 30 days on your agent profile, property, or group tour. Admin can review and manage featured status.",
               },
             ].map((faq) => (
               <div key={faq.q} className="card p-5">
@@ -144,14 +72,14 @@ export default function PricingPage() {
       </section>
 
       <Disclaimer className="container-px py-4 text-center">
-        Globe Travel Voyage is an independent marketplace platform. Free features and premium upgrades are subject to change as the platform grows.
+        Payments are processed by Stripe. Globe Travel Voyage does not store card numbers. Visa approval is never guaranteed.
       </Disclaimer>
 
       <CTASection
-        title="Start free today"
-        subtitle="Create your account and explore the platform. Upgrade only when you need premium help or featured visibility."
-        primary={{ label: "Create free account", href: "/register" }}
-        secondary={{ label: "Browse all services", href: "/services" }}
+        title="Questions about a plan?"
+        subtitle="Our team can help you choose the right upgrade for your trip or business."
+        primary={{ label: "Contact support", href: "/support" }}
+        secondary={{ label: "Try free concierge", href: "/concierge" }}
       />
     </>
   );

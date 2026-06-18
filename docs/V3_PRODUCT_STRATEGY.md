@@ -18,6 +18,7 @@
 | 4 | Group Tours Marketplace | Phase 3 | `/tours` powered by Supabase group tours; admin + provider flows |
 | 5 | Reviews & Reputation | Phase 3 | Cross-marketplace trust scores; concierge cites verified providers |
 | 6 | Community | Phase 4 | Traveler stories, messaging, moderation at `/community` |
+| 7 | Premium conversion | Phase 5 | Stripe plans, subscriptions, featured listings |
 
 ---
 
@@ -70,11 +71,14 @@
 
 ---
 
-## Phase 5 — Premium conversion
+## Phase 5 — Premium conversion (current)
 
-- Stripe concierge tiers surfaced in-chat
-- Saved trips + shareable itineraries
-- Luxury white-glove human escalation from concierge
+- [x] `/pricing` — Free Traveler, AI Concierge Plus, Premium Concierge, Agent Pro, Featured listings
+- [x] Real Stripe Checkout (one-time + subscription mode)
+- [x] Tables: `subscriptions`, `premium_requests`, `featured_listings` (+ existing `payments`)
+- [x] Access control: save limits, priority concierge/support by tier
+- [x] Admin: `/admin/payments`, `/admin/subscriptions`
+- [x] Post-payment emails via existing Resend flow
 
 ---
 
