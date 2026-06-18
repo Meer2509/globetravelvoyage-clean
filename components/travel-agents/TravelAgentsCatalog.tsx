@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { FilterBar } from "@/components/FilterBar";
 import { Stars } from "@/components/Stars";
+import { EMPTY_MARKETPLACE_LABEL } from "@/lib/launch-trust";
 import type { TravelAgentProfileRow } from "@/lib/supabase/travel-agent-types";
 
 export function TravelAgentsCatalog({ agents }: { agents: TravelAgentProfileRow[] }) {
@@ -56,15 +57,17 @@ export function TravelAgentsCatalog({ agents }: { agents: TravelAgentProfileRow[
 
       <div className="container-px pt-8 pb-12">
         <p className="mb-5 text-sm text-muted">
-          {filtered.length} verified travel agent{filtered.length !== 1 ? "s" : ""}
+          {agents.length === 0
+            ? EMPTY_MARKETPLACE_LABEL
+            : `${filtered.length} verified travel agent${filtered.length !== 1 ? "s" : ""}`}
         </p>
 
         {agents.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed border-soft-200 py-16 text-center px-6">
             <p className="text-4xl mb-3">👔</p>
-            <p className="font-semibold text-navy text-lg">Travel agents are being verified.</p>
+            <p className="font-semibold text-navy text-lg">{EMPTY_MARKETPLACE_LABEL}</p>
             <p className="mt-2 text-sm text-muted max-w-md mx-auto">
-              Verified agents will appear here once approved by our admin team.
+              Verified agents appear here once approved by our admin team.
             </p>
             <Link href="/register?role=agent" className="btn-primary mt-6 inline-flex px-6 py-3 text-sm">
               Become a travel agent
@@ -99,8 +102,14 @@ export function TravelAgentsCatalog({ agents }: { agents: TravelAgentProfileRow[
                       <p className="text-sm text-muted truncate">{agent.agency_name}</p>
                     )}
                     <div className="mt-1 flex items-center gap-1">
-                      <Stars rating={agent.rating ?? 0} reviews={agent.review_count ?? 0} />
-                      <span className="text-xs text-muted">({agent.review_count ?? 0})</span>
+                      {(agent.review_count ?? 0) > 0 ? (
+                        <>
+                          <Stars rating={agent.rating ?? 0} reviews={agent.review_count ?? 0} />
+                          <span className="text-xs text-muted">({agent.review_count})</span>
+                        </>
+                      ) : (
+                        <span className="text-xs text-muted">Verified provider</span>
+                      )}
                     </div>
                   </div>
                 </div>

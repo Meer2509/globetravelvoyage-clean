@@ -81,7 +81,7 @@ export async function HomeMarketplaceSection() {
             <div className="h-1.5 w-full bg-hero-gradient" />
             <div className="px-6 pt-12">
               <p className="text-xs font-bold uppercase tracking-widest text-gold">{PROVIDER_ONBOARDING_HEADLINE}</p>
-              <p className="mt-3 font-bold text-navy text-lg">Verified providers are being onboarded now.</p>
+              <p className="mt-3 font-bold text-navy text-lg">{PROVIDER_ONBOARDING_HEADLINE}</p>
               <p className="mt-2 max-w-md mx-auto text-sm text-muted">
                 Our admin team reviews every provider profile before it goes live. Join the marketplace as a verified expert or agency.
               </p>
@@ -127,7 +127,7 @@ export async function HomeMarketplaceSection() {
                       <span className="text-xs text-charcoal/45">({p.reviews} reviews)</span>
                     </>
                   ) : (
-                    <span className="text-xs text-charcoal/50">Real reviews appear after completed bookings</span>
+                    <span className="text-xs text-charcoal/50">Verified reviews from completed trips</span>
                   )}
                 </div>
 

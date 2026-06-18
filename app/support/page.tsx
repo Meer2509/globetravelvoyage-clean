@@ -6,14 +6,14 @@ import { submitSupportTicket } from "@/lib/supabase/actions";
 import { FORM_SUBMIT_SUCCESS_MESSAGE, FORM_SUBMIT_ERROR_MESSAGE, SITE_CONFIG, supportMailto } from "@/lib/site-config";
 
 const HELP_CATEGORIES = [
-  { icon: "🛂", title: "Visa & immigration",     desc: "Visa types, documents, application status", href: "/visa" },
-  { icon: "✈️", title: "Flights & tickets",       desc: "Booking, cancellations, refunds",           href: "/flights" },
-  { icon: "🏨", title: "Hotels & stays",           desc: "Check-in, amenities, cancellations",        href: "/hotels" },
-  { icon: "🗺️", title: "Tours & experiences",     desc: "Booking, guides, availability",             href: "/tours" },
-  { icon: "👔", title: "Visa experts & agents",   desc: "Verification, disputes, reviews",           href: "/agents" },
-  { icon: "💰", title: "Payments & refunds",      desc: "Billing, commission payouts, disputes",     href: "/pricing" },
-  { icon: "🔐", title: "Account & security",      desc: "Login, profile, password, verification",   href: "/dashboard" },
-  { icon: "🏠", title: "Property listings",        desc: "Hosting, listing management, inquiries",   href: "/properties" },
+  { icon: "🛂", title: "Visa & immigration", desc: "Visa types, documents, application status", href: "/visa" },
+  { icon: "✈️", title: "Flights", desc: "Search, quotes, and booking requests", href: "/flights" },
+  { icon: "🏠", title: "Properties", desc: "Rentals, listings, and host inquiries", href: "/properties" },
+  { icon: "🗺️", title: "Group tours", desc: "Departures, join requests, availability", href: "/group-tours" },
+  { icon: "✨", title: "AI Concierge", desc: "Trip planning, visas, and document guidance", href: "/concierge" },
+  { icon: "👔", title: "Travel agents", desc: "Verification, disputes, reviews", href: "/travel-agents" },
+  { icon: "💰", title: "Payments & refunds", desc: "Billing, commission payouts, disputes", href: "/pricing" },
+  { icon: "🔐", title: "Account & security", desc: "Login, profile, password, verification", href: "/dashboard" },
 ];
 
 const FAQS = [

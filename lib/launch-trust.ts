@@ -9,11 +9,16 @@ export const CATALOG_BANNER_DETAIL =
 /** Default badge on marketplace listing cards. */
 export const QUOTE_BADGE_LABEL = "Request quote";
 
-/** Referral program headline. */
-export const REFERRAL_LAUNCHING_SOON = "Referral rewards for verified members";
+/** Premium empty-state copy when a marketplace has no approved listings yet. */
+export const EMPTY_MARKETPLACE_LABEL = "Now accepting verified providers.";
 
-export const PROVIDER_ONBOARDING_HEADLINE =
-  "Become one of the first verified providers.";
+/** Referral program headline when rewards are not yet enabled. */
+export const REFERRAL_PROGRAM_HEADLINE = "Referral rewards for verified members";
+
+/** @deprecated Use REFERRAL_PROGRAM_HEADLINE */
+export const REFERRAL_LAUNCHING_SOON = REFERRAL_PROGRAM_HEADLINE;
+
+export const PROVIDER_ONBOARDING_HEADLINE = EMPTY_MARKETPLACE_LABEL;
 
 /** Document checker and visa case upload messaging. */
 export const SECURE_UPLOAD_AFTER_CASE =

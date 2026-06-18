@@ -70,7 +70,7 @@ export default async function Home() {
               {
                 step: "03",
                 title: "Book with trust",
-                text: "Send inquiries to verified providers. Reviews and reputation grow with every trip.",
+                text: "Connect with verified agents and providers. Reputation grows with every completed trip.",
                 href: "/travel-agents",
                 cta: "Find an agent",
               },

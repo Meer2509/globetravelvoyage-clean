@@ -34,12 +34,11 @@ const nav = [
     label: "Travel",
     href: "/flights",
     sub: [
-      { label: "Flights",             href: "/flights",     desc: "Compare routes globally" },
-      { label: "Hotels & Stays",      href: "/hotels",      desc: "Hotels, apartments, villas" },
-      { label: "Car Rentals",         href: "/car-rentals", desc: "Economy to luxury cars" },
-      { label: "Cruises & Boats",     href: "/cruises",     desc: "Ocean, river & yacht charters" },
-      { label: "Local Tours",         href: "/tours",       desc: "Verified guide experiences" },
-      { label: "Attraction Tickets",  href: "/tickets",     desc: "Skip-the-line worldwide" },
+      { label: "Flights", href: "/flights", desc: "Live search & verified quotes" },
+      { label: "Properties", href: "/properties", desc: "Rent, buy & list property" },
+      { label: "Group Tours", href: "/group-tours", desc: "Verified guided departures" },
+      { label: "Travel Community", href: "/community", desc: "Stories, tips & messaging" },
+      { label: "Additional services", href: "/future-services", desc: "Hotels, cruises & more" },
     ],
   },
   {

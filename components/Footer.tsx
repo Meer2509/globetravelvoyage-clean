@@ -10,48 +10,36 @@ import { SITE_CONFIG, FORM_SUBMIT_SUCCESS_MESSAGE, FORM_SUBMIT_ERROR_MESSAGE, su
 
 const navCols = [
   {
-    title: "Visa Services",
+    title: "Live marketplaces",
     links: [
-      { label: "Services & Pricing", href: "/services" },
-      { label: "AI Visa Assistant", href: "/visa" },
+      { label: "AI Travel Concierge", href: "/concierge" },
+      { label: "Visa Services", href: "/visa" },
+      { label: "Flights & quotes", href: "/flights" },
+      { label: "Property marketplace", href: "/properties" },
+      { label: "Travel agents", href: "/travel-agents" },
+      { label: "Group tours", href: "/group-tours" },
+      { label: "Travel community", href: "/community" },
+    ],
+  },
+  {
+    title: "Visa intelligence",
+    links: [
+      { label: "All visa guides", href: "/visa/countries" },
       { label: "USA Visa Guide", href: "/visa/usa" },
-      { label: "USA from Pakistan 🇵🇰→🇺🇸", href: "/visa/usa-from-pakistan" },
-      { label: "All Countries A–Z", href: "/visa/countries" },
-      { label: "AI Travel Concierge", href: "/concierge" },
-      { label: "Travel Agents Marketplace", href: "/travel-agents" },
-      { label: "Visa Intelligence Hub", href: "/visa" },
+      { label: "USA from Pakistan", href: "/visa/usa-from-pakistan" },
+      { label: "Start visa request", href: "/visa/start" },
+      { label: "Visa experts", href: "/agents" },
     ],
   },
   {
-    title: "Flights & Transport",
+    title: "Additional services",
     links: [
-      { label: "Compare Flights", href: "/flights" },
-      { label: "Gulf → Pakistan routes", href: "/flights" },
-      { label: "Gulf → India routes", href: "/flights" },
-      { label: "Pakistan → USA/UK", href: "/flights" },
-      { label: "Car Rentals", href: "/car-rentals" },
-      { label: "Cruises & Yachts", href: "/cruises" },
-    ],
-  },
-  {
-    title: "Hotels & Stays",
-    links: [
-      { label: "Hotels & Resorts", href: "/hotels" },
-      { label: "Vacation Rentals", href: "/properties" },
-      { label: "Monthly Furnished Apartments", href: "/properties" },
-      { label: "Luxury Properties", href: "/properties" },
-      { label: "Buy / Sell Properties", href: "/properties" },
-    ],
-  },
-  {
-    title: "Experiences & AI",
-    links: [
-      { label: "Local Tours", href: "/tours" },
-      { label: "Attraction Tickets", href: "/tickets" },
-      { label: "AI Travel Concierge", href: "/concierge" },
-      { label: "Destination Explorer", href: "/destinations" },
-      { label: "Travel Guides", href: "/guides" },
-      { label: "Vacation Packages", href: "/agencies" },
+      { label: "Hotels & resorts", href: "/future-services#hotels" },
+      { label: "Cruises & yachts", href: "/future-services#cruises" },
+      { label: "Car rentals", href: "/future-services#car-rentals" },
+      { label: "Local tours", href: "/future-services#tours" },
+      { label: "Attraction tickets", href: "/future-services#tickets" },
+      { label: "Travel insurance", href: "/future-services#insurance" },
     ],
   },
   {
@@ -61,8 +49,8 @@ const navCols = [
       { label: "Become a travel agency", href: "/register?role=agency" },
       { label: "Become a tour guide", href: "/register?role=guide" },
       { label: "Become a property host", href: "/register?role=host" },
-      { label: "Referral program", href: "/referrals" },
       { label: "Post a property listing", href: "/properties/post" },
+      { label: "Referral program", href: "/referrals" },
     ],
   },
   {
@@ -103,13 +91,6 @@ const socials = [
   { label: "LinkedIn", icon: "💼", href: "/contact" },
 ];
 
-const popularRoutes = [
-  { from: "🇦🇪 Dubai", to: "🇵🇰 Lahore", price: "from $145" },
-  { from: "🇸🇦 Riyadh", to: "🇵🇰 Karachi", price: "from $170" },
-  { from: "🇦🇪 Dubai", to: "🇮🇳 Delhi", price: "from $130" },
-  { from: "🇵🇰 Karachi", to: "🇺🇸 New York", price: "from $720" },
-];
-
 function NewsletterBar() {
   const [email, setEmail]       = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -144,7 +125,7 @@ function NewsletterBar() {
               ✈️ Travel smarter with free weekly tips
             </h3>
             <p className="mt-1 text-sm text-white/50">
-              Visa updates, price drops, new guides and AI travel insights — no spam.
+              Visa updates, new guides and AI travel insights — no spam.
             </p>
           </div>
           {submitted ? (
@@ -187,10 +168,8 @@ export function Footer() {
     <footer className="mt-auto bg-navy text-white">
       <NewsletterBar />
 
-      {/* ── Main footer content ── */}
       <div className="container-px py-16">
-        <div className="grid gap-10 lg:grid-cols-[1.8fr_repeat(6,1fr)]">
-          {/* Brand column */}
+        <div className="grid gap-10 lg:grid-cols-[1.8fr_repeat(5,1fr)]">
           <div className="max-w-sm">
             <Link href="/" className="inline-block group" aria-label="Globe Travel Voyage">
               <div className="inline-block rounded-2xl bg-white/95 px-4 py-2 shadow-lg group-hover:bg-white transition-colors">
@@ -206,7 +185,7 @@ export function Footer() {
             </Link>
 
             <p className="mt-5 text-sm leading-relaxed text-white/55">
-              Your AI Travel Command Center for visas, flights, tours, luxury stays and global journeys — powered by AI and verified human experts worldwide.
+              Your AI travel command center for visas, flights, properties, verified agents, group tours, and community — powered by AI and human experts worldwide.
             </p>
 
             <p className="mt-4 text-sm text-white/55">
@@ -216,11 +195,10 @@ export function Footer() {
               </a>
             </p>
 
-            {/* Trust badges */}
             <div className="mt-5 grid grid-cols-2 gap-2">
               {[
                 { icon: "shield" as const, label: "ID-verified providers" },
-                { icon: "check" as const, label: "Authentic reviews" },
+                { icon: "check" as const, label: "Verified reviews" },
                 { icon: "sparkles" as const, label: "AI-powered tools" },
                 { icon: "globe" as const, label: "190+ countries" },
               ].map((b) => (
@@ -231,30 +209,26 @@ export function Footer() {
               ))}
             </div>
 
-            {/* Popular routes mini section */}
-            <div className="mt-6">
-              <p className="text-xs font-bold uppercase tracking-widest text-white/30 mb-3">Popular routes</p>
-              <div className="space-y-1.5">
-                {popularRoutes.map((r, index) => (
-                  <Link
-                    key={`${r.from}-${r.to}-${index}`}
-                    href="/flights"
-                    className="flex items-center justify-between rounded-lg border border-white/8 bg-white/3 px-3 py-2 text-xs hover:bg-white/8 transition-colors"
-                  >
-                    <span className="text-white/60">{r.from} → {r.to}</span>
-                    <span className="font-bold text-gold">{r.price}</span>
-                  </Link>
-                ))}
-              </div>
+            <div className="mt-6 rounded-xl border border-white/8 bg-white/5 px-4 py-3">
+              <p className="text-xs font-bold uppercase tracking-widest text-white/35 mb-2">Popular routes</p>
+              <p className="text-xs text-white/55 leading-relaxed">
+                Search live fares on{" "}
+                <Link href="/flights" className="font-semibold text-gold hover:underline">
+                  Flights
+                </Link>
+                {" "}or ask the{" "}
+                <Link href="/concierge" className="font-semibold text-gold hover:underline">
+                  AI Concierge
+                </Link>
+                {" "}for a verified quote — no static route pricing.
+              </p>
             </div>
 
-            {/* Disclaimer */}
             <p className="mt-6 text-[11px] leading-relaxed text-white/30">
               {disclaimerShort}
             </p>
           </div>
 
-          {/* Link columns */}
           {navCols.map((col) => (
             <div key={col.title}>
               <h4 className="text-[11px] font-bold uppercase tracking-widest text-white/35">
@@ -277,7 +251,6 @@ export function Footer() {
         </div>
       </div>
 
-      {/* ── Social links ── */}
       <div className="border-t border-white/8">
         <div className="container-px py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -307,7 +280,6 @@ export function Footer() {
         </div>
       </div>
 
-      {/* ── Bottom bar ── */}
       <div className="border-t border-white/8 bg-black/20">
         <div className="container-px flex flex-col items-center justify-between gap-2 py-5 text-xs text-white/30 sm:flex-row">
           <p>© {new Date().getFullYear()} Globe Travel Voyage. All rights reserved.</p>

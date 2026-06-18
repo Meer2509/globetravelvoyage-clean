@@ -6,7 +6,7 @@ import { FilterBar } from "@/components/FilterBar";
 import { Disclaimer } from "@/components/Disclaimer";
 import { CTASection } from "@/components/CTASection";
 import { SaveButton } from "@/components/SaveButton";
-import { PROVIDER_ONBOARDING_HEADLINE } from "@/lib/launch-trust";
+import { PROVIDER_ONBOARDING_HEADLINE, EMPTY_MARKETPLACE_LABEL } from "@/lib/launch-trust";
 import type { PropertyListingRow } from "@/lib/supabase/property-types";
 
 const PROPERTY_EMOJI: Record<string, string> = {
@@ -123,16 +123,17 @@ export function PropertiesCatalog({
         </div>
 
         <div className="mb-5 text-sm text-muted">
-          {filtered.length} approved listing{filtered.length !== 1 ? "s" : ""}
-          {search || chips.length > 0 ? " — filtered" : ""}
+          {properties.length === 0
+            ? EMPTY_MARKETPLACE_LABEL
+            : `${filtered.length} approved listing${filtered.length !== 1 ? "s" : ""}${search || chips.length > 0 ? " — filtered" : ""}`}
         </div>
 
         {properties.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-soft-200 py-16 text-center px-6">
             <span className="text-4xl mb-3">🏠</span>
-            <p className="font-semibold text-navy text-lg">Property listings are currently being reviewed.</p>
+            <p className="font-semibold text-navy text-lg">{PROVIDER_ONBOARDING_HEADLINE}</p>
             <p className="mt-2 text-sm text-muted max-w-md">
-              New host submissions are reviewed by our admin team before they appear here. Check back soon or post your own listing.
+              Host submissions are reviewed by our admin team before they appear here. List your property to join the marketplace.
             </p>
             <Link href="/properties/post" className="btn-primary mt-6 px-6 py-3 text-sm">
               Post a property listing

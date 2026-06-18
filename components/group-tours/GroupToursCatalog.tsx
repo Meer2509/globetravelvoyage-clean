@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Stars } from "@/components/Stars";
+import { EMPTY_MARKETPLACE_LABEL } from "@/lib/launch-trust";
 import type { GroupTourRow } from "@/lib/supabase/group-tour-types";
 
 export function GroupToursCatalog({ tours }: { tours: GroupTourRow[] }) {
@@ -49,15 +50,17 @@ export function GroupToursCatalog({ tours }: { tours: GroupTourRow[] }) {
               ))}
             </select>
           </div>
-          <p className="text-sm text-charcoal/55">{filtered.length} tour{filtered.length === 1 ? "" : "s"}</p>
+          <p className="text-sm text-charcoal/55">
+            {tours.length === 0 ? EMPTY_MARKETPLACE_LABEL : `${filtered.length} tour${filtered.length === 1 ? "" : "s"}`}
+          </p>
         </div>
 
         {filtered.length === 0 ? (
           <div className="card p-12 text-center">
             <div className="text-5xl">🗺️</div>
-            <h2 className="mt-4 text-xl font-extrabold text-navy">No group tours yet</h2>
+            <h2 className="mt-4 text-xl font-extrabold text-navy">{EMPTY_MARKETPLACE_LABEL}</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-charcoal/60">
-              Verified travel agents are listing premium group departures. Check back soon or become a verified agent to list your first tour.
+              Verified travel agents can list premium group departures. Apply to become a verified agent and publish your first tour.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Link href="/register?role=agent" className="btn-gold px-6 py-2.5 text-sm">

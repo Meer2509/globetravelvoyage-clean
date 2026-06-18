@@ -22,7 +22,7 @@ export const TRAVELER_FREE_FEATURES: LaunchFeature[] = [
   { title: "Visa guides", description: "Country-specific visa guides and embassy fee references.", emoji: "🛂", href: "/visa", tier: "free", audience: "traveler" },
   { title: "Basic visa checklist", description: "Document checklist for popular visa types — free to use.", emoji: "📋", href: "/visa/start", tier: "free", audience: "traveler" },
   { title: "Browse providers", description: "Explore verified visa experts, agencies, guides, and hosts.", emoji: "🔍", href: "/agents", tier: "free", audience: "traveler" },
-  { title: "Request quotes", description: "Contact providers for flights, hotels, tours, and stays — no platform fee.", emoji: "💬", href: "/booking/request", tier: "free", audience: "traveler" },
+  { title: "Request quotes", description: "Contact providers for flights, properties, and group tours — no platform fee.", emoji: "💬", href: "/booking/request", tier: "free", audience: "traveler" },
   { title: "Compare providers", description: "Side-by-side ratings, specialties, and response times.", emoji: "⚖️", href: "/agents", tier: "free", audience: "traveler" },
 ];
 
