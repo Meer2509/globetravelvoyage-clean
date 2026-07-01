@@ -1,5 +1,11 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { fetchUserSavedItems } from "@/lib/supabase/saved-actions";
+
+export const metadata: Metadata = {
+  title: "Saved Items",
+  description: "Your saved properties, tours, travel agents, and visa guides on Globe Travel Voyage.",
+};
 
 const TYPE_META: Record<string, { label: string; emoji: string; browseHref: string }> = {
   property: { label: "Properties", emoji: "🏠", browseHref: "/properties" },

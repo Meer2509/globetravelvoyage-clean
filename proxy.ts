@@ -155,15 +155,11 @@ export async function proxy(request: NextRequest) {
   if (user && pathname.startsWith("/dashboard/")) {
     const dbRole = await getPrimaryRoleFromDb(user.id);
     const metaRole = normalizeUserRole(user.user_metadata?.role as string | undefined);
-    const adminEmail = (
-      process.env.PLATFORM_ADMIN_EMAIL ||
-      process.env.ADMIN_EMAIL ||
-      "meerhamzakhan2020@gmail.com"
-    ).toLowerCase();
+    const platformAdminEmail = process.env.PLATFORM_ADMIN_EMAIL?.trim().toLowerCase();
     const isAdmin =
       dbRole === "admin" ||
       metaRole === "admin" ||
-      user.email?.toLowerCase() === adminEmail;
+      Boolean(platformAdminEmail && user.email?.toLowerCase() === platformAdminEmail);
     const role = isAdmin ? "admin" : (dbRole ?? metaRole);
     if (!isDashboardPathAllowed(pathname, role)) {
       return NextResponse.redirect(new URL(getDashboardForRole(role), request.url));
@@ -174,15 +170,11 @@ export async function proxy(request: NextRequest) {
   if (user && pathname.startsWith("/admin")) {
     const dbRole = await getPrimaryRoleFromDb(user.id);
     const metaRole = normalizeUserRole(user.user_metadata?.role as string | undefined);
-    const adminEmail = (
-      process.env.PLATFORM_ADMIN_EMAIL ||
-      process.env.ADMIN_EMAIL ||
-      "meerhamzakhan2020@gmail.com"
-    ).toLowerCase();
+    const platformAdminEmail = process.env.PLATFORM_ADMIN_EMAIL?.trim().toLowerCase();
     const isAdmin =
       dbRole === "admin" ||
       metaRole === "admin" ||
-      user.email?.toLowerCase() === adminEmail;
+      Boolean(platformAdminEmail && user.email?.toLowerCase() === platformAdminEmail);
     if (!isAdmin) {
       return NextResponse.redirect(new URL(getDashboardForRole(dbRole ?? metaRole), request.url));
     }

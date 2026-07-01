@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { HeroStatsBar } from "@/components/HeroStatsBar";
 import { V3HomeHero } from "@/components/v3/V3HomeHero";
@@ -13,6 +14,12 @@ import { TrustSection } from "@/components/TrustSection";
 import { ProviderOnboardingCta } from "@/components/ProviderOnboardingCta";
 import { visaHubHref } from "@/lib/marketplace-routes";
 import { CONCIERGE_PATH } from "@/lib/v3/concierge-config";
+
+export const metadata: Metadata = {
+  title: "AI Powered Global Travel",
+  description:
+    "Globe Travel Voyage — your AI-first luxury travel marketplace. Plan trips, search flights, apply for visas, and book with verified experts worldwide.",
+};
 
 export default async function Home() {
   const [{ visas, faqs, visaHubCards }, marketplaceCounts] = await Promise.all([

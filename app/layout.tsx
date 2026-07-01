@@ -20,7 +20,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://globetravelvoyage.com"),
+  metadataBase: new URL("https://www.globetravelvoyage.com"),
   title: {
     default: "Globe Travel Voyage — AI Powered Global Travel",
     template: "%s · Globe Travel Voyage",
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://globetravelvoyage.com",
+    url: "https://www.globetravelvoyage.com",
     siteName: "Globe Travel Voyage",
     title: "Globe Travel Voyage — AI Powered Global Travel",
     description:

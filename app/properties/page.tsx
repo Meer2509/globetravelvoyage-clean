@@ -1,10 +1,17 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { PropertiesCatalog } from "@/components/PropertiesCatalog";
 import { ProviderOnboardingCta } from "@/components/ProviderOnboardingCta";
 import { fetchApprovedPropertyListings } from "@/lib/supabase/property-actions";
 import { fetchUserSavedIds } from "@/lib/supabase/saved-actions";
 import { EmailCaptureStrip } from "@/components/growth/EmailCaptureStrip";
 import { ConversionTrustStrip } from "@/components/growth/ConversionTrustStrip";
+
+export const metadata: Metadata = {
+  title: "Property Rentals Marketplace",
+  description:
+    "Browse verified short and long-term rental properties worldwide. Connect with hosts and request bookings on Globe Travel Voyage.",
+};
 
 export default async function PropertiesPage() {
   const [properties, savedIds] = await Promise.all([

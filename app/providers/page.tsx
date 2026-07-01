@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { PROVIDER_LANDING_PAGES } from "@/lib/provider-acquisition/landing-config";
 
 const PROGRAMS = [
@@ -7,6 +8,12 @@ const PROGRAMS = [
   PROVIDER_LANDING_PAGES["property-host"],
   PROVIDER_LANDING_PAGES["tour-organizer"],
 ];
+
+export const metadata: Metadata = {
+  title: "Become a Travel Provider",
+  description:
+    "Join Globe Travel Voyage as a travel agent, visa expert, property host, or tour organizer. Grow your business on our AI-powered marketplace.",
+};
 
 export default function ProvidersHubPage() {
   return (

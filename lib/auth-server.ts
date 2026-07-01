@@ -44,11 +44,7 @@ export async function resolveUserRole(userId: string): Promise<UserRole> {
 
 /** Platform owner email — granted admin access when signed in (also set admin role in Supabase). */
 export function getPlatformAdminEmail(): string {
-  return (
-    process.env.PLATFORM_ADMIN_EMAIL?.trim() ||
-    process.env.ADMIN_EMAIL?.trim() ||
-    "meerhamzakhan2020@gmail.com"
-  ).toLowerCase();
+  return process.env.PLATFORM_ADMIN_EMAIL?.trim().toLowerCase() ?? "";
 }
 
 export async function isPlatformAdminUser(userId: string, email?: string | null): Promise<boolean> {
