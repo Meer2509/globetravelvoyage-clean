@@ -5,7 +5,7 @@ import Link from "next/link";
 import { PROVIDER_CATEGORIES, type ProviderCategory, type VerificationProfileRow } from "@/lib/trust/types";
 import { saveVerificationProfile } from "@/lib/trust/verification-actions";
 import { TrustScoreBadge } from "@/components/trust/TrustScoreBadge";
-import { FORM_SUBMIT_ERROR_MESSAGE } from "@/lib/site-config";
+import { FORM_SUBMIT_ERROR_MESSAGE, SITE_CONFIG } from "@/lib/site-config";
 
 const STATUS_STYLE: Record<string, string> = {
   draft: "bg-soft text-charcoal/55",
@@ -137,7 +137,7 @@ export function ProviderVerificationCenter({
         </div>
 
         <p className="text-xs text-charcoal/50">
-          Identity documents and business licenses are reviewed manually. Email {process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "support@globetravelvoyage.com"} to submit files securely.
+          Identity documents and business licenses are reviewed manually. Email {SITE_CONFIG.supportEmail} to submit files securely.
         </p>
 
         {error && <p className="text-sm text-red-600">{error}</p>}

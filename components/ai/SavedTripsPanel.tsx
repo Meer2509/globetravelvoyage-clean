@@ -8,13 +8,10 @@ import { Panel } from "@/components/DashboardLayout";
 
 export function SavedTripsPanel() {
   const [trips, setTrips] = useState<SavedTripRow[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(!isSupabaseConfigured);
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setLoaded(true);
-      return;
-    }
+    if (!isSupabaseConfigured) return;
     fetchUserSavedTrips().then((rows) => {
       setTrips(rows);
       setLoaded(true);

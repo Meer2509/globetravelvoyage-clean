@@ -12,15 +12,12 @@ import { FORM_SUBMIT_ERROR_MESSAGE } from "@/lib/site-config";
 
 export function MessagesInbox() {
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isSupabaseConfigured);
   const [supportBusy, setSupportBusy] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setLoading(false);
-      return;
-    }
+    if (!isSupabaseConfigured) return;
     fetchUserConversations().then((rows) => {
       setConversations(rows);
       setLoading(false);

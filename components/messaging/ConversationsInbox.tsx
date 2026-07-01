@@ -19,7 +19,7 @@ export function ConversationsInbox({ title = "Messages" }: { title?: string }) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ThreadMessage[]>([]);
   const [body, setBody] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isSupabaseConfigured);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
 
@@ -31,10 +31,7 @@ export function ConversationsInbox({ title = "Messages" }: { title?: string }) {
   }
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setLoading(false);
-      return;
-    }
+    if (!isSupabaseConfigured) return;
     reloadConversations();
   }, []);
 

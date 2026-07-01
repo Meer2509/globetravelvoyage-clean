@@ -37,20 +37,17 @@ export function AirportAutocomplete({
     return () => document.removeEventListener("mousedown", onPointerDown);
   }, []);
 
-  useEffect(() => {
+  function handleInputChange(next: string) {
+    setQuery(next);
+    setOpen(true);
     setActiveIndex(0);
-  }, [query]);
+    if (!next.trim()) onChange(null);
+  }
 
   function selectAirport(airport: AirportRecord) {
     onChange(airport);
     setQuery("");
     setOpen(false);
-  }
-
-  function handleInputChange(next: string) {
-    setQuery(next);
-    setOpen(true);
-    if (!next.trim()) onChange(null);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {

@@ -83,7 +83,9 @@ export function TravelAgentMarketplacePanel({ userId }: { userId: string }) {
   }
 
   useEffect(() => {
-    reload();
+    queueMicrotask(() => {
+      void reload();
+    });
   }, [userId]);
 
   async function handleSaveProfile(e: React.FormEvent) {

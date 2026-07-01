@@ -20,7 +20,7 @@ export function MessageThread({
 }) {
   const [messages, setMessages] = useState<ThreadMessage[]>([]);
   const [body, setBody] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isSupabaseConfigured);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
@@ -33,10 +33,7 @@ export function MessageThread({
   }
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setLoading(false);
-      return;
-    }
+    if (!isSupabaseConfigured) return;
     const supabase = createClient();
     supabase?.auth.getUser().then(({ data }) => {
       setMyUserId(data.user?.id ?? null);

@@ -8,7 +8,6 @@ import {
   PROVIDER_REFERRAL_REWARD_USD,
   type ProviderAcquisitionRole,
   type ProviderReferralRow,
-  type ProviderReferralStatus,
 } from "./types";
 
 const PROVIDER_ROLES: ProviderAcquisitionRole[] = [
