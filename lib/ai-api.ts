@@ -97,7 +97,7 @@ export async function getTravelAssistantReply(
 Provide concise, practical travel guidance (visas, flights, hotels, itineraries, or documents as relevant).
 Use short paragraphs and bullet lists where helpful. Include a brief reminder that visa approval is never guaranteed.`
   );
-  return { text, actions: getConciergeActions(intent) };
+  return { text, actions: getConciergeActions(intent, userMessage) };
 }
 
 export async function analyzeVisaWithAi(input: VisaInput): Promise<VisaResult> {
