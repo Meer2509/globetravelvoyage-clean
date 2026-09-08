@@ -85,7 +85,10 @@ function extractFlightSearchHref(message?: string): string {
   const upper = message.toUpperCase();
   const codes = upper.match(/\b[A-Z]{3}\b/g) ?? [];
   if (codes.length < 2) return "/flights";
-  const params = new URLSearchParams({ from: codes[0], to: codes[1] });
+  const from = codes[0];
+  const to = codes[1];
+  if (!from || !to) return "/flights";
+  const params = new URLSearchParams({ from, to });
   const dates = message.match(/\b20\d{2}-\d{2}-\d{2}\b/g) ?? [];
   if (dates[0]) params.set("depart", dates[0]);
   if (dates[1]) params.set("return", dates[1]);
