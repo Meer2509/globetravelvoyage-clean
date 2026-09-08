@@ -236,6 +236,23 @@ export async function fulfillPaymentFromCheckoutSession(
   return { ok: true, paymentId: result.paymentId ?? ensured.paymentId };
 }
 
+
+export async function markPaymentRefundedByIntent(
+  stripePaymentIntentId: string,
+  refundStatus: "refunded" | "partially_refunded" = "refunded"
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const admin = createAdminClient();
+  if (!admin) return { ok: false, error: "Supabase admin client is not configured." };
+
+  const { error } = await admin
+    .from("payments")
+    .update({ status: refundStatus, stripe_status: refundStatus })
+    .eq("stripe_payment_intent_id", stripePaymentIntentId);
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
 export async function markPaymentStatusBySession(
   stripeSessionId: string,
   status: "failed" | "expired" | "cancelled"
