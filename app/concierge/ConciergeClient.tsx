@@ -71,6 +71,18 @@ export function ConciergeClient() {
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
+              href="/trip-planner"
+              className="flex items-center gap-2 rounded-xl border border-blue/25 bg-blue/5 px-4 py-2.5 text-xs font-semibold text-navy hover:bg-blue/10 transition-colors"
+            >
+              Build & save a full trip
+            </Link>
+            <Link
+              href="/account"
+              className="flex items-center gap-2 rounded-xl border border-soft-200 bg-white px-4 py-2.5 text-xs font-semibold text-charcoal/70 hover:border-blue/30 hover:text-navy transition-colors"
+            >
+              My travel workspace
+            </Link>
+            <Link
               href="/travel-agents"
               className="flex items-center gap-2 rounded-xl border border-gold/30 bg-gold/5 px-4 py-2.5 text-xs font-semibold text-navy hover:bg-gold/10 transition-colors"
             >
