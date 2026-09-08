@@ -82,15 +82,6 @@ const navCols = [
   },
 ];
 
-const socials = [
-  { label: "WhatsApp", icon: "💬", href: "/contact" },
-  { label: "Instagram", icon: "📸", href: "/contact" },
-  { label: "Facebook", icon: "📘", href: "/contact" },
-  { label: "Twitter / X", icon: "🐦", href: "/contact" },
-  { label: "YouTube", icon: "▶️", href: "/contact" },
-  { label: "LinkedIn", icon: "💼", href: "/contact" },
-];
-
 function NewsletterBar() {
   const [email, setEmail]       = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -197,10 +188,10 @@ export function Footer() {
 
             <div className="mt-5 grid grid-cols-2 gap-2">
               {[
-                { icon: "shield" as const, label: "ID-verified providers" },
-                { icon: "check" as const, label: "Verified reviews" },
+                { icon: "shield" as const, label: "Provider verification" },
+                { icon: "check" as const, label: "Admin-reviewed listings" },
                 { icon: "sparkles" as const, label: "AI-powered tools" },
-                { icon: "globe" as const, label: "190+ countries" },
+                { icon: "globe" as const, label: "Global visa guides" },
               ].map((b) => (
                 <div key={b.label} className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/5 px-3 py-2">
                   <Icon name={b.icon} className="h-3.5 w-3.5 text-gold" />
@@ -254,19 +245,9 @@ export function Footer() {
       <div className="border-t border-white/8">
         <div className="container-px py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap gap-2">
-              {socials.map((s) => (
-                <Link
-                  key={s.label}
-                  href={s.href}
-                  className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/50 transition-all hover:border-gold/30 hover:text-gold"
-                  aria-label={s.label}
-                >
-                  <span>{s.icon}</span>
-                  <span className="hidden sm:block">{s.label}</span>
-                </Link>
-              ))}
-            </div>
+            <p className="text-xs text-white/40">
+              Premium travel planning, marketplace services, and support in one account.
+            </p>
             <div className="flex flex-wrap gap-3 text-xs text-white/35">
               <Link href="/legal/privacy" className="hover:text-white/60 transition-colors">Privacy</Link>
               <span>·</span>

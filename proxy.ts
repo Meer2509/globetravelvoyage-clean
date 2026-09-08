@@ -97,6 +97,17 @@ async function getPrimaryRoleFromDb(userId: string): Promise<UserRole | undefine
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // ── Canonical host ──────────────────────────────────────────────────────────
+  // Keep a single production origin so Server Actions, auth callbacks, cookies,
+  // SEO canonicals, and analytics all agree on the same host.
+  const forwardedHost = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  if (forwardedHost === "globetravelvoyage.com") {
+    const canonicalUrl = request.nextUrl.clone();
+    canonicalUrl.hostname = "www.globetravelvoyage.com";
+    canonicalUrl.protocol = "https:";
+    return NextResponse.redirect(canonicalUrl, 308);
+  }
+
   // ── Skip Supabase when not configured ─────────────────────────────────────
   if (!isConfigured) {
     return NextResponse.next({ request });

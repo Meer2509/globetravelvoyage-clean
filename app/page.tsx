@@ -18,7 +18,7 @@ import { CONCIERGE_PATH } from "@/lib/v3/concierge-config";
 export const metadata: Metadata = {
   title: "AI Powered Global Travel",
   description:
-    "Globe Travel Voyage — your AI-first luxury travel marketplace. Plan trips, search flights, apply for visas, and book with verified experts worldwide.",
+    "Plan international travel with AI assistance, live flight search, visa guidance, properties, tours and reviewed travel providers in one marketplace.",
 };
 
 export default async function Home() {
@@ -32,19 +32,6 @@ export default async function Home() {
     <>
       <V3HomeHero statsBar={<HeroStatsBar />} />
 
-      <div className="border-b border-soft-200 bg-gold-50">
-        <div className="container-px py-3">
-          <p className="text-center text-[11px] text-charcoal/60 leading-relaxed">
-            <span className="font-bold text-charcoal/80">Disclaimer:</span>{" "}
-            Independent marketplace — not a government agency or immigration authority.
-            Visa approvals are never guaranteed.{" "}
-            <Link href="/legal/disclaimer" className="font-semibold text-navy/70 underline hover:text-navy">
-              Full disclaimer →
-            </Link>
-          </p>
-        </div>
-      </div>
-
       <HomeConciergeSection />
 
       <HomeMarketplaceHub counts={marketplaceCounts} />
@@ -55,7 +42,7 @@ export default async function Home() {
           <SectionHeader
             eyebrow="How it works"
             title="Three steps to your next journey"
-            subtitle="Start with AI, then connect to verified marketplaces when you're ready to book."
+            subtitle="Start with AI, compare your options, then move into the right marketplace or human expert."
             center
           />
           <div className="mt-8 grid gap-6 md:grid-cols-3">
@@ -70,14 +57,14 @@ export default async function Home() {
               {
                 step: "02",
                 title: "Explore marketplaces",
-                text: "Browse verified flights, visa guides, properties, agents and group tours.",
+                text: "Search live flights, visa guides, approved listings, agents and group tours.",
                 href: "#marketplaces",
                 cta: "View marketplaces",
               },
               {
                 step: "03",
-                title: "Book with trust",
-                text: "Connect with verified agents and providers. Reputation grows with every completed trip.",
+                title: "Move forward with confidence",
+                text: "See provider status clearly, request quotes, use secure checkout, and keep your trip activity in one account.",
                 href: "/travel-agents",
                 cta: "Find an agent",
               },
@@ -109,7 +96,7 @@ export default async function Home() {
                   <span className="text-gradient-gold">Pakistan</span>
                 </h2>
                 <p className="mt-4 max-w-xl text-base leading-relaxed text-white/70">
-                  AI-guided preparation for the {featuredUsa.type}: DS-160, embassy fees,
+                  Preparation guidance for the {featuredUsa.type}: DS-160, current fee guidance,
                   interview prep and document checklist — tailored for Pakistani applicants.
                 </p>
                 <ul className="mt-6 space-y-2">
@@ -133,7 +120,7 @@ export default async function Home() {
                 <div className="text-center">
                   <div className="text-[88px] leading-none animate-float">🛂</div>
                   <p className="mt-4 text-sm text-white/55 max-w-xs">
-                    Consular fee from <span className="font-bold text-gold">$185</span> · Processing 3–12 weeks
+                    Requirements and government fees can change. Check the current guide before you apply.
                   </p>
                 </div>
               </div>

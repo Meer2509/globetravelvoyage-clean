@@ -40,10 +40,10 @@ export function TrustSection({ compact = false }: { compact?: boolean }) {
         <div className="text-center mb-8">
           <span className="eyebrow">Trust & transparency</span>
           <h2 className="mt-2 text-2xl font-extrabold text-navy sm:text-3xl">
-            Built for honest premium travel
+            Premium travel built on visible trust
           </h2>
           <p className="mt-2 max-w-2xl mx-auto text-sm text-muted">
-            Globe Travel Voyage is an independent marketplace — not a government agency, embassy, or immigration lawyer.
+            Clear pricing, clear provider status, and clear boundaries between guidance, marketplace services, and official authorities.
           </p>
         </div>
         <div className={`grid gap-4 ${compact ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2 lg:grid-cols-3"}`}>
