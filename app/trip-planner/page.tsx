@@ -8,6 +8,7 @@ import { CTASection } from "@/components/CTASection";
 import { ContactModal } from "@/components/ContactModal";
 import { useCatalog } from "@/lib/catalog/context";
 import { generateTripPlanWithAi, mapTravelStyleLabel, AiUnavailableError } from "@/lib/ai-api";
+import { saveAiTripPlan } from "@/lib/supabase/ai-actions";
 import type { TripResult } from "@/lib/ai-types";
 
 const TRIP_PLAN_DISCLAIMER =
@@ -33,6 +34,8 @@ export default function TripPlannerPage() {
   const [loading, setLoading]         = useState(false);
   const [error, setError]             = useState("");
   const [modal, setModal]             = useState(false);
+  const [saveState, setSaveState]     = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveMessage, setSaveMessage] = useState("");
 
   const { packages } = useCatalog();
   const pkgFilter = useMemo(() => packages.filter((p) => !destination || p.destinations.toLowerCase().includes(destination.toLowerCase())).slice(0, 4), [destination, packages]);
@@ -73,6 +76,34 @@ export default function TripPlannerPage() {
       );
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function savePlan() {
+    if (!plan) return;
+    setSaveState("saving");
+    setSaveMessage("");
+    const result = await saveAiTripPlan({
+      form: {
+        destination: destination.trim(),
+        days,
+        budget: plan.totalBudget,
+        currency: "USD",
+        travelers,
+        travelStyle: mapTravelStyleLabel(style),
+        accommodation: "hotel",
+        interests: [],
+        includeFlights: true,
+        includeVisa: true,
+      },
+      result: plan,
+    });
+    if (result.ok) {
+      setSaveState("saved");
+      setSaveMessage("Trip saved to your travel workspace.");
+    } else {
+      setSaveState("error");
+      setSaveMessage(result.error);
     }
   }
 
@@ -169,9 +200,26 @@ export default function TripPlannerPage() {
                       <h3 className="text-2xl font-extrabold text-navy">{plan.destination}</h3>
                       <p className="text-charcoal/55">{plan.totalDays} days · ${plan.totalBudget.toLocaleString()} total budget · {plan.style}</p>
                     </div>
-                    <button onClick={() => setModal(true)} className="btn-primary py-2.5 px-5">Book this trip</button>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={savePlan}
+                        disabled={saveState === "saving" || saveState === "saved"}
+                        className="btn-outline py-2.5 px-5 disabled:opacity-60"
+                      >
+                        {saveState === "saving" ? "Saving…" : saveState === "saved" ? "✓ Saved" : "Save trip"}
+                      </button>
+                      <button onClick={() => setModal(true)} className="btn-primary py-2.5 px-5">Book this trip</button>
+                    </div>
                   </div>
                 </div>
+                {saveMessage && (
+                  <div className={`rounded-xl border p-3 text-sm ${saveState === "saved" ? "border-green-200 bg-green-50 text-green-800" : "border-amber-200 bg-amber-50 text-amber-900"}`}>
+                    {saveMessage}
+                    {saveState === "error" && saveMessage.toLowerCase().includes("sign in") && (
+                      <Link href="/login?next=/trip-planner" className="ml-2 font-bold underline">Sign in</Link>
+                    )}
+                  </div>
+                )}
 
                 {/* Budget breakdown */}
                 <div className="card p-6">
