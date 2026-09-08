@@ -80,7 +80,19 @@ export function detectConciergeIntent(message: string): ConciergeIntent {
   return bestScore > 0 ? best : "general";
 }
 
-export function getConciergeActions(intent: ConciergeIntent): ConciergeAction[] {
+function extractFlightSearchHref(message?: string): string {
+  if (!message) return "/flights";
+  const upper = message.toUpperCase();
+  const codes = upper.match(/\b[A-Z]{3}\b/g) ?? [];
+  if (codes.length < 2) return "/flights";
+  const params = new URLSearchParams({ from: codes[0], to: codes[1] });
+  const dates = message.match(/\b20\d{2}-\d{2}-\d{2}\b/g) ?? [];
+  if (dates[0]) params.set("depart", dates[0]);
+  if (dates[1]) params.set("return", dates[1]);
+  return `/flights?${params.toString()}`;
+}
+
+export function getConciergeActions(intent: ConciergeIntent, message?: string): ConciergeAction[] {
   switch (intent) {
     case "visa":
       return [
@@ -105,7 +117,7 @@ export function getConciergeActions(intent: ConciergeIntent): ConciergeAction[] 
           id: "flights-search",
           label: "Search Live Flights",
           kind: "link",
-          href: "/flights",
+          href: extractFlightSearchHref(message),
           variant: "primary",
         },
       ];
