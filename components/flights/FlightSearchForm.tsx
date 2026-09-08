@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Icon } from "@/components/Icon";
 import { AirportAutocomplete } from "@/components/flights/AirportAutocomplete";
 import {
@@ -46,6 +47,29 @@ export function FlightSearchForm({
   const [adults, setAdults] = useState(1);
   const [cabinClass, setCabinClass] = useState<FlightCabinClass>("economy");
   const [error, setError] = useState("");
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const from = searchParams.get("from");
+    const to = searchParams.get("to");
+    const depart = searchParams.get("depart");
+    const ret = searchParams.get("return");
+    if (from) {
+      const airport = getAirportByIata(from.toUpperCase());
+      if (airport) setOrigin(airport);
+    }
+    if (to) {
+      const airport = getAirportByIata(to.toUpperCase());
+      if (airport) setDestination(airport);
+    }
+    if (depart && /^20\d{2}-\d{2}-\d{2}$/.test(depart)) setDepartureDate(depart);
+    if (ret && /^20\d{2}-\d{2}-\d{2}$/.test(ret)) {
+      setReturnDate(ret);
+      setTripType("roundtrip");
+    } else if (from && to) {
+      setTripType("oneway");
+    }
+  }, [searchParams]);
 
   function applyPopular(search: PopularFlightSearch) {
     const from = getAirportByIata(search.originIata);
