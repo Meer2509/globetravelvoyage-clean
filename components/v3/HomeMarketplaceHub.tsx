@@ -122,7 +122,7 @@ export function HomeMarketplaceHub({ counts }: { counts: V3MarketplaceCounts }) 
         <SectionHeader
           eyebrow="Travel marketplace"
           title="Everything for your journey, in one trusted place"
-          Move from inspiration to action without stitching together disconnected travel tools.
+          subtitle="Move from inspiration to action without stitching together disconnected travel tools."
           center
         />
 
