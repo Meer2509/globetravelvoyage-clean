@@ -27,7 +27,7 @@ export default function VisaPageClient() {
       <PageHeader
         eyebrow="Visa marketplace"
         title="AI Visa Assistant for every country"
-        subtitle="Understand the right visa type, required documents and the exact steps — then connect with verified visa agents who prepare your application. Guidance only; we never guarantee approval."
+        subtitle="Understand common visa pathways, document requirements and next steps — then connect with reviewed providers when you want human help. Guidance only; official requirements control."
         breadcrumbs={[{ label: "Home", href: "/" }, { label: "Visa" }]}
       >
         <div className="flex flex-wrap gap-3">
@@ -43,7 +43,7 @@ export default function VisaPageClient() {
           <SectionHeader
             eyebrow="AI visa wizard"
             title="Not sure which visa you need?"
-            subtitle="Answer three quick questions and our AI will recommend a visa type, document checklist and step-by-step plan."
+            subtitle="Answer three quick questions and our AI will suggest a likely visa pathway, checklist and next-step plan for you to verify against official sources."
           />
           <VisaWizard />
 
@@ -116,7 +116,7 @@ export default function VisaPageClient() {
           <SectionHeader
             eyebrow="Verified visa agents"
             title="Get expert help with your application"
-            subtitle="Identity-checked visa agents who prepare documents, review applications and guide you through interviews."
+            subtitle="Reviewed visa-service providers can help prepare documents, review applications and guide you through interviews."
             linkHref="/agents"
             linkLabel="View all agents"
           />

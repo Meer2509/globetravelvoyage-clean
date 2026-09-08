@@ -10,11 +10,11 @@ export function MarketplaceTrustStrip({ className = "" }: { className?: string }
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-charcoal/70">
           <span className="inline-flex items-center gap-1.5 text-blue">
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue/10 text-[10px]">✓</span>
-            Verified providers
+            Provider verification
           </span>
           <span className="inline-flex items-center gap-1.5 text-gold">
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gold/15 text-[10px]">★</span>
-            Reviewed by Globe Travel Voyage
+            Admin-reviewed listings
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-navy/8 text-[10px]">🔒</span>
