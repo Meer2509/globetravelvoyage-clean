@@ -120,9 +120,9 @@ export function HomeMarketplaceHub({ counts }: { counts: V3MarketplaceCounts }) 
     <section id="marketplaces" className="section bg-white">
       <div className="container-px">
         <SectionHeader
-          eyebrow="Live at launch"
-          title="Seven ways to plan, book, and connect"
-          subtitle="AI concierge, visas, flights, properties, travel agents, group tours, and community — all in one platform."
+          eyebrow="Travel marketplace"
+          title="Everything for your journey, in one trusted place"
+          Move from inspiration to action without stitching together disconnected travel tools.
           center
         />
 
