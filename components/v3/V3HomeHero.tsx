@@ -34,13 +34,12 @@ export function V3HomeHero({ statsBar }: { statsBar?: ReactNode }) {
           </span>
 
           <h1 className="mt-6 text-[2rem] font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-[3.25rem]">
-            Plan your entire journey with{" "}
-            <span className="text-gradient-gold">one AI concierge</span>
+            Plan, compare, and move your trip forward with{" "}
+            <span className="text-gradient-gold">one travel concierge</span>
           </h1>
 
           <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/72 sm:text-lg">
-            Visas, itineraries, flights and verified experts — luxury travel planning
-            in a single trusted conversation. No fragmented tools.
+            AI planning, live flight search, visa guidance, properties, tours, and human experts — organized around one premium travel experience.
           </p>
 
           <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
@@ -72,8 +71,7 @@ export function V3HomeHero({ statsBar }: { statsBar?: ReactNode }) {
           </div>
 
           <p className="mt-6 text-[11px] leading-relaxed text-white/40">
-            Independent marketplace — not a government or immigration authority.
-            AI guidance is informational only.
+            Live flight search · Provider verification · Secure checkout · Independent travel marketplace
           </p>
         </div>
 
