@@ -21,7 +21,7 @@ export default function ConciergePage() {
             ← Home
           </Link>
           <div className="max-w-2xl">
-            <span className="eyebrow-white">Globe Travel Voyage V3</span>
+            <span className="eyebrow-white">AI-powered travel planning</span>
             <h1 className="mt-3 text-3xl font-extrabold text-white sm:text-4xl">
               AI Travel Concierge
             </h1>
