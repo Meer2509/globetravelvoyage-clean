@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe, isStripeWebhookConfigured } from "@/lib/stripe/server";
 import { fulfillStripeCheckoutSession } from "@/lib/stripe/fulfill-session";
-import { markPaymentStatusBySession } from "@/lib/stripe/payment-records";
+import { markPaymentRefundedByIntent, markPaymentStatusBySession } from "@/lib/stripe/payment-records";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -63,6 +63,19 @@ export async function POST(request: Request) {
       const intent = event.data.object as Stripe.PaymentIntent;
       const sessionId = intent.metadata?.checkout_session_id;
       if (sessionId) await markPaymentStatusBySession(sessionId, "failed");
+    } else if (event.type === "charge.refunded") {
+      const charge = event.data.object as Stripe.Charge;
+      const paymentIntentId =
+        typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
+      if (paymentIntentId) {
+        const refundStatus =
+          charge.amount_refunded >= charge.amount ? "refunded" : "partially_refunded";
+        const result = await markPaymentRefundedByIntent(paymentIntentId, refundStatus);
+        if (!result.ok) {
+          console.error("Webhook refund update failed:", result.error);
+          return NextResponse.json({ error: result.error }, { status: 500 });
+        }
+      }
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Webhook handler failed.";
